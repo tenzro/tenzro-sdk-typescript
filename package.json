@@ -1,0 +1,41 @@
+{
+  "name": "tenzro-sdk",
+  "version": "0.1.0",
+  "description": "Tenzro Network SDK — wallets, identity, agents, inference, bridge, crypto, TEE, ZK proofs, custody, and settlement",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "blockchain",
+    "ai",
+    "agents",
+    "mcp",
+    "web3",
+    "tenzro",
+    "defi"
+  ],
+  "author": "Tenzro <eng@tenzro.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tenzro/tenzro-sdk-typescript"
+  },
+  "homepage": "https://tenzro.com",
+  "bugs": {
+    "url": "https://github.com/tenzro/tenzro-sdk-typescript/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

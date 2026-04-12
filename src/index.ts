@@ -1,0 +1,400 @@
+// Main client
+export { TenzroClient } from "./client";
+
+// App client (developer-funded app pattern / paymaster)
+export { AppClient } from "./app";
+
+// Sub-clients
+export { WalletClient } from "./wallet";
+export { InferenceClient } from "./inference";
+export { SettlementClient } from "./settlement";
+export { AgentClient } from "./agent";
+export { GovernanceClient } from "./governance";
+export { IdentityClient } from "./identity";
+export { PaymentClient } from "./payment";
+export { ProviderClient } from "./provider";
+export { TaskClient } from "./task";
+export { MarketplaceClient } from "./marketplace";
+export { SkillClient } from "./skill";
+export { ToolClient } from "./tool";
+export { CantonClient } from "./canton";
+export { StakingClient } from "./staking";
+export { TokenClient } from "./token";
+export { ContractClient } from "./contract";
+export { CryptoClient } from "./crypto";
+export { CustodyClient } from "./custody";
+export { TeeClient } from "./tee";
+export { ZkClient } from "./zk";
+export { StreamingClient } from "./streaming";
+export { Ap2Client } from "./ap2";
+export { BridgeClient } from "./bridge";
+export { AgentPaymentClient } from "./agent-payments";
+export { CircuitBreakerClient } from "./circuit-breaker";
+export { NanopaymentClient } from "./nanopayment";
+export { Erc7802Client } from "./erc7802";
+export { NftClient } from "./nft";
+export { ComplianceClient } from "./compliance";
+export { EventsClient } from "./events";
+export { DebridgeClient } from "./debridge";
+
+// Configuration
+export {
+  TenzroConfig,
+  MAINNET_CONFIG,
+  TESTNET_CONFIG,
+  LOCAL_CONFIG,
+} from "./config";
+
+// RPC
+export { RpcClient, RpcCallError } from "./rpc";
+
+// Types
+export type {
+  MicroNodeCapabilities,
+  MicroNodeNetworkEndpoints,
+  JoinAsMicroNodeResponse,
+} from "./types";
+
+export type {
+  Hash,
+  Address,
+  Signature,
+  BlockHeight,
+  Nonce,
+  Timestamp,
+  ChainId,
+  AccountInfo,
+  WalletInfo,
+  WalletType,
+  ModelInfo,
+  ModelModality,
+  ModelParameters,
+  ModelStatus,
+  InferenceRequest,
+  InferenceResponse,
+  InferenceResult,
+  InferenceParameters,
+  InferenceMetadata,
+  InferenceProvider,
+  ProviderCapacity,
+  ProviderStatus,
+  PricingConfig,
+  PricingModel,
+  SettlementParams,
+  SettlementRequest,
+  SettlementReceipt,
+  SettlementStatus,
+  ServiceType,
+  PaymentIntent,
+  ServiceProof,
+  AgentIdentity,
+  AgentConfig,
+  AgentMessage,
+  AgentMessageType,
+  Capability,
+  RegisterAgentResponse,
+  AgentMessageResponse,
+  DelegateTaskResponse,
+  SpawnAgentResponse,
+  RunAgentTaskResponse,
+  CreateSwarmResponse,
+  SwarmMemberInfo,
+  SwarmStatus,
+  TerminateSwarmResponse,
+  GovernanceProposal,
+  GovernanceVote,
+  VoteType,
+  ProposalType,
+  ProposalStatus,
+  VoteReceipt,
+  VotingPower,
+  BridgeMessage,
+  BridgeTransfer,
+  BridgeProtocol,
+  Block,
+  BlockHeader,
+  Transaction,
+  TransactionType,
+  Account,
+  AccountState,
+  NetworkInfo,
+  NodeInfo,
+  NodeStatus,
+  PeerInfo,
+  FaucetResponse,
+  HealthResponse,
+  VerificationResponse,
+  IdentityInfo,
+  IdentityType,
+  DidDocument,
+  VerificationMethod,
+  DidService,
+  PaymentChallenge,
+  PaymentReceipt,
+  PaymentSessionInfo,
+  GatewayInfo,
+  ModelLoadInfo,
+  ModelEndpoint,
+  UsernameResult,
+} from "./types";
+
+// Provider types
+export type {
+  ParticipateResponse,
+  ProviderStats,
+  ChatMessage,
+  ChatResponse,
+  DownloadProgress,
+  HardwareProfile,
+} from "./provider";
+
+// Task marketplace types
+export type {
+  TaskInfo,
+  TaskStatus,
+  TaskType,
+  TaskPriority,
+  TaskQuote,
+  TaskFilter,
+  PostTaskParams,
+} from "./types";
+
+// Agent marketplace types
+export type {
+  AgentTemplate,
+  AgentTemplateStatus,
+  AgentTemplateType,
+  AgentPricingModel,
+  AgentCapabilityDef,
+  AgentRuntimeRequirements,
+  AgentExample,
+  AgentTemplateFilter,
+  RegisterAgentTemplateParams,
+  UpdateAgentTemplateParams,
+  AgentTemplateStats,
+} from "./types";
+
+// AgentKit types
+export type {
+  SpawnAgentTemplateResponse,
+  RunAgentTemplateReport,
+} from "./types";
+
+// Skills registry types
+export type {
+  SkillInfo,
+  SkillFilter,
+  RegisterSkillParams,
+  UpdateSkillParams,
+  SkillExecutionResult,
+  SkillUsage,
+} from "./types";
+
+// Tool registry types
+export type {
+  ToolInfo,
+  ToolFilter,
+  RegisterToolParams,
+  UpdateToolParams,
+  ToolExecutionResult,
+  ToolUsage,
+} from "./types";
+
+// Canton / DAML types
+export type {
+  CantonDomain,
+  DamlContract,
+  ListDamlContractsParams,
+  DamlCommandParams,
+  DamlCommandResult,
+  DamlEvent,
+} from "./types";
+
+// Staking types
+export type {
+  StakingRole,
+  StakeResult,
+  UnstakeResult,
+  StakingBalance,
+  StakingRewards,
+  UnbondingEntry,
+} from "./types";
+
+// AP2 types
+export type {
+  Ap2Session,
+  Ap2Authorization,
+  CancelResult,
+} from "./types";
+
+// Bridge types (extended)
+export type {
+  BridgeRoute,
+  BridgeAdapter,
+  BridgeFee,
+  TransferStatus,
+} from "./types";
+
+// Agent payment types
+export type {
+  SpendingPolicy,
+  PolicyResult,
+  AgentPaymentReceipt,
+  DailySpend,
+  AgentTransaction,
+} from "./types";
+
+// Circuit breaker types
+export type {
+  ProviderHealth,
+  CircuitBreakerStatus,
+  CircuitBreakerConfig,
+  ConfigResult,
+  ResetResult,
+} from "./types";
+
+// Nanopayment types
+export type {
+  ChannelInfo,
+  NanopaymentReceipt,
+  BatchSettlement,
+  CloseResult,
+} from "./types";
+
+// ERC-7802 types
+export type {
+  MintResult,
+  BurnResult,
+  CrossChainSupply,
+} from "./types";
+
+// Gas policy types
+export type {
+  GasPolicy,
+} from "./types";
+
+// Task marketplace additional types
+export type {
+  AssignTaskResult,
+  CompleteTaskResult,
+} from "./types";
+
+// NFT types
+export type {
+  CollectionInfo,
+  NftMintResult,
+  NftInfo,
+  NftTransferResult,
+  NftPointerResult,
+} from "./nft";
+
+// Compliance types
+export type {
+  ComplianceRules,
+  ComplianceResult,
+  FreezeResult,
+} from "./compliance";
+
+// Events types
+export type {
+  BlockchainEvent,
+  GetEventsParams,
+  Subscription,
+  WebhookRegistration,
+  UnsubscribeResult,
+  WebhookRemoveResult,
+} from "./events";
+
+// deBridge types
+export type {
+  DebridgeChain,
+  DebridgeToken,
+  DebridgeOrder,
+  DebridgeSwapResult,
+  DebridgeInstructions,
+} from "./debridge";
+
+// Token registry types
+export type {
+  CreateTokenParams,
+  GetTokenInfoParams,
+  ListTokensParams,
+  CrossVmTransferParams,
+  TokenInfo,
+  TokenListResult,
+  TokenBalance,
+  WrapResult,
+  TransferResult,
+} from "./token";
+
+// Token constants
+export { WTNZO_EVM_ADDRESS } from "./token";
+
+// Contract deployment types
+export type {
+  DeployContractParams,
+  DeployResult,
+  CallResult,
+} from "./contract";
+
+// App client types (developer-funded app pattern / paymaster)
+export type {
+  MasterWallet,
+  UserWallet,
+  FundResult as AppFundResult,
+  SpendingPolicy as AppSpendingPolicy,
+  SessionKey as AppSessionKey,
+  UsageStats,
+  InferenceResult as AppInferenceResult,
+  AgentResult as AppAgentResult,
+  BridgeResult as AppBridgeResult,
+  TaskResult as AppTaskResult,
+  TxResult as AppTxResult,
+} from "./app";
+
+// Crypto types
+export type {
+  SignatureResult,
+  VerifyResult,
+  EncryptResult,
+  DecryptResult,
+  DerivedKey,
+  KeyPair,
+  SharedSecret,
+} from "./crypto";
+
+// TEE types
+export type {
+  TeeInfo,
+  AttestationResult,
+  TeeVerifyResult,
+  SealedData,
+  UnsealedData,
+  TeeProvider,
+} from "./tee";
+
+// ZK types
+export type {
+  ZkProof,
+  ZkVerifyResult,
+  ProvingKey,
+  CircuitInfo,
+} from "./zk";
+
+// Custody types
+export type {
+  MpcWallet,
+  EncryptedKeystore,
+  KeyShare,
+  RotationResult,
+  SpendingPolicy as CustodySpendingPolicy,
+  SessionKey as CustodySessionKey,
+} from "./custody";
+
+// Streaming types
+export type {
+  StreamResult,
+  SubscriptionHandle as StreamSubscriptionHandle,
+  SseConnection,
+  StreamEvent,
+} from "./streaming";
