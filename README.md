@@ -55,6 +55,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 
 | Module | Key Methods |
 |--------|------------|
+| `auth` | `issueOnboardingKey()`, `listOnboardingKeys()`, `revokeOnboardingKey()`, `validateOnboardingKey()` |
 | `wallet` | `createWallet()`, `getBalance()`, `sendTransaction()` |
 | `identity` | `registerHuman()`, `resolveDid()`, `setUsername()` |
 | `agent` | `register()`, `spawnAgent()`, `createSwarm()`, `delegateTask()` |
@@ -81,6 +82,40 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `canton` | `listDomains()`, `submitCommand()` |
 | `skill` | `listSkills()`, `registerSkill()` |
 | `tool` | `listTools()`, `registerTool()` |
+
+## Auth (Onboarding Keys)
+
+```typescript
+import { TenzroClient, TESTNET_CONFIG } from 'tenzro-sdk';
+
+const client = new TenzroClient(TESTNET_CONFIG);
+
+// Issue an onboarding key
+const key = await client.auth.issueOnboardingKey(
+  'Alice',
+  'did:tenzro:human:abc123',
+  '0x1234abcd',
+  'Human'
+);
+console.log('Key:', key.key);
+console.log('Expires:', key.expires_at);
+
+// List all active keys
+const keys = await client.auth.listOnboardingKeys();
+for (const k of keys) {
+  console.log(`${k.name} — ${k.did} (${k.status})`);
+}
+
+// Validate a key
+const result = await client.auth.validateOnboardingKey(key.key);
+if (result.valid) {
+  console.log('Valid for DID:', result.did);
+}
+
+// Revoke a key
+const revoke = await client.auth.revokeOnboardingKey('did:tenzro:human:abc123');
+console.log('Revoked:', revoke.revoked);
+```
 
 ## Live Testnet
 

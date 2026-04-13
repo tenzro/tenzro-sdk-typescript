@@ -31,6 +31,7 @@ import { NftClient } from "./nft";
 import { ComplianceClient } from "./compliance";
 import { EventsClient } from "./events";
 import { DebridgeClient } from "./debridge";
+import { AuthClient } from "./auth";
 import {
   Block,
   Transaction,
@@ -44,6 +45,7 @@ import {
  * Provides access to all network functionality through specialized sub-clients.
  */
 export class TenzroClient {
+  public readonly auth: AuthClient;
   public readonly wallet: WalletClient;
   public readonly inference: InferenceClient;
   public readonly settlement: SettlementClient;
@@ -74,6 +76,7 @@ export class TenzroClient {
       config.apiEndpoint,
       config.timeout
     );
+    this.auth = new AuthClient(this.rpc);
     this.wallet = new WalletClient(this.rpc);
     this.inference = new InferenceClient(this.rpc);
     this.settlement = new SettlementClient(this.rpc);

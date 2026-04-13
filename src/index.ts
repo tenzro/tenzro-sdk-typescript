@@ -5,6 +5,7 @@ export { TenzroClient } from "./client";
 export { AppClient } from "./app";
 
 // Sub-clients
+export { AuthClient } from "./auth";
 export { WalletClient } from "./wallet";
 export { InferenceClient } from "./inference";
 export { SettlementClient } from "./settlement";
@@ -398,3 +399,10 @@ export type {
   SseConnection,
   StreamEvent,
 } from "./streaming";
+
+// Auth / onboarding key types
+export type {
+  OnboardingKey,
+  RevokeKeyResponse,
+  ValidateKeyResponse,
+} from "./auth";
