@@ -4,3 +4,7 @@ dist/
 .env.*
 *.tgz
 .DS_Store
+
+# Claude Code
+CLAUDE.md
+.claude/
