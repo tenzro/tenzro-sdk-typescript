@@ -66,7 +66,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `settlement` | `createEscrow()`, `releaseEscrow()`, `openPaymentChannel()` |
 | `payment` | `createChallenge()`, `payMpp()`, `payX402()` |
 | `compliance` | `registerCompliance()`, `checkCompliance()`, `freezeAddress()` |
-| `crypto` | `signMessage()`, `encrypt()`, `decrypt()`, `hashSha256()`, `generateVrfProof()`, `verifyVrfProof()` (RFC 9381) |
+| `crypto` | `signMessage()`, `encrypt()`, `decrypt()`, `hashSha256()` |
 | `tee` | `detectTee()`, `getAttestation()`, `sealData()` |
 | `zk` | `createProof()`, `verifyProof()`, `listCircuits()` |
 | `custody` | `createMpcWallet()`, `exportKeystore()`, `authorizeSession()` |
