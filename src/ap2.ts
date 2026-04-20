@@ -7,6 +7,52 @@ import type {
 } from './types';
 
 /**
+ * Result of verifying a single AP2 mandate (Intent / Cart / Payment VDC).
+ */
+export interface Ap2MandateVerification {
+  /** Whether the VDC proof is valid. */
+  valid: boolean;
+  /** Mandate type: "Intent" | "Cart" | "Payment". */
+  mandate_type: string;
+  /** Issuer DID. */
+  issuer: string;
+  /** Subject DID (agent/merchant). */
+  subject: string;
+  /** Expiration timestamp (Unix seconds). */
+  expires_at: number;
+  /** Reason for failure if `valid` is false. */
+  error?: string;
+}
+
+/**
+ * Result of validating an Intent+Cart mandate pair.
+ */
+export interface Ap2MandatePairValidation {
+  /** Whether the pair is mutually consistent and both VDCs verify. */
+  valid: boolean;
+  /** Verification result for the intent mandate. */
+  intent?: Ap2MandateVerification;
+  /** Verification result for the cart mandate. */
+  cart?: Ap2MandateVerification;
+  /** Reason for failure if `valid` is false. */
+  error?: string;
+}
+
+/**
+ * AP2 protocol metadata.
+ */
+export interface Ap2ProtocolInfo {
+  /** AP2 protocol version. */
+  version: string;
+  /** Supported mandate types (e.g. ["Intent", "Cart", "Payment"]). */
+  supported_mandate_types: string[];
+  /** Supported VC formats (e.g. ["jwt_vc", "ldp_vc"]). */
+  supported_vc_formats: string[];
+  /** Recognized issuer DID methods (e.g. ["did:tenzro", "did:web"]). */
+  supported_did_methods: string[];
+}
+
+/**
  * Client for the AP2 (Agentic Payment Protocol).
  * Enables agents to establish payment sessions with providers,
  * authorize individual payments, and manage session lifecycle.
@@ -102,5 +148,45 @@ export class Ap2Client {
     return this.rpc.call<Ap2Session[]>('tenzro_ap2ListAgentSessions', [
       { agent_did: agentDid },
     ]);
+  }
+
+  // ─── AP2 Mandate Verification (Google AP2 spec) ────────────────────────
+
+  /**
+   * Verify a single AP2 mandate (Verifiable Digital Credential).
+   *
+   * Checks the VDC proof, issuer, and schema for Intent, Cart, or Payment
+   * mandates per Google's AP2 specification.
+   *
+   * @param vdc - The full JSON-LD VC envelope with proof.
+   */
+  async verifyMandate(vdc: unknown): Promise<Ap2MandateVerification> {
+    return this.rpc.call<Ap2MandateVerification>('tenzro_ap2VerifyMandate', [
+      { vdc },
+    ]);
+  }
+
+  /**
+   * Validate an AP2 Intent+Cart mandate pair for consistency.
+   *
+   * Ensures the cart references the intent, amounts/items match the intent's
+   * constraints, and both VDCs verify.
+   */
+  async validateMandatePair(
+    intentVdc: unknown,
+    cartVdc: unknown
+  ): Promise<Ap2MandatePairValidation> {
+    return this.rpc.call<Ap2MandatePairValidation>(
+      'tenzro_ap2ValidateMandatePair',
+      [{ intent_vdc: intentVdc, cart_vdc: cartVdc }]
+    );
+  }
+
+  /**
+   * Return AP2 protocol metadata (version, supported mandate types,
+   * VC formats, and recognized DID methods).
+   */
+  async protocolInfo(): Promise<Ap2ProtocolInfo> {
+    return this.rpc.call<Ap2ProtocolInfo>('tenzro_ap2ProtocolInfo', []);
   }
 }

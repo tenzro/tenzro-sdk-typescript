@@ -33,6 +33,9 @@ export { AgentPaymentClient } from "./agent-payments";
 export { CircuitBreakerClient } from "./circuit-breaker";
 export { NanopaymentClient } from "./nanopayment";
 export { Erc7802Client } from "./erc7802";
+export { Erc8004Client } from "./erc8004";
+export { WormholeClient } from "./wormhole";
+export { CctClient } from "./cct";
 export { NftClient } from "./nft";
 export { ComplianceClient } from "./compliance";
 export { EventsClient } from "./events";
@@ -227,6 +230,33 @@ export type {
   Ap2Authorization,
   CancelResult,
 } from "./types";
+
+// AP2 mandate verification types
+export type {
+  Ap2MandateVerification,
+  Ap2MandatePairValidation,
+  Ap2ProtocolInfo,
+} from "./ap2";
+
+// ERC-8004 types
+export type {
+  Erc8004AgentId,
+  Erc8004Calldata,
+  Erc8004Agent,
+} from "./erc8004";
+
+// Wormhole types
+export type {
+  WormholeChainId,
+  WormholeVaaId,
+  WormholeTransferResult,
+} from "./wormhole";
+
+// CCT (Chainlink Cross-Chain Token) types
+export type {
+  CctPool,
+  CctPoolList,
+} from "./cct";
 
 // Bridge types (extended)
 export type {

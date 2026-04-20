@@ -27,6 +27,9 @@ import { AgentPaymentClient } from "./agent-payments";
 import { CircuitBreakerClient } from "./circuit-breaker";
 import { NanopaymentClient } from "./nanopayment";
 import { Erc7802Client } from "./erc7802";
+import { Erc8004Client } from "./erc8004";
+import { WormholeClient } from "./wormhole";
+import { CctClient } from "./cct";
 import { NftClient } from "./nft";
 import { ComplianceClient } from "./compliance";
 import { EventsClient } from "./events";
@@ -134,6 +137,21 @@ export class TenzroClient {
   /** Access the ERC-7802 cross-chain token client. */
   erc7802(): Erc7802Client {
     return new Erc7802Client(this.rpc);
+  }
+
+  /** Access the ERC-8004 Trustless Agents Registry client. */
+  erc8004(): Erc8004Client {
+    return new Erc8004Client(this.rpc);
+  }
+
+  /** Access the Wormhole cross-chain client. */
+  wormhole(): WormholeClient {
+    return new WormholeClient(this.rpc);
+  }
+
+  /** Access the TNZO CCT (Chainlink Cross-Chain Token) pool registry client. */
+  cct(): CctClient {
+    return new CctClient(this.rpc);
   }
 
   /** Access the NFT client. */
