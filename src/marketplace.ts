@@ -1,5 +1,13 @@
 import type { RpcClient } from './rpc';
-import type { AgentTemplate, AgentTemplateFilter, RegisterAgentTemplateParams, UpdateAgentTemplateParams, AgentTemplateStats } from './types';
+import type {
+  AgentTemplate,
+  AgentTemplateFilter,
+  RegisterAgentTemplateParams,
+  UpdateAgentTemplateParams,
+  AgentTemplateStats,
+  RunAgentTemplateParams,
+  RunAgentTemplateReport,
+} from './types';
 
 export class MarketplaceClient {
   constructor(private readonly rpc: RpcClient) {}
@@ -8,8 +16,32 @@ export class MarketplaceClient {
     return this.rpc.call<AgentTemplate[]>('tenzro_listAgentTemplates', [filter ?? {}]);
   }
 
+  /**
+   * Register a new agent template on the marketplace.
+   *
+   * Paid-agent marketplace semantics:
+   * - `creator_did` (optional): bind the template to a `did:tenzro:` / `did:pdis:`
+   *   identity at registration time (immutable afterwards).
+   * - `creator_wallet` (**mandatory** for non-free pricing): payout wallet. Each
+   *   invocation fee is split 95/5 — 5% flows to the network treasury as
+   *   `AGENT_MARKETPLACE_COMMISSION_BPS`, the remainder is paid here.
+   * - `pricing`: either the canonical `AgentPricingModel` object or the compact
+   *   string form (`"free"`, `"per_execution:<u128>"`, `"per_token:<u128>"`,
+   *   `"subscription:<u128>"`, `"revenue_share:<bps>"`).
+   */
   async registerAgentTemplate(params: RegisterAgentTemplateParams): Promise<AgentTemplate> {
     return this.rpc.call<AgentTemplate>('tenzro_registerAgentTemplate', [params]);
+  }
+
+  /**
+   * Invoke (run) a spawned agent template end-to-end.
+   *
+   * For paid templates, `payer_wallet` is charged the per-invocation fee and
+   * the report contains the detailed fee-split breakdown (treasury commission,
+   * creator share, invocation counters, total revenue).
+   */
+  async runAgentTemplate(params: RunAgentTemplateParams): Promise<RunAgentTemplateReport> {
+    return this.rpc.call<RunAgentTemplateReport>('tenzro_runAgentTemplate', [params]);
   }
 
   async getAgentTemplate(templateId: string): Promise<AgentTemplate> {

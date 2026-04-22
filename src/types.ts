@@ -809,6 +809,17 @@ export interface AgentTemplate {
   content_hash?: string;
   docs_url?: string;
   metadata: Record<string, string>;
+  /** Optional DID binding (`did:tenzro:...` / `did:pdis:...`) set at registration time. */
+  creator_did?: string;
+  /**
+   * Creator payout wallet — **mandatory** for any non-free pricing; receives the
+   * per-invocation fee minus the `AGENT_MARKETPLACE_COMMISSION_BPS` network commission.
+   */
+  creator_wallet?: string;
+  /** Total successful invocations via `tenzro_runAgentTemplate`. */
+  invocation_count?: number;
+  /** Total TNZO revenue (pre-split) collected across all invocations, as u128 decimal string. */
+  total_revenue?: string;
 }
 
 export interface AgentTemplateFilter {
@@ -822,13 +833,33 @@ export interface AgentTemplateFilter {
   offset?: number;
 }
 
+/**
+ * Compact pricing string form accepted by `tenzro_registerAgentTemplate`:
+ * `"free"`, `"per_execution:<u128>"`, `"per_token:<u128>"`,
+ * `"subscription:<u128>"`, or `"revenue_share:<bps>"`.
+ */
+export type AgentPricingSpec = string | AgentPricingModel;
+
 export interface RegisterAgentTemplateParams {
   name: string;
   description: string;
   template_type: AgentTemplateType;
   system_prompt: string;
   tags?: string[];
-  pricing?: AgentPricingModel;
+  /**
+   * Pricing model. May be supplied either as the canonical object form
+   * (`AgentPricingModel`) or as the compact string form (e.g.
+   * `"per_execution:5000000000000000000"`).
+   */
+  pricing?: AgentPricingSpec;
+  /** Optional DID binding set at registration time (immutable afterwards). */
+  creator_did?: string;
+  /**
+   * Creator payout wallet. **Mandatory** for any non-free pricing — receives
+   * the per-invocation fee minus the `AGENT_MARKETPLACE_COMMISSION_BPS` (5%)
+   * network commission that flows to the treasury.
+   */
+  creator_wallet?: string;
 }
 
 export interface UpdateAgentTemplateParams {
@@ -850,13 +881,51 @@ export interface SpawnAgentTemplateResponse {
   status: string;
 }
 
-export interface RunAgentTemplateReport {
+export interface RunAgentTemplateParams {
+  /** Spawned agent instance to invoke. */
   agent_id: string;
+  /**
+   * Payer wallet. **Mandatory** for any non-free template — charged the
+   * per-invocation fee which is split 95/5 between creator and treasury
+   * (`AGENT_MARKETPLACE_COMMISSION_BPS = 500`). May be omitted for free
+   * templates.
+   */
+  payer_wallet?: string;
+  /** Estimated tokens (used for per-token pricing calculations). */
+  tokens_estimate?: number;
+  /** Maximum iterations the spawned agent may run. */
+  max_iterations?: number;
+  /** When true, no fees are collected and no state changes are committed. */
+  dry_run?: boolean;
+}
+
+export interface RunAgentTemplateReport {
+  agent_id?: string;
   template_id: string;
-  iterations: number;
-  status: string;
-  result: string;
-  duration_ms: number;
+  /** Number of agent steps that were executed. */
+  steps_executed: number;
+  /** Number of agent steps that failed. */
+  steps_failed: number;
+  /** Number of agent steps skipped because `dry_run` was true. */
+  steps_skipped_by_dry_run: number;
+  /** TNZO fee charged for this invocation (u128 decimal string). */
+  fee_paid: string;
+  /** Commission in basis points that flows to the treasury (typically 500 = 5%). */
+  commission_bps: number;
+  /** Portion of `fee_paid` routed to the treasury (u128 decimal string). */
+  network_commission: string;
+  /** Portion of `fee_paid` paid to `creator_wallet` (u128 decimal string). */
+  creator_share: string;
+  /** Payer wallet the fee was charged to. */
+  payer_wallet?: string;
+  /** Creator wallet that received `creator_share`. */
+  creator_wallet?: string;
+  /** Treasury address that received `network_commission`. */
+  treasury?: string;
+  /** Total successful invocations on this template after this run. */
+  invocation_count: number;
+  /** Total TNZO revenue (pre-split) on this template after this run. */
+  total_revenue: string;
 }
 
 // ─── Skills Registry ─────────────────────────────────────────────────────────

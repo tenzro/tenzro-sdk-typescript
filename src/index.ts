@@ -169,6 +169,7 @@ export type {
   AgentTemplateStatus,
   AgentTemplateType,
   AgentPricingModel,
+  AgentPricingSpec,
   AgentCapabilityDef,
   AgentRuntimeRequirements,
   AgentExample,
@@ -181,6 +182,7 @@ export type {
 // AgentKit types
 export type {
   SpawnAgentTemplateResponse,
+  RunAgentTemplateParams,
   RunAgentTemplateReport,
 } from "./types";
 
