@@ -36,6 +36,62 @@ const result = await client.inference.request('gemma3-270m', 'Hello!', 100);
 console.log(result.output);
 ```
 
+## Transaction signing
+
+The Tenzro node canonicalises the transaction hash over `Transaction::hash()`,
+which includes the server-supplied `timestamp` field. Every transaction is
+synchronously verified against its Ed25519 signature before acceptance; an
+invalid or missing signature returns JSON-RPC error `-32003`.
+
+Three supported flows:
+
+1. **Atomic server-side sign + send (recommended):** forward the hex-encoded
+   private key to `tenzro_signAndSendTransaction` — the node assembles,
+   hashes, signs, verifies, and submits the transaction in one call.
+
+   ```typescript
+   const txHash = await client.rpc.call<string>(
+     'tenzro_signAndSendTransaction',
+     [{
+       private_key: '0x...',
+       from: '0x...',
+       to: '0x...',
+       value: '0x...',
+       nonce: '0x0',
+       chain_id: 1337,
+     }]
+   );
+   ```
+
+2. **Offline sign, then submit:** call `tenzro_signTransaction` to obtain
+   `{signature, public_key, timestamp, tx_hash}` and resubmit later via
+   `eth_sendRawTransaction` with all four fields intact.
+
+3. **Pre-signed submission:** call `eth_sendRawTransaction` directly with
+   `signature`, `public_key`, and explicit `timestamp` matching a
+   client-computed `Transaction::hash()`. `wallet.sendTransaction()`
+   dispatches the bare `{from, to, value, gas_limit?, gas_price?}` payload
+   and will be rejected unless the caller adds these fields — prefer
+   flow (1) for typical usage. See the `crates/tenzro-cli` `wallet send`
+   command for a reference.
+
+## Durable state
+
+The node persists AI infrastructure to RocksDB and restores it on restart —
+SDK consumers see consistent state across node upgrades and reboots:
+
+- **Model catalog** — `ModelRegistry` writes `ModelInfo` records under
+  `info:<model_id>` in `CF_MODELS`; models survive restart without
+  re-registration.
+- **Agent runtime** — `AgentRuntime` persists `RegisteredAgent`,
+  `AgentLifecycleInfo`, and parent→children spawn trees under
+  `agent:`/`lifecycle:`/`children:` prefixes in `CF_AGENTS`. Terminated
+  agents are retained for audit of `state_history`, `registration_fee`,
+  and `tenzro_did`.
+- **Swarms** — `SwarmManager` persists `SwarmState` under `swarm:<swarm_id>`
+  in `CF_AGENTS` with write-through on create, status transitions, and
+  termination.
+
 ## AppClient (Developer Pattern)
 
 ```typescript

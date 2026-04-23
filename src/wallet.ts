@@ -52,6 +52,21 @@ export class WalletClient {
 
   /**
    * Send a transaction from one address to another.
+   *
+   * **Signing contract:** The Tenzro node canonicalises the transaction hash
+   * over `Transaction::hash()`, which includes the server-supplied `timestamp`
+   * field. It synchronously verifies the Ed25519 signature before accepting
+   * and returns JSON-RPC error `-32003` on an invalid or missing signature.
+   *
+   * This helper dispatches the bare `{from, to, value}` payload to
+   * `eth_sendRawTransaction`; the node will reject it unless the same call
+   * also carries `signature`, `public_key`, and explicit `timestamp` matching
+   * a client-computed `Transaction::hash()`. For most workflows prefer
+   * `tenzro_signAndSendTransaction` directly via `rpc.call(...)` — that path
+   * forwards a hex-encoded private key and lets the node assemble, hash,
+   * sign, verify, and submit the transaction atomically. See the
+   * `crates/tenzro-cli` `wallet send` command for a reference implementation.
+   *
    * @param from - Sender address
    * @param to - Recipient address
    * @param value - Amount to transfer (in smallest unit)
