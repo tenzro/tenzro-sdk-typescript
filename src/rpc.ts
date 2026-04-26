@@ -41,7 +41,7 @@ export class RpcClient {
     }
   }
 
-  async call<T>(method: string, params: unknown[] = []): Promise<T> {
+  async call<T>(method: string, params: unknown[] | Record<string, unknown> = []): Promise<T> {
     // Use modular arithmetic to prevent overflow beyond Number.MAX_SAFE_INTEGER
     this.requestId = (this.requestId + 1) % Number.MAX_SAFE_INTEGER;
     const id = this.requestId;
@@ -49,10 +49,32 @@ export class RpcClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
+    // Ambient auth: forward `Authorization: DPoP <jwt>` and `DPoP: <proof>`
+    // headers from environment variables when set (Node only). This mirrors
+    // the Rust SDK's RpcClient and keeps SDK callsites free of private-key
+    // handling — the holder mints the JWT once during onboarding via
+    // AuthClient, then exports the token + per-call DPoP proof through
+    // TENZRO_BEARER_JWT / TENZRO_DPOP_PROOF.
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const proc = (globalThis as unknown as {
+      process?: { env?: Record<string, string | undefined> };
+    }).process;
+    const env = proc && proc.env ? proc.env : undefined;
+    if (env) {
+      const bearer = env.TENZRO_BEARER_JWT;
+      if (bearer && bearer.length > 0) {
+        headers["Authorization"] = `DPoP ${bearer}`;
+      }
+      const dpop = env.TENZRO_DPOP_PROOF;
+      if (dpop && dpop.length > 0) {
+        headers["DPoP"] = dpop;
+      }
+    }
+
     try {
       const response = await fetch(this.endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ jsonrpc: "2.0", method, params, id }),
         signal: controller.signal,
       });

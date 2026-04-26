@@ -70,14 +70,29 @@ const receipt = await client.settlement(address).createSettlement(
   ServiceType.Inference
 );
 
-// Escrow
-const escrowId = await client.settlement(address).createEscrow(
-  "payee_address",
-  "100.0",
-  "USDC"
+// Escrow (consensus-mediated typed transactions; ambient OAuth 2.1 + DPoP auth)
+// Signing happens server-side against the holder's MPC wallet — no raw key here.
+// The SDK forwards `Authorization: DPoP <jwt>` + `DPoP: <proof>` from
+// TENZRO_BEARER_JWT / TENZRO_DPOP_PROOF on every RPC call.
+const txHash = await client.settlement(address).createEscrow(
+  "0xpayer...",            // payer (the holder's MPC wallet address)
+  "0xpayee...",            // payee
+  1000000000000000000n,    // amount in wei
+  "TNZO",                  // asset
+  1735689600000n,          // expires_at (ms)
+  "timeout"                // release conditions
+);
+// escrow_id is derived deterministically by the VM and emitted in the receipt log.
+
+await client.settlement(address).releaseEscrow(
+  "0xpayer...", escrowIdHex, "0xproof..."
 );
 
-await client.settlement(address).releaseEscrow(escrowId, "proof");
+await client.settlement(address).refundEscrow(
+  "0xpayer...", escrowIdHex
+);
+
+const escrow = await client.settlement(address).getEscrow(escrowIdHex);
 
 // Payment channel
 const channelId = await client.settlement(address).openPaymentChannel(

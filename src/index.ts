@@ -432,9 +432,10 @@ export type {
   StreamEvent,
 } from "./streaming";
 
-// Auth / onboarding key types
+// OAuth 2.1 onboarding types
 export type {
-  OnboardingKey,
-  RevokeKeyResponse,
-  ValidateKeyResponse,
+  OnboardSession,
+  RevokeResponse,
+  PendingApprovals,
+  ApprovalDecision,
 } from "./auth";

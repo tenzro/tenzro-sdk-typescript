@@ -394,34 +394,63 @@ async createSettlement(
 
 Creates a settlement for a service.
 
-#### createEscrow(payee, amount, asset, releaseConditions?)
+#### createEscrow(payer, payee, amount, asset, expiresAt, releaseConditions)
 ```typescript
 async createEscrow(
-  payee: Address,
-  amount: string,
-  asset: AssetId,
-  releaseConditions?: Record<string, unknown>
+  payer: string,
+  payee: string,
+  amount: bigint,
+  asset: string,
+  expiresAt: bigint,
+  releaseConditions: string
 ): Promise<string>
 ```
 
-Creates an escrow account.
+Submits a `CreateEscrow` transaction (gas: 75,000) via
+`tenzro_signAndSendTransaction`. Authentication is **ambient**: the bearer JWT
+from `TENZRO_BEARER_JWT` and per-request DPoP proof from `TENZRO_DPOP_PROOF`
+(set after onboarding via `client.auth`) are forwarded automatically. Signing
+happens server-side against the holder's MPC wallet — no raw private key
+crosses the SDK surface.
 
-#### releaseEscrow(escrowId, proof)
+Funds are locked at a deterministically-derived vault address by the Native VM.
+The `escrow_id` is derived as `SHA-256("tenzro/escrow/id/v1" || payer || nonce_le)`
+and emitted in the receipt log. `releaseConditions` accepts: `"timeout"` |
+`"provider"` | `"consumer"` | `"both"` | `"verifier"` | `"custom"`. Returns the
+transaction hash.
+
+#### releaseEscrow(payer, escrowId, proof?)
 ```typescript
 async releaseEscrow(
+  payer: string,
   escrowId: string,
-  proof: string
-): Promise<SettlementReceipt>
+  proof?: string
+): Promise<string>
 ```
 
-Releases funds from escrow.
+Submits a `ReleaseEscrow` transaction (gas: 60,000). Authentication is ambient
+(see `createEscrow`). Only the original payer can submit — the VM rejects
+releases from any other address. Returns the transaction hash.
 
-#### cancelEscrow(escrowId)
+#### refundEscrow(payer, escrowId)
 ```typescript
-async cancelEscrow(escrowId: string): Promise<string>
+async refundEscrow(
+  payer: string,
+  escrowId: string
+): Promise<string>
 ```
 
-Cancels an escrow.
+Submits a `RefundEscrow` transaction (gas: 50,000). Authentication is ambient
+(see `createEscrow`). Only the original payer can submit, AND the escrow must
+be expired (or use `Timeout`/`Custom` release conditions). Returns the
+transaction hash.
+
+#### getEscrow(escrowId)
+```typescript
+async getEscrow(escrowId: string): Promise<any>
+```
+
+Reads an escrow record by its 32-byte id (calls `tenzro_getEscrow`).
 
 #### openPaymentChannel(payee, deposit, asset?, duration?)
 ```typescript

@@ -111,7 +111,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 
 | Module | Key Methods |
 |--------|------------|
-| `auth` | `issueOnboardingKey()`, `listOnboardingKeys()`, `revokeOnboardingKey()`, `validateOnboardingKey()` |
+| `auth` | `onboardHuman()`, `onboardDelegatedAgent()`, `onboardAutonomousAgent()`, `revokeJwt()`, `revokeDid()`, `listPendingApprovals()`, `decideApproval()` |
 | `wallet` | `createWallet()`, `getBalance()`, `sendTransaction()` |
 | `identity` | `registerHuman()`, `resolveDid()`, `setUsername()` |
 | `agent` | `register()`, `spawnAgent()`, `createSwarm()`, `delegateTask()` |
@@ -119,7 +119,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `token` | `createToken()`, `listTokens()`, `crossVmTransfer()` |
 | `nft` | `createCollection()`, `mintNft()`, `transferNft()` |
 | `bridge` | `bridgeTokens()`, `getRoutes()`, `getBridgeStatus()` |
-| `settlement` | `createEscrow()`, `releaseEscrow()`, `openPaymentChannel()` |
+| `settlement` | `createEscrow()`, `releaseEscrow()`, `refundEscrow()`, `getEscrow()`, `openPaymentChannel()` |
 | `payment` | `createChallenge()`, `payMpp()`, `payX402()` |
 | `compliance` | `registerCompliance()`, `checkCompliance()`, `freezeAddress()` |
 | `crypto` | `signMessage()`, `encrypt()`, `decrypt()`, `hashSha256()` |
@@ -139,39 +139,45 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `skill` | `listSkills()`, `registerSkill()` |
 | `tool` | `listTools()`, `registerTool()` |
 
-## Auth (Onboarding Keys)
+## Auth (OAuth 2.1 + DPoP Onboarding)
+
+Onboarding uses OAuth 2.1 (RFC 6749 successor) + DPoP-bound JWTs (RFC 9449) +
+Rich Authorization Requests (RFC 9396). Participants — humans, delegated agents
+under a human controller, and fully autonomous agents — onboard via three RPCs
+that each provision a TDIP identity + MPC wallet and return a JWT bound to a
+holder-supplied DPoP `jkt` (RFC 7638 thumbprint).
 
 ```typescript
 import { TenzroClient, TESTNET_CONFIG } from 'tenzro-sdk';
 
 const client = new TenzroClient(TESTNET_CONFIG);
 
-// Issue an onboarding key
-const key = await client.auth.issueOnboardingKey(
-  'Alice',
-  'did:tenzro:human:abc123',
-  '0x1234abcd',
-  'Human'
+// Onboard a new human — returns identity, MPC wallet, and access token
+const session = await client.auth.onboardHuman('Alice', /* dpopJkt */ undefined);
+console.log('DID:    ', (session.identity as any).did);
+console.log('Wallet: ', (session.wallet as any).address);
+console.log('Token:  ', session.access_token.slice(0, 32), '…');
+
+// Subsequent privileged calls (sign + send tx, escrow, etc.) authenticate
+// ambiently via these env vars — the SDK forwards them as
+// `Authorization: DPoP <jwt>` and `DPoP: <proof>` on every JSON-RPC call:
+process.env.TENZRO_BEARER_JWT = session.access_token;
+process.env.TENZRO_DPOP_PROOF = '<freshly minted DPoP proof>';
+
+// Onboard a delegated agent under Alice's act-chain
+const agent = await client.auth.onboardDelegatedAgent(
+  (session.identity as any).did,
+  ['inference', 'settlement'],
+  { max_transaction_value: '1000000000000000000', allowed_chains: ['tenzro'] },
 );
-console.log('Key:', key.key);
-console.log('Expires:', key.expires_at);
 
-// List all active keys
-const keys = await client.auth.listOnboardingKeys();
-for (const k of keys) {
-  console.log(`${k.name} — ${k.did} (${k.status})`);
-}
-
-// Validate a key
-const result = await client.auth.validateOnboardingKey(key.key);
-if (result.valid) {
-  console.log('Valid for DID:', result.did);
-}
-
-// Revoke a key
-const revoke = await client.auth.revokeOnboardingKey('did:tenzro:human:abc123');
-console.log('Revoked:', revoke.revoked);
+// Revoke (cascades through act-chain by DID)
+await client.auth.revokeDid((session.identity as any).did, 'lost device');
 ```
+
+Holder-side DPoP proof generation is left to the caller — sign a per-request
+JWT with your Ed25519 holder key and the JWS-compact form lands in
+`TENZRO_DPOP_PROOF`. See RFC 9449 §4.
 
 ## Live Testnet
 
