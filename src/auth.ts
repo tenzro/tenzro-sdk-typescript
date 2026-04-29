@@ -88,6 +88,51 @@ export class AuthClient {
   }
 
   /**
+   * Exchange a long-lived refresh token for a fresh access token. Mirrors
+   * OAuth 2.1 `grant_type=refresh_token`. Refresh tokens are opaque UUIDs
+   * with a 30-day TTL; access tokens are HS256 JWTs with a 1-hour TTL.
+   *
+   * If `dpopJkt` is supplied, the new access token is DPoP-bound to that
+   * thumbprint. The refresh token itself is **not** rotated in V1.
+   */
+  async refreshToken(
+    refreshToken: string,
+    dpopJkt?: string
+  ): Promise<RefreshedToken> {
+    const params: Record<string, unknown> = { refresh_token: refreshToken };
+    if (dpopJkt) params.dpop_jkt = dpopJkt;
+    return this.rpc.call<RefreshedToken>("tenzro_refreshToken", params);
+  }
+
+  /**
+   * Mint a fresh access + refresh token pair against an existing MPC
+   * wallet. Useful when the holder already provisioned a wallet via
+   * `tenzro_createWallet` and now wants OAuth-style auth credentials
+   * without re-running the full onboarding flow.
+   *
+   * Returns the same shape as the three onboard variants —
+   * {@link OnboardSession} — so it slots into existing session-management
+   * code.
+   */
+  async linkWalletForAuth(
+    walletId: string,
+    options?: {
+      dpopJkt?: string;
+      displayName?: string;
+      ttlSecs?: number;
+    }
+  ): Promise<OnboardSession> {
+    const params: Record<string, unknown> = { wallet_id: walletId };
+    if (options?.dpopJkt) params.dpop_jkt = options.dpopJkt;
+    if (options?.displayName) params.display_name = options.displayName;
+    if (options?.ttlSecs) params.ttl_secs = options.ttlSecs;
+    return this.rpc.call<OnboardSession>(
+      "tenzro_linkWalletForAuth",
+      params
+    );
+  }
+
+  /**
    * Revoke a single JWT by its `jti` claim. The token is added to the
    * engine's revocation set and any subsequent validation fails.
    */
@@ -140,23 +185,58 @@ export class AuthClient {
   }
 }
 
-/** One of the three onboarding RPCs returns this session bundle. */
+/**
+ * One of the three onboarding RPCs (or `linkWalletForAuth`) returns this
+ * session bundle.
+ */
 export interface OnboardSession {
   /** Provisioned TDIP identity record. */
   identity: unknown;
   /** Provisioned MPC wallet record (id + address). */
   wallet: unknown;
   /**
-   * OAuth 2.1 access token (DPoP-bound JWT). Send as
-   * `Authorization: DPoP <token>` on subsequent privileged calls.
+   * OAuth 2.1 access token (HS256 JWT, optionally DPoP-bound). Send as
+   * `Authorization: Bearer <token>` on subsequent privileged calls. When
+   * DPoP-bound, also send a fresh `DPoP: <proof>` header.
    */
   access_token: string;
   /** Always `"Bearer"` (RFC 6750 token type, even though DPoP-bound). */
   token_type?: string;
-  /** `true` iff the token requires a DPoP proof on every call. */
-  dpop_bound?: boolean;
-  /** Token lifetime in seconds. */
+  /** Access-token lifetime in seconds (default 3600). */
   expires_in?: number;
+  /**
+   * Long-lived refresh token (opaque UUID, 30-day TTL). Exchange via
+   * {@link AuthClient.refreshToken} when the access token expires. Treat
+   * as a secret — leakage allows minting access tokens until revocation.
+   */
+  refresh_token?: string;
+  /** Refresh-token lifetime in seconds (default 30 days). */
+  refresh_token_expires_in?: number;
+  /** `true` iff the access token requires a DPoP proof on every call. */
+  dpop_bound?: boolean;
+  /**
+   * RFC 9396 Rich Authorization Request payload echoed back, describing
+   * the act-chain and capabilities the token is authorized for.
+   */
+  authorization_details?: unknown;
+}
+
+/**
+ * Result of {@link AuthClient.refreshToken}. The refresh token is **not**
+ * rotated in V1 — only the access token changes.
+ */
+export interface RefreshedToken {
+  /** New access-token JWT. */
+  access_token: string;
+  /** Always `"Bearer"`. */
+  token_type?: string;
+  /** Access-token lifetime in seconds. */
+  expires_in?: number;
+  /**
+   * `true` iff the new access token is DPoP-bound (i.e., the request
+   * supplied `dpopJkt` and the engine encoded a `cnf.jkt` claim).
+   */
+  dpop_bound?: boolean;
 }
 
 /** Result of `revokeJwt` / `revokeDid`. */
