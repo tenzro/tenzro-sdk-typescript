@@ -38,42 +38,35 @@ console.log(result.output);
 
 ## Transaction signing
 
-The Tenzro node canonicalises the transaction hash over `Transaction::hash()`,
-which includes the server-supplied `timestamp` field. Every transaction is
-synchronously verified against its Ed25519 signature before acceptance; an
-invalid or missing signature returns JSON-RPC error `-32003`.
+Every Tenzro transaction is hybrid post-quantum signed: a classical Ed25519
+signature **and** an ML-DSA-65 (FIPS 204) signature, both verified
+synchronously by the node against the canonical `Transaction::hash()`
+preimage (which commits to the PQ public key). An invalid or missing
+signature on either leg returns JSON-RPC error `-32003`.
 
-Three supported flows:
+Two supported flows:
 
-1. **Atomic server-side sign + send (recommended):** forward the hex-encoded
-   private key to `tenzro_signAndSendTransaction` — the node assembles,
-   hashes, signs, verifies, and submits the transaction in one call.
+1. **Atomic server-side sign + send (recommended).** The SDK dispatches
+   the request via `tenzro_signAndSendTransaction`. The node identifies
+   the signing wallet from the ambient DPoP-bound bearer JWT, constructs
+   the hash preimage, signs both legs, verifies them, and submits to the
+   mempool — all in one call. Private keys never travel over the wire.
 
    ```typescript
-   const txHash = await client.rpc.call<string>(
-     'tenzro_signAndSendTransaction',
-     [{
-       private_key: '0x...',
-       from: '0x...',
-       to: '0x...',
-       value: '0x...',
-       nonce: '0x0',
-       chain_id: 1337,
-     }]
-   );
+   const txHash = await client.wallet.signAndSend({
+     from: '0x...',
+     to: '0x...',
+     value: 1_000_000_000_000_000_000n,
+   });
    ```
 
-2. **Offline sign, then submit:** call `tenzro_signTransaction` to obtain
-   `{signature, public_key, timestamp, tx_hash}` and resubmit later via
-   `eth_sendRawTransaction` with all four fields intact.
+   `client.sendTransaction(...)` and `client.wallet.signAndSend(...)`
+   are both thin wrappers over this RPC.
 
-3. **Pre-signed submission:** call `eth_sendRawTransaction` directly with
-   `signature`, `public_key`, and explicit `timestamp` matching a
-   client-computed `Transaction::hash()`. `wallet.sendTransaction()`
-   dispatches the bare `{from, to, value, gas_limit?, gas_price?}` payload
-   and will be rejected unless the caller adds these fields — prefer
-   flow (1) for typical usage. See the `crates/tenzro-cli` `wallet send`
-   command for a reference.
+2. **Offline sign, then submit.** Call `tenzro_signTransaction` to obtain
+   `{signature, public_key, pq_signature, pq_public_key, timestamp,
+   tx_hash}`, then resubmit later via `eth_sendRawTransaction` with all
+   six fields intact. Use this for batched or air-gapped submission.
 
 ## Durable state
 
@@ -115,7 +108,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `wallet` | `createWallet()`, `getBalance()`, `sendTransaction()` |
 | `identity` | `registerHuman()`, `resolveDid()`, `setUsername()` |
 | `agent` | `register()`, `spawnAgent()`, `createSwarm()`, `delegateTask()` |
-| `inference` | `listModels()`, `request()`, `estimateCost()` |
+| `inference` | `listModels()`, `request()`, `estimateCost()`, plus multi-modal helpers for forecast, vision embed/similarity, text embedding, segmentation, detection, audio ASR, video embed (modality-aware routing via `tenzro_forecast`, `tenzro_visionEmbed`, `tenzro_textEmbed`, `tenzro_segment`, `tenzro_detect`, `tenzro_transcribe`, `tenzro_videoEmbed`) |
 | `token` | `createToken()`, `listTokens()`, `crossVmTransfer()` |
 | `nft` | `createCollection()`, `mintNft()`, `transferNft()` |
 | `bridge` | `bridgeTokens()`, `getRoutes()`, `getBridgeStatus()` |

@@ -220,25 +220,43 @@ export class TenzroClient {
     return parseHex(hex);
   }
 
+  /**
+   * Sign and send a TNZO transfer atomically via the node's hybrid-signing
+   * path (`tenzro_signAndSendTransaction`).
+   *
+   * The node identifies the signing wallet from the ambient auth context
+   * (DPoP-bound bearer JWT), constructs the canonical `Transaction::hash()`
+   * preimage including the PQ public key, signs both the Ed25519 and
+   * ML-DSA-65 legs, verifies them, and submits atomically. Private keys
+   * never travel over the wire.
+   */
   async sendTransaction(params: {
     from: string;
     to: string;
     value: bigint;
     gas_limit?: number;
     gas_price?: number;
+    nonce?: number;
+    chain_id?: number;
   }): Promise<string> {
-    const tx: Record<string, unknown> = {
+    let { nonce, chain_id } = params;
+    if (nonce === undefined) {
+      const nonceHex = await this.rpc.call<string>("tenzro_getNonce", [params.from]);
+      nonce = parseHex(nonceHex);
+    }
+    if (chain_id === undefined) {
+      const chainHex = await this.rpc.call<string>("eth_chainId", []);
+      chain_id = parseHex(chainHex);
+    }
+    return this.rpc.call<string>("tenzro_signAndSendTransaction", {
       from: params.from,
       to: params.to,
-      value: `0x${params.value.toString(16)}`,
-    };
-    if (params.gas_limit !== undefined) {
-      tx.gas_limit = `0x${params.gas_limit.toString(16)}`;
-    }
-    if (params.gas_price !== undefined) {
-      tx.gas_price = `0x${params.gas_price.toString(16)}`;
-    }
-    return this.rpc.call<string>("eth_sendRawTransaction", [tx]);
+      value: params.value.toString(),
+      gas_limit: params.gas_limit ?? 21000,
+      gas_price: params.gas_price ?? 1_000_000_000,
+      nonce,
+      chain_id,
+    });
   }
 
   // Node status and network info

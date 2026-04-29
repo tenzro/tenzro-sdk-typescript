@@ -51,47 +51,43 @@ export class WalletClient {
   }
 
   /**
-   * Send a transaction from one address to another.
+   * Sign and send a TNZO transfer atomically via the node's hybrid-signing
+   * path (`tenzro_signAndSendTransaction`).
    *
-   * **Signing contract:** The Tenzro node canonicalises the transaction hash
-   * over `Transaction::hash()`, which includes the server-supplied `timestamp`
-   * field. It synchronously verifies the Ed25519 signature before accepting
-   * and returns JSON-RPC error `-32003` on an invalid or missing signature.
+   * The node identifies the signing wallet from the ambient auth context
+   * (DPoP-bound bearer JWT), constructs the canonical `Transaction::hash()`
+   * preimage including the PQ public key, signs both the Ed25519 and
+   * ML-DSA-65 legs, verifies them against the preimage, and submits to
+   * the mempool. Private keys never travel over the wire.
    *
-   * This helper dispatches the bare `{from, to, value}` payload to
-   * `eth_sendRawTransaction`; the node will reject it unless the same call
-   * also carries `signature`, `public_key`, and explicit `timestamp` matching
-   * a client-computed `Transaction::hash()`. For most workflows prefer
-   * `tenzro_signAndSendTransaction` directly via `rpc.call(...)` — that path
-   * forwards a hex-encoded private key and lets the node assemble, hash,
-   * sign, verify, and submit the transaction atomically. See the
-   * `crates/tenzro-cli` `wallet send` command for a reference implementation.
-   *
-   * @param from - Sender address
-   * @param to - Recipient address
-   * @param value - Amount to transfer (in smallest unit)
-   * @param gasLimit - Optional gas limit
-   * @param gasPrice - Optional gas price
-   * @returns Transaction hash
+   * @returns The submitted transaction hash (64-char lowercase hex).
    */
-  async sendTransaction(
-    from: Address,
-    to: Address,
-    value: bigint,
-    gasLimit?: number,
-    gasPrice?: number
-  ): Promise<string> {
-    const tx: Record<string, unknown> = {
-      from,
-      to,
-      value: `0x${value.toString(16)}`,
-    };
-    if (gasLimit !== undefined) {
-      tx.gas_limit = `0x${gasLimit.toString(16)}`;
+  async signAndSend(args: {
+    from: Address;
+    to: Address;
+    value: bigint;
+    gasLimit?: number;
+    gasPrice?: number;
+    nonce?: number;
+    chainId?: number;
+  }): Promise<string> {
+    let { nonce, chainId } = args;
+    if (nonce === undefined) {
+      const nonceHex = await this.rpc.call<string>("tenzro_getNonce", [args.from]);
+      nonce = parseInt(nonceHex, 16);
     }
-    if (gasPrice !== undefined) {
-      tx.gas_price = `0x${gasPrice.toString(16)}`;
+    if (chainId === undefined) {
+      const chainHex = await this.rpc.call<string>("eth_chainId", []);
+      chainId = parseInt(chainHex, 16);
     }
-    return this.rpc.call<string>("eth_sendRawTransaction", [tx]);
+    return this.rpc.call<string>("tenzro_signAndSendTransaction", {
+      from: args.from,
+      to: args.to,
+      value: args.value.toString(),
+      gas_limit: args.gasLimit ?? 21000,
+      gas_price: args.gasPrice ?? 1_000_000_000,
+      nonce,
+      chain_id: chainId,
+    });
   }
 }
