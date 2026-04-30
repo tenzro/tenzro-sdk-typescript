@@ -117,6 +117,7 @@ export type {
   BridgeProtocol,
   Block,
   BlockHeader,
+  BlockRange,
   Transaction,
   TransactionType,
   Account,

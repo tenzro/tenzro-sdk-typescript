@@ -462,6 +462,24 @@ export interface Block {
   hash: Hash;
 }
 
+/**
+ * Paginated block range response from `tenzro_getBlockRange`.
+ *
+ * Each block summary is a free-form object (height, hash, prev_hash,
+ * state_root, tx_root, timestamp millis, proposer, tx_count, gas_used,
+ * gas_limit). `nextHeight` and `moreAvailable` drive pagination: a sync
+ * loop keeps requesting until `moreAvailable` is false. `moreAvailable`
+ * reflects whether the chain has further blocks beyond `nextHeight`,
+ * independent of the requested `endHeight`, so it is safe to step over
+ * pruning gaps.
+ */
+export interface BlockRange {
+  blocks: Record<string, unknown>[];
+  nextHeight: BlockHeight;
+  moreAvailable: boolean;
+  localTip: BlockHeight;
+}
+
 export interface BlockHeader {
   height: BlockHeight;
   timestamp: Timestamp;

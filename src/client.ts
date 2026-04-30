@@ -37,6 +37,7 @@ import { DebridgeClient } from "./debridge";
 import { AuthClient } from "./auth";
 import {
   Block,
+  BlockRange,
   Transaction,
   NodeStatus,
   FaucetResponse,
@@ -199,6 +200,40 @@ export class TenzroClient {
 
   async getLatestBlock(): Promise<Block> {
     return this.rpc.call<Block>("tenzro_getBlock", [{ height: "latest" }]);
+  }
+
+  /**
+   * Fetch a contiguous range of blocks for catch-up sync.
+   *
+   * Returns up to `maxResults` blocks (default 64, capped at 256). Use
+   * `nextHeight` and `moreAvailable` to drive pagination. `moreAvailable`
+   * reflects whether the chain has further blocks beyond `nextHeight`,
+   * independent of the requested `endHeight`, so a sync loop can step over
+   * pruning gaps:
+   *
+   * ```ts
+   * let cur = 0;
+   * while (true) {
+   *   const r = await client.getBlockRange(cur, cur + 255, 256);
+   *   for (const b of r.blocks) { /* ... *\/ }
+   *   if (!r.moreAvailable) break;
+   *   cur = r.nextHeight;
+   * }
+   * ```
+   */
+  async getBlockRange(
+    startHeight: number,
+    endHeight: number,
+    maxResults?: number,
+  ): Promise<BlockRange> {
+    const params: Record<string, number> = {
+      startHeight,
+      endHeight,
+    };
+    if (maxResults !== undefined) {
+      params.maxResults = maxResults;
+    }
+    return this.rpc.call<BlockRange>("tenzro_getBlockRange", params);
   }
 
   async getTransaction(txHash: string): Promise<Transaction | null> {

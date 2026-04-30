@@ -36,6 +36,26 @@ const result = await client.inference.request('gemma3-270m', 'Hello!', 100);
 console.log(result.output);
 ```
 
+## Catch-up sync
+
+A node lagging behind the network can pull batches of historical blocks via
+`getBlockRange`. The call returns up to 256 blocks per request along with a
+`nextHeight` + `moreAvailable` cursor so a sync loop steps over pruning gaps:
+
+```typescript
+let cur = 0;
+while (true) {
+  const r = await client.getBlockRange(cur, cur + 255, 256);
+  for (const b of r.blocks) { /* import block */ }
+  if (!r.moreAvailable) break;
+  cur = r.nextHeight;
+}
+```
+
+`isSyncing()` reports the live gap by comparing the local tip against
+peer-reported network tips (gossiped on `tenzro/status/1.0.0`); pair it with
+`getBlockRange` to drive a catch-up loop only when needed.
+
 ## Transaction signing
 
 Every Tenzro transaction is hybrid post-quantum signed: a classical Ed25519
