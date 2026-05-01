@@ -252,7 +252,7 @@ export class AuthClient {
    * clients (CLI, agents) that don't want to also speak HTTP discovery.
    */
   async oauthDiscovery(): Promise<OAuthDiscovery> {
-    return this.rpc.call<OAuthDiscovery>("tenzro_oauthDiscovery", null);
+    return this.rpc.call<OAuthDiscovery>("tenzro_oauthDiscovery", []);
   }
 }
 
