@@ -30,10 +30,19 @@ export interface Ap2MandateVerification {
 export interface Ap2MandatePairValidation {
   /** Whether the pair is mutually consistent and both VDCs verify. */
   valid: boolean;
-  /** Verification result for the intent mandate. */
-  intent?: Ap2MandateVerification;
-  /** Verification result for the cart mandate. */
-  cart?: Ap2MandateVerification;
+  /** Mandate id of the intent VDC (set on success). */
+  intent_mandate_id?: string;
+  /** Mandate id of the cart VDC (set on success). */
+  cart_mandate_id?: string;
+  /** Principal DID — intent signer (set on success). */
+  principal_did?: string;
+  /** Agent DID — cart signer (set on success). */
+  agent_did?: string;
+  /**
+   * Whether the TDIP delegation gate ran in addition to AP2 validation.
+   * Mirrors the `enforce_delegation` request flag.
+   */
+  delegation_enforced: boolean;
   /** Reason for failure if `valid` is false. */
   error?: string;
 }
@@ -170,15 +179,28 @@ export class Ap2Client {
    * Validate an AP2 Intent+Cart mandate pair for consistency.
    *
    * Ensures the cart references the intent, amounts/items match the intent's
-   * constraints, and both VDCs verify.
+   * constraints, and both VDCs verify. When `enforceDelegation` is true,
+   * additionally cross-checks the agent's TDIP `DelegationScope` against
+   * the cart total via `IdentityRegistry::enforce_operation(agent_did,
+   * "payment", total)`. Both layers must admit the cart.
+   *
+   * @param intentVdc - The principal-signed IntentMandate VDC.
+   * @param cartVdc - The agent-signed CartMandate VDC.
+   * @param enforceDelegation - If true, run the TDIP delegation gate after
+   *   AP2 validation succeeds. Defaults to false (AP2-only).
    */
   async validateMandatePair(
     intentVdc: unknown,
-    cartVdc: unknown
+    cartVdc: unknown,
+    enforceDelegation: boolean = false
   ): Promise<Ap2MandatePairValidation> {
     return this.rpc.call<Ap2MandatePairValidation>(
       'tenzro_ap2ValidateMandatePair',
-      [{ intent_vdc: intentVdc, cart_vdc: cartVdc }]
+      [{
+        intent_vdc: intentVdc,
+        cart_vdc: cartVdc,
+        enforce_delegation: enforceDelegation,
+      }]
     );
   }
 

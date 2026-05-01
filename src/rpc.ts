@@ -153,6 +153,85 @@ export class RpcClient {
     }
   }
 
+  /**
+   * Authenticated POST to the Web API. The `/wallet/*` endpoints
+   * require a fresh DPoP proof per request that signs over the exact
+   * `(method, htu)` pair — only the wallet kernel can produce that
+   * proof, so the SDK accepts both the bearer JWT and the proof as
+   * explicit arguments instead of reading them from ambient env.
+   */
+  async postWithAuth<T>(
+    path: string,
+    body: unknown,
+    bearerJwt: string,
+    dpopProof: string,
+  ): Promise<T> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(`${this.apiEndpoint}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `DPoP ${bearerJwt}`,
+          DPoP: dpopProof,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return (await response.json()) as T;
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(`Request timed out after ${this.timeout}ms`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  /** Authenticated GET counterpart to {@link postWithAuth}. */
+  async getWithAuth<T>(
+    path: string,
+    bearerJwt: string,
+    dpopProof: string,
+  ): Promise<T> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(`${this.apiEndpoint}${path}`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: `DPoP ${bearerJwt}`,
+          DPoP: dpopProof,
+        },
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return (await response.json()) as T;
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(`Request timed out after ${this.timeout}ms`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   getEndpoint(): string {
     return this.endpoint;
   }

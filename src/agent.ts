@@ -182,18 +182,31 @@ export class AgentClient {
 
   /**
    * Spawn a new agent from a registered template.
+   *
+   * When `parentMachineDid` is supplied, the spawned agent's effective
+   * delegation scope is the strict intersection of the parent's scope and
+   * the template's spec — the child can never be broader than its parent
+   * on any axis (numeric ceilings, allow-lists, time bound).
+   *
    * @param templateId - The template to instantiate
    * @param displayName - Optional human-readable name for the spawned agent
    * @param context - Optional key-value context passed to the agent at boot
+   * @param parentMachineDid - Optional parent machine DID to attenuate against
    * @returns Spawned agent info with agent_id, template_id, name, and status
    */
   async spawnAgentTemplate(
     templateId: string,
     displayName?: string,
-    context?: Record<string, string>
+    context?: Record<string, string>,
+    parentMachineDid?: string
   ): Promise<SpawnAgentTemplateResponse> {
     return this.rpc.call<SpawnAgentTemplateResponse>("tenzro_spawnAgentTemplate", [
-      { template_id: templateId, display_name: displayName, context },
+      {
+        template_id: templateId,
+        display_name: displayName,
+        context,
+        parent_machine_did: parentMachineDid,
+      },
     ]);
   }
 

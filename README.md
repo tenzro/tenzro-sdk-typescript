@@ -132,8 +132,17 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `token` | `createToken()`, `listTokens()`, `crossVmTransfer()` |
 | `nft` | `createCollection()`, `mintNft()`, `transferNft()` |
 | `bridge` | `bridgeTokens()`, `getRoutes()`, `getBridgeStatus()` |
+| `wormhole` | `wormholeBridge()`, `getVaa()`, `redeemVaa()` |
+| `cct` | `cctListPools()`, `cctGetPool()` (Chainlink CCT v1.6+ pool registry) |
+| `erc8004` | `register8004Agent()`, `submit8004Feedback()`, `request8004Validation()`, `submit8004Validation()` (Trustless Agents Registry) |
+| `ap2` | `createAp2Mandate()`, `validateMandatePair()` (Agent Payments Protocol intent/cart/payment VDCs) |
+| `agentPayments` | Per-agent runtime spending policies (max-per-tx, daily-cap, enforce_operation pre-check) |
+| `nanopayment` | Per-token streaming micropayment channels |
+| `circuitBreaker` | Provider health management for inference routing |
+| `erc7802` | Cross-chain token mint/burn primitive |
+| `provider` | Hardware detection, model serving, scheduling |
 | `settlement` | `createEscrow()`, `releaseEscrow()`, `refundEscrow()`, `getEscrow()`, `openPaymentChannel()` |
-| `payment` | `createChallenge()`, `payMpp()`, `payX402()` |
+| `payment` | `createChallenge()`, `payMpp()`, `payX402()`, `listX402Schemes()` (pluggable scheme adapters: `exact`, `permit2`) |
 | `compliance` | `registerCompliance()`, `checkCompliance()`, `freezeAddress()` |
 | `crypto` | `signMessage()`, `encrypt()`, `decrypt()`, `hashSha256()` |
 | `tee` | `detectTee()`, `getAttestation()`, `sealData()` |

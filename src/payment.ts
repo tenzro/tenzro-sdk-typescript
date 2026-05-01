@@ -4,6 +4,7 @@ import {
   PaymentReceipt,
   PaymentSessionInfo,
   GatewayInfo,
+  X402SchemeRegistry,
 } from "./types";
 
 /**
@@ -84,6 +85,22 @@ export class PaymentClient {
    */
   async gatewayInfo(): Promise<GatewayInfo> {
     return this.rpc.call<GatewayInfo>("tenzro_paymentGatewayInfo");
+  }
+
+  /**
+   * List the x402 scheme backends registered on the connected node.
+   *
+   * Each scheme corresponds to a different verification path under the x402
+   * protocol: `tenzro-hybrid` (Ed25519 hybrid signature over canonical
+   * preimage), `exact-eip3009` (USDC EIP-3009 meta-transaction via the CDP
+   * facilitator), `permit2` (Uniswap Permit2 via the CDP facilitator), and
+   * `erc7710` (delegation redemption). Use the returned ids in the
+   * `extra.scheme` field of an x402 PaymentRequirement.
+   *
+   * @returns Snapshot of the node's x402 scheme registry
+   */
+  async listX402Schemes(): Promise<X402SchemeRegistry> {
+    return this.rpc.call<X402SchemeRegistry>("tenzro_listX402Schemes");
   }
 
   /**

@@ -708,6 +708,35 @@ export interface GatewayInfo {
   supportedAssets: string[];
 }
 
+/**
+ * Description of a single x402 scheme backend registered on the node.
+ *
+ * Returned as an element of {@link X402SchemeRegistry.schemes}. Use
+ * {@link X402SchemeDescriptor.id} as the value of `extra.scheme` in an x402
+ * PaymentRequirement.
+ */
+export interface X402SchemeDescriptor {
+  /** Scheme id (e.g. `tenzro-hybrid`, `exact-eip3009`, `permit2`, `erc7710`). */
+  id: string;
+  /** Human-readable description of the scheme's verification path. */
+  description: string;
+}
+
+/**
+ * Snapshot of the x402 scheme registry currently wired into the node.
+ *
+ * Returned by `PaymentClient.listX402Schemes()`. The `default` field is the
+ * scheme used when no `extra.scheme` is set on the PaymentRequirement.
+ */
+export interface X402SchemeRegistry {
+  /** Default scheme id when `extra.scheme` is absent. */
+  default: string;
+  /** All schemes registered on this node. */
+  schemes: X402SchemeDescriptor[];
+  /** Total number of registered schemes. */
+  count: number;
+}
+
 // ─── Task Marketplace ──────────────────────────────────────────────────────────
 
 export type TaskStatus = 'open' | 'assigned' | 'in_progress' | 'completed' | 'cancelled' | 'expired' | 'disputed';

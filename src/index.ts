@@ -138,6 +138,8 @@ export type {
   PaymentReceipt,
   PaymentSessionInfo,
   GatewayInfo,
+  X402SchemeDescriptor,
+  X402SchemeRegistry,
   ModelLoadInfo,
   ModelEndpoint,
   UsernameResult,
@@ -436,7 +438,11 @@ export type {
 // OAuth 2.1 onboarding types
 export type {
   OnboardSession,
+  RefreshedToken,
   RevokeResponse,
   PendingApprovals,
   ApprovalDecision,
+  TokenExchangeResult,
+  IntrospectionResult,
+  OAuthDiscovery,
 } from "./auth";

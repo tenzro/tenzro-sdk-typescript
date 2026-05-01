@@ -65,13 +65,28 @@ export class MarketplaceClient {
 
   /**
    * Spawn a new agent instance from a template.
+   *
+   * When `parentMachineDid` is supplied, the spawned agent's effective
+   * delegation scope is the strict intersection of the parent's scope and
+   * the template's spec — the child can never be broader than its parent
+   * on any axis (numeric ceilings, allow-lists, time bound).
+   *
    * @param templateId - The template to spawn from
    * @param name - Name for the new agent instance
+   * @param parentMachineDid - Optional parent machine DID to attenuate against
    * @returns Spawn result with agent ID
    */
-  async spawnAgentFromTemplate(templateId: string, name: string): Promise<any> {
+  async spawnAgentFromTemplate(
+    templateId: string,
+    name: string,
+    parentMachineDid?: string
+  ): Promise<any> {
     return this.rpc.call('tenzro_spawnAgentFromTemplate', [
-      { template_id: templateId, name },
+      {
+        template_id: templateId,
+        name,
+        parent_machine_did: parentMachineDid,
+      },
     ]);
   }
 
