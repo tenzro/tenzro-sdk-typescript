@@ -18,15 +18,56 @@ export interface RpcError {
   data?: unknown;
 }
 
+/**
+ * Pluggable transport for JSON-RPC calls.
+ *
+ * The default transport `fetch`es the configured endpoint with the
+ * usual `Content-Type: application/json` body. Browser-extension dApps
+ * can supply an EIP-1193 provider instead — `provider.request({method,
+ * params})` then handles auth (DPoP, session), routing, and user
+ * confirmation, and the SDK never touches a private key or token.
+ */
+export interface RpcTransport {
+  call<T>(method: string, params: unknown[] | Record<string, unknown>): Promise<T>;
+}
+
+/**
+ * Adapter that turns an EIP-1193 provider into an `RpcTransport`. Used
+ * by `TenzroClient.fromInjected()` and any direct consumer that wants
+ * to route SDK calls through `window.tenzro` rather than a network
+ * endpoint.
+ */
+export class Eip1193Transport implements RpcTransport {
+  constructor(
+    private readonly provider: {
+      request<T = unknown>(args: {
+        method: string;
+        params?: readonly unknown[] | Record<string, unknown>;
+      }): Promise<T>;
+    },
+  ) {}
+
+  async call<T>(method: string, params: unknown[] | Record<string, unknown> = []): Promise<T> {
+    return this.provider.request<T>({ method, params });
+  }
+}
+
 export class RpcClient {
   private endpoint: string;
   private apiEndpoint: string;
   private timeout: number;
   private requestId: number = 0;
+  private readonly transport: RpcTransport | undefined;
 
-  constructor(endpoint: string, apiEndpoint?: string, timeout: number = 30000) {
+  constructor(
+    endpoint: string,
+    apiEndpoint?: string,
+    timeout: number = 30000,
+    transport?: RpcTransport,
+  ) {
     this.endpoint = endpoint;
     this.timeout = timeout;
+    this.transport = transport;
 
     // Derive API endpoint from RPC endpoint if not provided
     if (apiEndpoint) {
@@ -42,6 +83,11 @@ export class RpcClient {
   }
 
   async call<T>(method: string, params: unknown[] | Record<string, unknown> = []): Promise<T> {
+    // Injected-provider path: the extension owns auth + routing.
+    if (this.transport) {
+      return this.transport.call<T>(method, params);
+    }
+
     // Use modular arithmetic to prevent overflow beyond Number.MAX_SAFE_INTEGER
     this.requestId = (this.requestId + 1) % Number.MAX_SAFE_INTEGER;
     const id = this.requestId;

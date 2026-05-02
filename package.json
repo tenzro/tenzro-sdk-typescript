@@ -37,5 +37,13 @@
   ],
   "devDependencies": {
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "@tenzro/inject": "^0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@tenzro/inject": {
+      "optional": true
+    }
   }
 }

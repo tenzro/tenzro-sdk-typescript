@@ -489,6 +489,27 @@ export interface BlockHeader {
   proposer: Address;
   signature: Signature;
   chainId: ChainId;
+  /**
+   * EIP-1559 base fee per gas in wei (hex-encoded). `null` for pre-fee-market
+   * blocks. Use `eth_feeHistory` for time-series base-fee modeling.
+   */
+  baseFeePerGas?: string | null;
+}
+
+/**
+ * EIP-1559 fee-history payload from `eth_feeHistory`.
+ *
+ * `baseFeePerGas` has length `blockCount + 1` — the trailing entry is the
+ * predicted base fee for the next block, suitable as the floor of a Type-2
+ * transaction's `maxFeePerGas`. `reward[i][j]` is the j-th requested
+ * percentile of priority tips paid in block `oldestBlock + i`; absent when
+ * no percentiles were requested.
+ */
+export interface FeeHistory {
+  oldestBlock: string;
+  baseFeePerGas: string[];
+  gasUsedRatio: number[];
+  reward?: string[][];
 }
 
 export interface Transaction {

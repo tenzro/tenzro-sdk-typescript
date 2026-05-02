@@ -41,6 +41,30 @@ export { ComplianceClient } from "./compliance";
 export { EventsClient } from "./events";
 export { DebridgeClient } from "./debridge";
 
+// SVM Cross-VM (native program) instruction builders
+export {
+  TENZRO_CROSS_VM_PROGRAM_ID,
+  TENZRO_CROSS_VM_PROGRAM_ID_BASE58,
+  TENZRO_CROSS_VM_PROGRAM_ID_HEX,
+  PROGRAM_ID_DERIVATION_DOMAIN,
+  CROSS_VM_DISCRIMINATORS,
+  CROSS_VM_PAYLOAD_SIZE,
+  VM_TYPE,
+  encodeBridgeToEvm,
+  encodeBridgeFromEvm,
+  encodeRegisterTokenPointer,
+  encodeTransferCrossVm,
+  decodeCrossVmInstruction,
+} from "./svm-cross-vm";
+export type {
+  VmType,
+  BridgeToEvmArgs,
+  BridgeFromEvmArgs,
+  RegisterTokenPointerArgs,
+  TransferCrossVmArgs,
+  CrossVmInstruction,
+} from "./svm-cross-vm";
+
 // Configuration
 export {
   TenzroConfig,
@@ -50,7 +74,8 @@ export {
 } from "./config";
 
 // RPC
-export { RpcClient, RpcCallError } from "./rpc";
+export { RpcClient, RpcCallError, Eip1193Transport } from "./rpc";
+export type { RpcTransport } from "./rpc";
 
 // Types
 export type {

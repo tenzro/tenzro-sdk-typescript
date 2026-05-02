@@ -1,5 +1,5 @@
 import { TenzroConfig, MAINNET_CONFIG, TESTNET_CONFIG, LOCAL_CONFIG } from "./config";
-import { RpcClient } from "./rpc";
+import { Eip1193Transport, RpcClient, RpcTransport } from "./rpc";
 import { WalletClient } from "./wallet";
 import { InferenceClient } from "./inference";
 import { SettlementClient } from "./settlement";
@@ -38,6 +38,7 @@ import { AuthClient } from "./auth";
 import {
   Block,
   BlockRange,
+  FeeHistory,
   Transaction,
   NodeStatus,
   FaucetResponse,
@@ -73,12 +74,13 @@ export class TenzroClient {
   private readonly rpc: RpcClient;
   private readonly config: TenzroConfig;
 
-  constructor(config: TenzroConfig) {
+  constructor(config: TenzroConfig, transport?: RpcTransport) {
     this.config = config;
     this.rpc = new RpcClient(
       config.endpoint,
       config.apiEndpoint,
-      config.timeout
+      config.timeout,
+      transport,
     );
     this.auth = new AuthClient(this.rpc);
     this.wallet = new WalletClient(this.rpc);
@@ -187,6 +189,48 @@ export class TenzroClient {
     return new TenzroClient(LOCAL_CONFIG);
   }
 
+  /**
+   * Construct a client that routes RPCs through a browser-extension
+   * provider (`window.tenzro`) discovered via EIP-6963.
+   *
+   * The Tenzro provider handles auth (DPoP-bound JWT) and CAIP-25
+   * sessions on its own — the SDK never sees the user's keys or tokens
+   * and never opens a direct fetch to `rpc.tenzro.network`. All
+   * `client.rpc.call(...)` calls become `provider.request(...)` calls.
+   *
+   * Defaults to the mainnet config for `endpoint` / `apiEndpoint` so
+   * REST surfaces (`api.tenzro.network`) still work for direct fetches
+   * (e.g., `/health`, `/faucet`). Override via `options.config` when
+   * targeting testnet or a local node.
+   *
+   * Throws if no Tenzro provider is announced within `timeoutMs`
+   * (default 3000) — wrap the call in a try/catch and render an
+   * "Install Tenzro" CTA on `TenzroNotInstalledError`.
+   *
+   * @example
+   * ```ts
+   * try {
+   *   const client = await TenzroClient.fromInjected();
+   *   const block = await client.getLatestBlock();
+   * } catch (err) {
+   *   if (err instanceof TenzroNotInstalledError) showInstallCta();
+   *   else throw err;
+   * }
+   * ```
+   */
+  static async fromInjected(options?: {
+    config?: TenzroConfig;
+    timeoutMs?: number;
+  }): Promise<TenzroClient> {
+    const { discoverEip6963Provider } = await import("@tenzro/inject/detect");
+    const detail = await discoverEip6963Provider({
+      timeoutMs: options?.timeoutMs,
+    });
+    const transport = new Eip1193Transport(detail.provider);
+    const config = options?.config ?? MAINNET_CONFIG;
+    return new TenzroClient(config, transport);
+  }
+
   // Core blockchain queries
 
   async getBlockNumber(): Promise<number> {
@@ -253,6 +297,47 @@ export class TenzroClient {
   async getChainId(): Promise<number> {
     const hex = await this.rpc.call<string>("eth_chainId");
     return parseHex(hex);
+  }
+
+  /**
+   * Returns the current effective gas price in wei (base fee + suggested
+   * priority tip). Tracks the EIP-1559 fee market — the value adjusts ±12.5%
+   * per block based on parent gas usage vs. the 15M target.
+   */
+  async getGasPrice(): Promise<bigint> {
+    const hex = await this.rpc.call<string>("eth_gasPrice");
+    return BigInt(hex);
+  }
+
+  /**
+   * Returns a suggested EIP-1559 priority fee (tip) in wei. Use this to fill
+   * `maxPriorityFeePerGas` on a Type-2 transaction; derive the base-fee
+   * portion from `getFeeHistory()` or the parent block's `baseFeePerGas`.
+   */
+  async getMaxPriorityFeePerGas(): Promise<bigint> {
+    const hex = await this.rpc.call<string>("eth_maxPriorityFeePerGas");
+    return BigInt(hex);
+  }
+
+  /**
+   * Returns base-fee history and gas-usage ratios for the last `blockCount`
+   * blocks. `newestBlock` is a hex height or `"latest"`. `rewardPercentiles`
+   * requests per-block tip percentiles (e.g. `[25, 50, 75]`); pass `undefined`
+   * to omit. `baseFeePerGas` returns `blockCount + 1` entries — the trailing
+   * entry is the predicted base fee for the next block. Used by wallets to
+   * model `maxFeePerGas` and `maxPriorityFeePerGas`.
+   */
+  async getFeeHistory(
+    blockCount: number,
+    newestBlock: string = "latest",
+    rewardPercentiles?: number[],
+  ): Promise<FeeHistory> {
+    const params: unknown[] = [
+      `0x${blockCount.toString(16)}`,
+      newestBlock,
+      rewardPercentiles ?? [],
+    ];
+    return this.rpc.call<FeeHistory>("eth_feeHistory", params);
   }
 
   /**

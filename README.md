@@ -36,6 +36,37 @@ const result = await client.inference.request('gemma3-270m', 'Hello!', 100);
 console.log(result.output);
 ```
 
+## Browser-extension provider
+
+Browser dApps can route SDK calls through `window.tenzro` (the
+[@tenzro/inject](../tenzro-inject/README.md) provider) instead of opening
+a direct fetch to the node. The extension owns auth (DPoP-bound JWT),
+session management (CAIP-25), and user confirmation:
+
+```typescript
+import { TenzroClient } from 'tenzro-sdk';
+
+try {
+  const client = await TenzroClient.fromInjected();
+  const block = await client.getLatestBlock();
+} catch (err) {
+  // The detect helper throws TenzroNotInstalledError (code:
+  // "TENZRO_NOT_INSTALLED") when no provider responds within the
+  // timeout — render an install CTA instead of bubbling up.
+  if (err && (err as { code?: string }).code === 'TENZRO_NOT_INSTALLED') {
+    showInstallCta();
+  } else {
+    throw err;
+  }
+}
+```
+
+`fromInjected()` discovers the Tenzro provider via EIP-6963
+(`rdns: network.tenzro.wallet`), wraps it in an `Eip1193Transport`, and
+returns a `TenzroClient` whose `rpc.call(...)` becomes
+`provider.request(...)`. Install `@tenzro/inject` alongside the SDK to
+opt into this path; Node consumers don't need it.
+
 ## Catch-up sync
 
 A node lagging behind the network can pull batches of historical blocks via
@@ -160,6 +191,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `canton` | `listDomains()`, `submitCommand()` |
 | `skill` | `listSkills()`, `registerSkill()` |
 | `tool` | `listTools()`, `registerTool()` |
+| `svm-cross-vm` | Tenzro Cross-VM SVM-native program: `TENZRO_CROSS_VM_PROGRAM_ID_BASE58`, `encodeBridgeToEvm()`, `encodeBridgeFromEvm()`, `encodeRegisterTokenPointer()`, `encodeTransferCrossVm()`, `decodeCrossVmInstruction()` |
 
 ## Auth (OAuth 2.1 + DPoP Onboarding)
 
