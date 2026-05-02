@@ -1,4 +1,5 @@
 import { TenzroConfig, MAINNET_CONFIG, TESTNET_CONFIG, LOCAL_CONFIG } from "./config";
+import { discoverEip6963Provider } from "./eip6963";
 import { Eip1193Transport, RpcClient, RpcTransport } from "./rpc";
 import { WalletClient } from "./wallet";
 import { InferenceClient } from "./inference";
@@ -221,10 +222,11 @@ export class TenzroClient {
   static async fromInjected(options?: {
     config?: TenzroConfig;
     timeoutMs?: number;
+    rdns?: string;
   }): Promise<TenzroClient> {
-    const { discoverEip6963Provider } = await import("@tenzro/inject/detect");
     const detail = await discoverEip6963Provider({
       timeoutMs: options?.timeoutMs,
+      rdns: options?.rdns,
     });
     const transport = new Eip1193Transport(detail.provider);
     const config = options?.config ?? MAINNET_CONFIG;

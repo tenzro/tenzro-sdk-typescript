@@ -38,22 +38,19 @@ console.log(result.output);
 
 ## Browser-extension provider
 
-Browser dApps can route SDK calls through `window.tenzro` (the
-[@tenzro/inject](../tenzro-inject/README.md) provider) instead of opening
-a direct fetch to the node. The extension owns auth (DPoP-bound JWT),
-session management (CAIP-25), and user confirmation:
+Browser dApps can route SDK calls through `window.tenzro` (any
+EIP-6963-announcing Tenzro extension) instead of opening a direct
+fetch to the node. The extension owns auth (DPoP-bound JWT), session
+management (CAIP-25), and user confirmation:
 
 ```typescript
-import { TenzroClient } from 'tenzro-sdk';
+import { TenzroClient, TenzroNotInstalledError } from 'tenzro-sdk';
 
 try {
   const client = await TenzroClient.fromInjected();
   const block = await client.getLatestBlock();
 } catch (err) {
-  // The detect helper throws TenzroNotInstalledError (code:
-  // "TENZRO_NOT_INSTALLED") when no provider responds within the
-  // timeout — render an install CTA instead of bubbling up.
-  if (err && (err as { code?: string }).code === 'TENZRO_NOT_INSTALLED') {
+  if (err instanceof TenzroNotInstalledError) {
     showInstallCta();
   } else {
     throw err;
@@ -62,10 +59,11 @@ try {
 ```
 
 `fromInjected()` discovers the Tenzro provider via EIP-6963
-(`rdns: network.tenzro.wallet`), wraps it in an `Eip1193Transport`, and
-returns a `TenzroClient` whose `rpc.call(...)` becomes
-`provider.request(...)`. Install `@tenzro/inject` alongside the SDK to
-opt into this path; Node consumers don't need it.
+(default `rdns: network.tenzro.wallet`, override with the `rdns`
+option), wraps it in an `Eip1193Transport`, and returns a
+`TenzroClient` whose `rpc.call(...)` becomes `provider.request(...)`.
+No extra dependency to install — the EIP-6963 listener is bundled in
+the SDK. Node consumers can ignore this entrypoint entirely.
 
 ## Catch-up sync
 

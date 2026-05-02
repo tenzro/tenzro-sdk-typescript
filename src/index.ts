@@ -77,6 +77,18 @@ export {
 export { RpcClient, RpcCallError, Eip1193Transport } from "./rpc";
 export type { RpcTransport } from "./rpc";
 
+// EIP-6963 injected-provider discovery (used by TenzroClient.fromInjected)
+export {
+  discoverEip6963Provider,
+  TenzroNotInstalledError,
+  TENZRO_PROVIDER_RDNS,
+} from "./eip6963";
+export type {
+  EIP1193Provider,
+  EIP6963ProviderInfo,
+  EIP6963ProviderDetail,
+} from "./eip6963";
+
 // Types
 export type {
   MicroNodeCapabilities,
