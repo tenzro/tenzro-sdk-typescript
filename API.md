@@ -80,10 +80,15 @@ Gets the most recent block.
 
 #### getTransaction(hash)
 ```typescript
-async getTransaction(hash: Hash): Promise<Transaction>
+async getTransaction(hash: Hash): Promise<Transaction | null>
 ```
 
-Gets a transaction by hash.
+Gets a transaction by hash. Resolves from finalized storage first, then falls
+back to the consensus mempool. The returned object's `status` field is
+`"pending"` while the transaction is in-mempool and `"finalized"` once it has
+been included in a block — callers polling immediately after broadcast can
+distinguish "not yet finalized" from "unknown hash" (the call returns `null`
+only when the hash is unknown to both storage and mempool).
 
 #### getTransactionReceipt(hash)
 ```typescript
@@ -200,7 +205,12 @@ Manages wallets and transaction signing.
 async createWallet(): Promise<WalletInfo>
 ```
 
-Creates a new wallet with generated keys.
+Provisions a chain-agnostic 2-of-3 Ed25519 MPC wallet. Tenzro wallets are not
+per-chain — a single wallet projects into EVM, SVM, and Canton via the
+pointer-token model, so there is no `chain` parameter. Use
+`client.token.crossVmTransfer` / `client.token.wrapTnzo` for VM-specific
+operations, and the bridge clients (`client.bridge`, `client.debridge`,
+`client.wormhole`, `client.lifi`) for sends to external chains.
 
 #### importWallet(privateKey)
 ```typescript

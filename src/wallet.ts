@@ -9,7 +9,13 @@ export class WalletClient {
   constructor(private rpc: RpcClient) {}
 
   /**
-   * Create a new MPC threshold wallet (default 2-of-3).
+   * Create a new chain-agnostic 2-of-3 Ed25519 MPC wallet.
+   *
+   * Tenzro wallets are chain-agnostic by design — a single wallet projects
+   * into EVM, SVM, and Canton via the pointer-token model, so there is no
+   * per-chain parameter. Use `crossVmTransfer` / `wrapTnzo` for VM-specific
+   * operations and the bridge clients (LayerZero V2, Chainlink CCIP, deBridge,
+   * Wormhole NTT) for sends to external chains.
    */
   async createWallet(): Promise<WalletInfo> {
     return this.rpc.call<WalletInfo>("tenzro_createWallet");

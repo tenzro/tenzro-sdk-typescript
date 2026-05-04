@@ -97,15 +97,20 @@ Two supported flows:
 
 1. **Atomic server-side sign + send (recommended).** The SDK dispatches
    the request via `tenzro_signAndSendTransaction`. The node identifies
-   the signing wallet from the ambient DPoP-bound bearer JWT, constructs
-   the hash preimage, signs both legs, verifies them, and submits to the
-   mempool — all in one call. Private keys never travel over the wire.
+   the signing wallet from the ambient DPoP-bound bearer JWT, looks up
+   the live nonce and gas price, constructs the hash preimage, signs
+   both legs, verifies them, and submits to the mempool — all in one
+   call. Private keys never travel over the wire. `nonce`, `chainId`,
+   and `gasPrice` are optional; `value` accepts the alias `amount` for
+   parity with the desktop and CLI clients. Self-sends (`from === to`)
+   return a `cannot transfer to self` validation error.
 
    ```typescript
    const txHash = await client.wallet.signAndSend({
      from: '0x...',
      to: '0x...',
      value: 1_000_000_000_000_000_000n,
+     // nonce, chainId, gasPrice all optional — looked up live
    });
    ```
 
@@ -116,6 +121,23 @@ Two supported flows:
    `{signature, public_key, pq_signature, pq_public_key, timestamp,
    tx_hash}`, then resubmit later via `eth_sendRawTransaction` with all
    six fields intact. Use this for batched or air-gapped submission.
+
+## Wallet model
+
+`client.wallet.create()` provisions a chain-agnostic 2-of-3 Ed25519 MPC
+wallet. Tenzro wallets are not per-chain — a single wallet projects into
+EVM, SVM, and Canton via the pointer-token model, so there is no `chain`
+parameter. VM-specific operations are exposed through `client.token`
+(`crossVmTransfer`, `wrapTnzo`); transfers to external chains use
+`client.bridge` (LayerZero V2, Chainlink CCIP), `client.debridge`,
+`client.wormhole`, or `client.lifi`.
+
+`client.getTransaction(hash)` resolves from finalized storage first, then
+falls back to the consensus mempool — `status` is `"pending"` while the
+transaction is in-mempool and `"finalized"` once block-included, so callers
+polling immediately after broadcast can distinguish "not yet finalized" from
+"unknown hash" (the call returns `null` only when the hash is unknown to
+both storage and mempool).
 
 ## Durable state
 

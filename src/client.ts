@@ -282,6 +282,16 @@ export class TenzroClient {
     return this.rpc.call<BlockRange>("tenzro_getBlockRange", params);
   }
 
+  /**
+   * Get a transaction by hash.
+   *
+   * Resolves from finalized storage first, then falls back to the consensus
+   * mempool. The returned object's `status` field is `"pending"` while the
+   * transaction is in-mempool and `"finalized"` once it has been included in
+   * a block — callers polling immediately after broadcast can therefore
+   * distinguish "not yet finalized" from "unknown hash" (the RPC returns
+   * `null` only when the hash is unknown to both storage and mempool).
+   */
   async getTransaction(txHash: string): Promise<Transaction | null> {
     return this.rpc.call<Transaction | null>("tenzro_getTransaction", [txHash]);
   }
