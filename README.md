@@ -188,6 +188,14 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `erc8004` | `register8004Agent()`, `submit8004Feedback()`, `request8004Validation()`, `submit8004Validation()` (Trustless Agents Registry) |
 | `ap2` | `createAp2Mandate()`, `validateMandatePair()` (Agent Payments Protocol intent/cart/payment VDCs) |
 | `agentPayments` | Per-agent runtime spending policies (max-per-tx, daily-cap, enforce_operation pre-check) |
+| `bond` | AgentBond stake operations (Spec 9): `getAgentBond()`, `listAgentBonds()`, `postAgentBond()`, `increaseAgentBond()`, `withdrawAgentBond()` |
+| `insurance` | AgentBond insurance claims (Spec 9): `fileInsuranceClaim()`, `listInsuranceClaims()`, `getInsurancePool()` |
+| `lifecycle` | Agent lifecycle + kill-switch audit trail: `getAgentLifecycle()`, `listKillSwitchReceiptsByTarget()` |
+| `principalChain` | Receipt principal-chain queries (Spec 5): walk every receipt back to its human/organisational controller |
+| `cortex` | Reasoning-tier inference with TEE / TEE+ZK attestation; `DEFAULT_CORTEX_PRICING`, `computeCortexCost()` |
+| `adaptiveBurn` | Adaptive-burn governance dial — `getBurnRateConfig()`, `getSupplyMetrics()`, `getBurnRateRecommendation()` |
+| `seedAgent` | SeedAgent treasury earmark + protocol-owned bootstrap agent registry (Spec 10) |
+| `quota` | Dual-rail burn quota (Spec 3), prioritised mempool lanes, hot-state contention, DA backend registry |
 | `nanopayment` | Per-token streaming micropayment channels |
 | `circuitBreaker` | Provider health management for inference routing |
 | `erc7802` | Cross-chain token mint/burn primitive |
