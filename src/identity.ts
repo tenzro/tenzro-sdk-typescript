@@ -1,5 +1,5 @@
 import { RpcClient } from "./rpc";
-import { IdentityInfo, IdentityType, DidDocument, JoinAsMicroNodeResponse, UsernameResult } from "./types";
+import { IdentityInfo, IdentityType, DidDocument, JoinAsMicroNodeResponse, UsernameResult, Jwk, JwkSet } from "./types";
 
 /**
  * Client for Tenzro Decentralized Identity Protocol (TDIP) operations.
@@ -173,5 +173,25 @@ export class IdentityClient {
     return this.rpc.call<JoinAsMicroNodeResponse>("tenzro_joinAsMicroNode", [
       params ?? {},
     ]);
+  }
+
+  /**
+   * List the public JWK Set published by this node (RFC 7517 / RFC 9421 keyid resolution).
+   *
+   * Each entry's `kid` is the canonical RFC 9421 keyid in the form
+   * `<did>#<key_fragment>` and resolves directly via `getJwk`.
+   *
+   * Equivalent to GET `/.well-known/jwks.json` on the verification API.
+   */
+  async listJwks(): Promise<JwkSet> {
+    return this.rpc.call<JwkSet>("tenzro_listAgentJwks", []);
+  }
+
+  /**
+   * Look up a single JWK by `kid` (RFC 9421 keyid resolution).
+   * @param keyid - Typically `<did>#<key_fragment>`
+   */
+  async getJwk(keyid: string): Promise<Jwk> {
+    return this.rpc.call<Jwk>("tenzro_getAgentJwk", [keyid]);
   }
 }

@@ -424,7 +424,7 @@ happens server-side against the holder's MPC wallet — no raw private key
 crosses the SDK surface.
 
 Funds are locked at a deterministically-derived vault address by the Native VM.
-The `escrow_id` is derived as `SHA-256("tenzro/escrow/id/v1" || payer || nonce_le)`
+The `escrow_id` is derived as `SHA-256("tenzro/escrow/id" || payer || nonce_le)`
 and emitted in the receipt log. `releaseConditions` accepts: `"timeout"` |
 `"provider"` | `"consumer"` | `"both"` | `"verifier"` | `"custom"`. Returns the
 transaction hash.

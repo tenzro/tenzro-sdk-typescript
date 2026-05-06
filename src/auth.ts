@@ -156,6 +156,18 @@ export class AuthClient {
   }
 
   /**
+   * TDIP/GDPR Article 17 right-to-erasure. Hard-deletes a previously
+   * revoked identity from the registry and persistent storage.
+   *
+   * The identity MUST already be `Revoked` — call {@link revokeDid} first,
+   * allow the cascading revocation broadcaster to propagate, and then
+   * call this. Distinct from `revokeDid` which is a logical delete.
+   */
+  async forgetIdentity(did: string): Promise<{ did: string; status: string; note: string }> {
+    return this.rpc.call("tenzro_forgetIdentity", { did });
+  }
+
+  /**
    * List approvals in `Pending` status for the given approver DID.
    * Returns the records the approver should review and decide on.
    */

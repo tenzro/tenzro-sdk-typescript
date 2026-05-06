@@ -43,7 +43,7 @@ export interface HardwareProfile {
  * A provider discovered on the Tenzro Network via gossipsub announcements.
  *
  * Providers broadcast a `ProviderAnnouncement` every 60 seconds on the
- * `tenzro/providers/1.0.0` gossipsub topic. All peers merge incoming
+ * `tenzro/providers` gossipsub topic. All peers merge incoming
  * announcements into their `network_providers` cache so any node can
  * discover every provider without a central registry.
  *
@@ -308,7 +308,7 @@ export class ProviderClient {
    *
    * Queries the `tenzro_listProviders` JSON-RPC method which merges:
    * - The local node's own provider info (if it is serving models)
-   * - All remote providers discovered via the `tenzro/providers/1.0.0`
+   * - All remote providers discovered via the `tenzro/providers`
    *   gossipsub topic (announcements refreshed every 60 seconds)
    *
    * @param providerType - Optional filter by provider type (e.g. "llm", "tee", "general")

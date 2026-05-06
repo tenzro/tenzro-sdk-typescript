@@ -1583,6 +1583,48 @@ export interface UsernameResult {
   did: string;
 }
 
+// ─── JSON Web Keys (RFC 7517 / RFC 9421 keyid resolution) ─────────────────
+
+/**
+ * JSON Web Key (RFC 7517 §4) as published by `tenzro_listAgentJwks` /
+ * `tenzro_getAgentJwk`.
+ *
+ * Only the public-key half is ever published. Algorithm-dependent fields
+ * (`x`, `y`, `n`, `e`, `crv`) are populated according to RFC 7518; unused
+ * fields are omitted from the wire form.
+ */
+export interface Jwk {
+  /** Key type — `OKP` (Ed25519), `EC` (P-256, P-384), `RSA`. */
+  kty: string;
+  /** Key ID — canonical form `<did>#<key_fragment>` for Tenzro keys. */
+  kid?: string;
+  /** JWA algorithm identifier (`EdDSA`, `ES256`, `ES384`, `PS256`, ...). */
+  alg?: string;
+  /** Curve identifier for `OKP` / `EC` keys (`Ed25519`, `P-256`, `P-384`). */
+  crv?: string;
+  /** Public-key use — typically `sig`. */
+  use?: string;
+  /** Permitted key operations (e.g., `["verify"]`). */
+  key_ops?: string[];
+  /** X coordinate (`OKP` raw key, `EC` x). */
+  x?: string;
+  /** Y coordinate (`EC` only). */
+  y?: string;
+  /** RSA modulus (`RSA` only). */
+  n?: string;
+  /** RSA public exponent (`RSA` only). */
+  e?: string;
+}
+
+/**
+ * JSON Web Key Set (RFC 7517 §5) — the wire format published at
+ * `/.well-known/jwks.json` and returned from `tenzro_listAgentJwks`.
+ */
+export interface JwkSet {
+  /** The set of published JWKs. */
+  keys: Jwk[];
+}
+
 // ─── Skill Usage ──────────────────────────────────────────────────────────
 
 /** Usage statistics for a skill. */

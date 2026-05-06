@@ -82,7 +82,7 @@ while (true) {
 ```
 
 `isSyncing()` reports the live gap by comparing the local tip against
-peer-reported network tips (gossiped on `tenzro/status/1.0.0`); pair it with
+peer-reported network tips (gossiped on `tenzro/status`); pair it with
 `getBlockRange` to drive a catch-up loop only when needed.
 
 ## Transaction signing
@@ -253,11 +253,25 @@ Holder-side DPoP proof generation is left to the caller — sign a per-request
 JWT with your Ed25519 holder key and the JWS-compact form lands in
 `TENZRO_DPOP_PROOF`. See RFC 9449 §4.
 
+## Examples
+
+```bash
+npx ts-node examples/quickstart.ts
+npx ts-node examples/advanced.ts
+npx ts-node examples/marketplace.ts        # 14 sections covering tasks, agents, skills, tools, NFTs, governance, payments, bridges
+npx ts-node examples/app_developer.ts
+npx ts-node examples/auth-session.ts
+npx ts-node examples/cortex.ts
+```
+
+See the [examples/](examples/) directory and [Tenzro Cookbook](https://github.com/tenzro/tenzro-cookbook).
+
 ## Live Testnet
 
 | Endpoint | URL |
 |----------|-----|
 | JSON-RPC | `https://rpc.tenzro.network` |
+| Web API | `https://api.tenzro.network` |
 | MCP Server | `https://mcp.tenzro.network/mcp` |
 | A2A Server | `https://a2a.tenzro.network` |
 

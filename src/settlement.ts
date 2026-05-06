@@ -32,7 +32,7 @@ export class SettlementClient {
    * Create an on-chain escrow via a signed `CreateEscrow` transaction.
    *
    * The escrow_id is derived deterministically by the VM as
-   * `SHA-256("tenzro/escrow/id/v1" || payer || nonce_le)` and the funds are
+   * `SHA-256("tenzro/escrow/id" || payer || nonce_le)` and the funds are
    * locked at a vault address derived from that escrow_id. Only the signing
    * payer can later release or refund.
    *
@@ -206,6 +206,24 @@ export class SettlementClient {
     const escrowIdBytes = parseEscrowId(escrowId);
     const escrowIdHex = "0x" + bytesToHex(escrowIdBytes);
     return this.rpc.call("tenzro_getEscrow", [{ escrow_id: escrowIdHex }]);
+  }
+
+  /**
+   * List every escrow whose `payer` matches the given address.
+   * @param payer - Payer address (the wallet that created the escrow)
+   * @returns Array of escrow records (empty if payer has none)
+   */
+  async listEscrowsByPayer(payer: string): Promise<any[]> {
+    return this.rpc.call<any[]>("tenzro_listEscrowsByPayer", [payer]);
+  }
+
+  /**
+   * List every escrow whose `payee` matches the given address.
+   * @param payee - Payee address (the recipient on successful release)
+   * @returns Array of escrow records (empty if payee has none)
+   */
+  async listEscrowsByPayee(payee: string): Promise<any[]> {
+    return this.rpc.call<any[]>("tenzro_listEscrowsByPayee", [payee]);
   }
 
   /** Internal helper: fetch nonce + chain_id with safe defaults. */

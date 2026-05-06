@@ -9,7 +9,7 @@
  * Authoritative source: `crates/tenzro-vm/src/svm/cross_vm.rs`. Constants here
  * MUST stay byte-identical to the Rust constants.
  *
- * - **Program ID**: `SHA-256("tenzro/svm/program/cross_vm/v1")`
+ * - **Program ID**: `SHA-256("tenzro/svm/program/cross_vm")`
  *   - Hex: `918f858b6b0dd134e9a1fcb73002428c5197093e76e536badc60382bb9f8ac78`
  *   - Base58: `AoD3kebB2bYjLKyJtaqkyXqwJy4oQ949SnVhMwEYzGXR`
  *
@@ -37,7 +37,7 @@ export const TENZRO_CROSS_VM_PROGRAM_ID: Uint8Array = new Uint8Array([
 ]);
 
 /** Domain string used to derive the program ID. */
-export const PROGRAM_ID_DERIVATION_DOMAIN = "tenzro/svm/program/cross_vm/v1";
+export const PROGRAM_ID_DERIVATION_DOMAIN = "tenzro/svm/program/cross_vm";
 
 /**
  * 8-byte Anchor-style instruction discriminators

@@ -3,6 +3,7 @@ import { discoverEip6963Provider } from "./eip6963";
 import { Eip1193Transport, RpcClient, RpcTransport } from "./rpc";
 import { WalletClient } from "./wallet";
 import { InferenceClient } from "./inference";
+import { CortexClient } from "./cortex";
 import { SettlementClient } from "./settlement";
 import { AgentClient } from "./agent";
 import { GovernanceClient } from "./governance";
@@ -36,6 +37,13 @@ import { ComplianceClient } from "./compliance";
 import { EventsClient } from "./events";
 import { DebridgeClient } from "./debridge";
 import { AuthClient } from "./auth";
+import { BondClient } from "./bond";
+import { InsuranceClient } from "./insurance";
+import { AdaptiveBurnClient } from "./adaptive-burn";
+import { SeedAgentClient } from "./seed-agent";
+import { QuotaClient } from "./quota";
+import { PrincipalChainClient } from "./principal-chain";
+import { LifecycleClient } from "./lifecycle";
 import {
   Block,
   BlockRange,
@@ -54,6 +62,7 @@ export class TenzroClient {
   public readonly auth: AuthClient;
   public readonly wallet: WalletClient;
   public readonly inference: InferenceClient;
+  public readonly cortex: CortexClient;
   public readonly settlement: SettlementClient;
   public readonly agent: AgentClient;
   public readonly governance: GovernanceClient;
@@ -86,6 +95,7 @@ export class TenzroClient {
     this.auth = new AuthClient(this.rpc);
     this.wallet = new WalletClient(this.rpc);
     this.inference = new InferenceClient(this.rpc);
+    this.cortex = new CortexClient(this.rpc);
     this.settlement = new SettlementClient(this.rpc);
     this.agent = new AgentClient(this.rpc);
     this.governance = new GovernanceClient(this.rpc);
@@ -176,6 +186,41 @@ export class TenzroClient {
   /** Access the deBridge cross-chain client. */
   debridge(): DebridgeClient {
     return new DebridgeClient(this.rpc);
+  }
+
+  /** Access the AgentBond client (Spec 9). */
+  bond(): BondClient {
+    return new BondClient(this.rpc);
+  }
+
+  /** Access the AgentBond insurance client (Spec 9). */
+  insurance(): InsuranceClient {
+    return new InsuranceClient(this.rpc);
+  }
+
+  /** Access the adaptive-burn governance dial client. */
+  adaptiveBurn(): AdaptiveBurnClient {
+    return new AdaptiveBurnClient(this.rpc);
+  }
+
+  /** Access the SeedAgent treasury / charter / registry client (Spec 10). */
+  seedAgent(): SeedAgentClient {
+    return new SeedAgentClient(this.rpc);
+  }
+
+  /** Access the node quota / mempool / DA client (Spec 3, 6). */
+  quota(): QuotaClient {
+    return new QuotaClient(this.rpc);
+  }
+
+  /** Access the receipt principal-chain client (Spec 5). */
+  principalChain(): PrincipalChainClient {
+    return new PrincipalChainClient(this.rpc);
+  }
+
+  /** Access the agent lifecycle / kill-switch client. */
+  lifecycle(): LifecycleClient {
+    return new LifecycleClient(this.rpc);
   }
 
   static mainnet(): TenzroClient {

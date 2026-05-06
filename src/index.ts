@@ -8,6 +8,7 @@ export { AppClient } from "./app";
 export { AuthClient } from "./auth";
 export { WalletClient } from "./wallet";
 export { InferenceClient } from "./inference";
+export { CortexClient } from "./cortex";
 export { SettlementClient } from "./settlement";
 export { AgentClient } from "./agent";
 export { GovernanceClient } from "./governance";
@@ -40,6 +41,13 @@ export { NftClient } from "./nft";
 export { ComplianceClient } from "./compliance";
 export { EventsClient } from "./events";
 export { DebridgeClient } from "./debridge";
+export { BondClient } from "./bond";
+export { InsuranceClient } from "./insurance";
+export { AdaptiveBurnClient } from "./adaptive-burn";
+export { SeedAgentClient } from "./seed-agent";
+export { QuotaClient } from "./quota";
+export { PrincipalChainClient } from "./principal-chain";
+export { LifecycleClient } from "./lifecycle";
 
 // SVM Cross-VM (native program) instruction builders
 export {
@@ -155,6 +163,7 @@ export type {
   Block,
   BlockHeader,
   BlockRange,
+  FeeHistory,
   Transaction,
   TransactionType,
   Account,
@@ -180,6 +189,8 @@ export type {
   ModelLoadInfo,
   ModelEndpoint,
   UsernameResult,
+  Jwk,
+  JwkSet,
 } from "./types";
 
 // Provider types
@@ -285,6 +296,7 @@ export type {
   Erc8004AgentId,
   Erc8004Calldata,
   Erc8004Agent,
+  Erc8004Metadata,
 } from "./erc8004";
 
 // Wormhole types
@@ -453,6 +465,20 @@ export type {
   ProvingKey,
   CircuitInfo,
 } from "./zk";
+
+// Cortex (recurrent-depth reasoning) types
+export type {
+  ReasoningTier,
+  AttestationRequirement,
+  CortexMetadata,
+  CortexReceipt,
+  CortexRequest,
+  CortexResponse,
+  CortexWorkerEntry,
+  CortexWorkerList,
+  CortexPricing,
+} from "./cortex";
+export { DEFAULT_CORTEX_PRICING, computeCortexCost } from "./cortex";
 
 // Custody types
 export type {
