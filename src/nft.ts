@@ -107,21 +107,21 @@ export class NftClient {
    * Mint a new NFT in an existing collection.
    * @param collectionId - Collection identifier
    * @param tokenId - Token ID to mint
-   * @param recipient - Recipient address
+   * @param to - Recipient address
    * @param metadataUri - Metadata URI (e.g. IPFS CID or HTTPS URL)
    * @returns Mint result with token ID and transaction hash
    */
   async mintNft(
     collectionId: string,
     tokenId: string,
-    recipient: string,
+    to: string,
     metadataUri: string
   ): Promise<NftMintResult> {
     return this.rpc.call<NftMintResult>('tenzro_mintNft', [
       {
         collection_id: collectionId,
         token_id: tokenId,
-        recipient,
+        to,
         metadata_uri: metadataUri,
       },
     ]);
