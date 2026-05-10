@@ -44,14 +44,16 @@ export class BridgeClient {
     token: string,
     amount: string,
     recipient: string,
-    adapter?: string
+    adapter?: string,
+    sender?: string
   ): Promise<BridgeTransfer> {
     return this.rpc.call<BridgeTransfer>('tenzro_bridgeTokens', [
       {
-        from_chain: fromChain,
-        to_chain: toChain,
-        token,
+        source_chain: fromChain,
+        dest_chain: toChain,
+        asset: token,
         amount,
+        sender: sender ?? recipient,
         recipient,
         adapter,
       },
@@ -71,7 +73,7 @@ export class BridgeClient {
     token?: string
   ): Promise<BridgeRoute[]> {
     return this.rpc.call<BridgeRoute[]>('tenzro_getBridgeRoutes', [
-      { from_chain: fromChain, to_chain: toChain, token },
+      { source_chain: fromChain, dest_chain: toChain, token },
     ]);
   }
 
