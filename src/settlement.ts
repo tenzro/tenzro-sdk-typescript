@@ -24,7 +24,7 @@ export class SettlementClient {
    */
   async getSettlement(receiptId: string): Promise<SettlementReceipt | null> {
     return this.rpc.call<SettlementReceipt | null>("tenzro_getSettlement", [
-      receiptId,
+      { receipt_id: receiptId },
     ]);
   }
 
@@ -214,7 +214,7 @@ export class SettlementClient {
    * @returns Array of escrow records (empty if payer has none)
    */
   async listEscrowsByPayer(payer: string): Promise<any[]> {
-    return this.rpc.call<any[]>("tenzro_listEscrowsByPayer", [payer]);
+    return this.rpc.call<any[]>("tenzro_listEscrowsByPayer", [{ payer }]);
   }
 
   /**
@@ -223,7 +223,7 @@ export class SettlementClient {
    * @returns Array of escrow records (empty if payee has none)
    */
   async listEscrowsByPayee(payee: string): Promise<any[]> {
-    return this.rpc.call<any[]>("tenzro_listEscrowsByPayee", [payee]);
+    return this.rpc.call<any[]>("tenzro_listEscrowsByPayee", [{ payee }]);
   }
 
   /** Internal helper: fetch nonce + chain_id with safe defaults. */
@@ -259,8 +259,8 @@ export class SettlementClient {
   async openPaymentChannel(payee: string, deposit: bigint): Promise<string> {
     return this.rpc.call<string>("tenzro_openPaymentChannel", [
       {
-        payee,
-        deposit: deposit.toString(),
+        counterparty: payee,
+        deposit: Number(deposit),
       },
     ]);
   }
