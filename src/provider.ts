@@ -229,22 +229,29 @@ export class ProviderClient {
    * Register as a provider on the network
    *
    * Model/inference providers do not need to stake TNZO — staking is only
-   * required for validators. The `stakeAmount` parameter defaults to 0.
+   * required for validators. The `stake` parameter defaults to "0" (wei).
    *
+   * @param providerType - One of "validator", "model_provider", "tee_provider", "storage_provider"
    * @param models - List of model IDs to serve
-   * @param stakeAmount - Amount of TNZO to stake (default: 0, not required for model providers)
+   * @param stake - Stake amount in wei (10^-18 TNZO) as decimal string. Default "0".
    * @returns Transaction hash of the registration
    *
    * @example
    * ```typescript
    * // Register as a model provider — no staking required
    * const models = ["gemma3-270m"];
-   * const txHash = await client.provider.register(models);
+   * const txHash = await client.provider.register("model_provider", models);
    * console.log("Registration tx:", txHash);
    * ```
    */
-  async register(models: string[], stakeAmount: number = 0): Promise<string> {
-    return await this.rpc.call<string>("tenzro_registerProvider", [models, stakeAmount]);
+  async register(
+    providerType: string,
+    models: string[],
+    stake: string = "0",
+  ): Promise<string> {
+    return await this.rpc.call<string>("tenzro_registerProvider", [
+      { provider_type: providerType, models, stake },
+    ]);
   }
 
   /**

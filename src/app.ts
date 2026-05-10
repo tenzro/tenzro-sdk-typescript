@@ -492,7 +492,7 @@ export class AppClient {
           title,
           description,
           task_type: taskType,
-          max_price: `0x${budgetWei.toString(16)}`,
+          max_price: budgetWei.toString(),
           poster: this.masterWalletInfo.address,
           on_behalf_of: userAddress,
         },

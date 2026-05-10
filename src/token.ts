@@ -30,7 +30,7 @@ export interface GetTokenInfoParams {
   /** Token symbol (e.g. "TNZO") */
   symbol?: string;
   /** EVM contract address */
-  evm_address?: string;
+  address?: string;
   /** Unified token ID */
   token_id?: string;
 }

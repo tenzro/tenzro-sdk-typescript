@@ -401,4 +401,40 @@ export class AgentClient {
       { agent_id: agentId },
     ]);
   }
+
+  /**
+   * Operational suspend (Active → Suspended). The reversible counterpart of
+   * `resumeAgent`. Distinct from the kill-switch `pauseAgent` /
+   * `quarantineAgent` axes (those require signed transactions).
+   * @param agentId - The agent identifier
+   * @param reason - Free-form audit reason
+   */
+  async suspendAgent(agentId: string, reason: string): Promise<unknown> {
+    return this.rpc.call<unknown>("tenzro_suspendAgent", {
+      agent_id: agentId,
+      reason,
+    });
+  }
+
+  /**
+   * Recover a Suspended agent back to Active. Used to recover from auto-
+   * suspend (heartbeat monitor) or a manual `suspendAgent`.
+   * @param agentId - The agent identifier
+   */
+  async resumeAgent(agentId: string): Promise<unknown> {
+    return this.rpc.call<unknown>("tenzro_resumeAgent", {
+      agent_id: agentId,
+    });
+  }
+
+  /**
+   * Send a liveness heartbeat for an agent. The heartbeat monitor uses
+   * `last_heartbeat` to decide whether to auto-suspend on the next sweep.
+   * @param agentId - The agent identifier
+   */
+  async agentHeartbeat(agentId: string): Promise<unknown> {
+    return this.rpc.call<unknown>("tenzro_agentHeartbeat", {
+      agent_id: agentId,
+    });
+  }
 }

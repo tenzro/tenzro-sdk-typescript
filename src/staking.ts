@@ -16,18 +16,20 @@ export class StakingClient {
   constructor(private readonly rpc: RpcClient) {}
 
   /**
-   * Stake TNZO tokens for a given role.
-   * @param amount - Amount of TNZO to stake (decimal string, e.g. "1000")
-   * @param role - Staking role: "validator", "model_provider", or "tee_provider"
+   * Stake TNZO tokens for a given provider type.
+   * @param amount - Amount in wei (10^-18 TNZO) as decimal string, e.g. "1000000000000000000000" for 1000 TNZO
+   * @param providerType - Provider type: "validator", "model_provider", "tee_provider", or "storage_provider"
    * @returns Stake result with transaction hash and status
    */
-  async stake(amount: string, role: StakingRole): Promise<StakeResult> {
-    return this.rpc.call<StakeResult>('tenzro_stake', [{ amount, role }]);
+  async stake(amount: string, providerType: StakingRole): Promise<StakeResult> {
+    return this.rpc.call<StakeResult>('tenzro_stake', [
+      { amount, provider_type: providerType },
+    ]);
   }
 
   /**
    * Unstake TNZO tokens (initiates the unbonding period).
-   * @param amount - Amount of TNZO to unstake (decimal string)
+   * @param amount - Amount in wei (10^-18 TNZO) as decimal string
    * @returns Unstake result with transaction hash, status, and unbonding end time
    */
   async unstake(amount: string): Promise<UnstakeResult> {
