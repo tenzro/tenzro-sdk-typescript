@@ -35,7 +35,7 @@ export class InsuranceClient {
    * @returns Claim record or null if not found
    */
   async getInsuranceClaim(claimId: string): Promise<any> {
-    return this.rpc.call("tenzro_getInsuranceClaim", [claimId]);
+    return this.rpc.call("tenzro_getInsuranceClaim", [{ claim_id: claimId }]);
   }
 
   /**
