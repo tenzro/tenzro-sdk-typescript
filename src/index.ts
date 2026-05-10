@@ -25,6 +25,55 @@ export { TokenClient } from "./token";
 export { ContractClient } from "./contract";
 export { CryptoClient } from "./crypto";
 export { CustodyClient } from "./custody";
+export {
+  Erc7579ModuleType,
+  RecoveryError,
+  SignerError,
+  StorageError,
+  ValidatorError,
+} from "./signer";
+export type {
+  GuardianSignature,
+  KeyId,
+  KeyStorage,
+  PackedUserOperation,
+  RecoveryErrorKind,
+  RecoveryGuardian,
+  RecoveryProposal,
+  SignContext,
+  SignerSignature,
+  Signer,
+  SignerErrorKind,
+  SignerKind,
+  StorageCapabilities,
+  StorageErrorKind,
+  StoragePolicy,
+  TeeBackend,
+  TxHash,
+  Validator,
+  ValidatorErrorKind,
+} from "./signer";
+export {
+  BrowserWebAuthnAuthenticator,
+  SoftwareP256Authenticator,
+  WebAuthnSigner,
+  WebAuthnValidator,
+  createPasskeyWallet,
+  defaultAuthenticator,
+  developmentConfig,
+  productionConfig,
+  signWithPasskey,
+} from "./passkey";
+export type {
+  AuthenticatorAssertion,
+  AuthenticatorRegistration,
+  CrossDeviceLink,
+  PasskeyConfig,
+  PasskeyCredential,
+  PasskeyWallet,
+  PlatformAuthenticator,
+  ResolvedPasskeyConfig,
+} from "./passkey";
 export { TeeClient } from "./tee";
 export { ZkClient } from "./zk";
 export { StreamingClient } from "./streaming";
