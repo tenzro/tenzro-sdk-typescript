@@ -19,15 +19,15 @@ export interface VerifyResult {
 /** Result of an encryption operation. */
 export interface EncryptResult {
   /** Hex-encoded ciphertext */
-  ciphertext: string;
+  ciphertext_hex: string;
   /** Hex-encoded nonce (12 bytes) */
-  nonce: string;
+  nonce_hex: string;
 }
 
 /** Result of a decryption operation. */
 export interface DecryptResult {
   /** Hex-encoded plaintext */
-  plaintext: string;
+  plaintext_hex: string;
 }
 
 /** Key derived from a password. */
@@ -72,7 +72,7 @@ export class CryptoClient {
    */
   async signMessage(privateKey: string, message: string): Promise<SignatureResult> {
     return this.rpc.call<SignatureResult>('tenzro_signMessage', [
-      { private_key: privateKey, message },
+      { private_key_hex: privateKey, message_hex: message },
     ]);
   }
 
@@ -84,7 +84,7 @@ export class CryptoClient {
    */
   async verifySignature(publicKey: string, message: string, signature: string): Promise<VerifyResult> {
     return this.rpc.call<VerifyResult>('tenzro_verifySignature', [
-      { public_key: publicKey, message, signature },
+      { public_key_hex: publicKey, message_hex: message, signature_hex: signature },
     ]);
   }
 
@@ -94,7 +94,9 @@ export class CryptoClient {
    * @param plaintext - Hex-encoded plaintext
    */
   async encrypt(key: string, plaintext: string): Promise<EncryptResult> {
-    return this.rpc.call<EncryptResult>('tenzro_encrypt', [{ key, plaintext }]);
+    return this.rpc.call<EncryptResult>('tenzro_encrypt', [
+      { key_hex: key, plaintext_hex: plaintext },
+    ]);
   }
 
   /**
@@ -104,7 +106,9 @@ export class CryptoClient {
    * @param nonce - Hex-encoded 12-byte nonce
    */
   async decrypt(key: string, ciphertext: string, nonce: string): Promise<DecryptResult> {
-    return this.rpc.call<DecryptResult>('tenzro_decrypt', [{ key, ciphertext, nonce }]);
+    return this.rpc.call<DecryptResult>('tenzro_decrypt', [
+      { key_hex: key, ciphertext_hex: ciphertext, nonce_hex: nonce },
+    ]);
   }
 
   /**
@@ -130,7 +134,7 @@ export class CryptoClient {
    * @returns Hex-encoded hash
    */
   async hashSha256(data: string): Promise<string> {
-    return this.rpc.call<string>('tenzro_hashSha256', [{ data }]);
+    return this.rpc.call<string>('tenzro_hashSha256', [{ data_hex: data }]);
   }
 
   /**
@@ -139,7 +143,7 @@ export class CryptoClient {
    * @returns Hex-encoded hash
    */
   async hashKeccak256(data: string): Promise<string> {
-    return this.rpc.call<string>('tenzro_hashKeccak256', [{ data }]);
+    return this.rpc.call<string>('tenzro_hashKeccak256', [{ data_hex: data }]);
   }
 
   /**
@@ -149,7 +153,7 @@ export class CryptoClient {
    */
   async x25519KeyExchange(privateKey: string, publicKey: string): Promise<SharedSecret> {
     return this.rpc.call<SharedSecret>('tenzro_x25519KeyExchange', [
-      { private_key: privateKey, public_key: publicKey },
+      { private_key_hex: privateKey, public_key_hex: publicKey },
     ]);
   }
 }
