@@ -42,13 +42,15 @@ export class AgentClient {
   async register(
     agentId: string,
     name: string,
-    capabilities: string[]
+    capabilities: string[],
+    creator?: string
   ): Promise<RegisterAgentResponse> {
     return this.rpc.call<RegisterAgentResponse>("tenzro_registerAgent", [
       {
         agent_id: agentId,
         name,
         capabilities,
+        creator,
       },
     ]);
   }
@@ -61,11 +63,13 @@ export class AgentClient {
    */
   async sendMessage(
     agentId: string,
-    message: string
+    message: string,
+    fromAgentId?: string
   ): Promise<AgentMessageResponse> {
     return this.rpc.call<AgentMessageResponse>("tenzro_sendAgentMessage", [
       {
-        agent_id: agentId,
+        from: fromAgentId ?? agentId,
+        to: agentId,
         message,
       },
     ]);
