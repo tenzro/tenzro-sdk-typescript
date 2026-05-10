@@ -307,14 +307,50 @@ export interface Capability {
   parameters?: Record<string, string>;
 }
 
+/**
+ * Mirrors the JSON shape returned by `tenzro_registerAgent`. The `byok`
+ * flag distinguishes the two registration modes — when `true`,
+ * `classical_public_key` and `pq_verifying_key_len` are absent because
+ * the keys are caller-held.
+ */
 export interface RegisterAgentResponse {
   agent_id: string;
+  name: string;
+  creator: string;
+  wallet_address: string;
+  capabilities: number;
   status: string;
+  created_at: string;
+  tenzro_did: string;
+  registration_fee: string;
+  /** Hex-encoded 32-byte Ed25519 verifying key. Provisioner mode only. */
+  classical_public_key?: string;
+  /** Length of the ML-DSA-65 verifying key (1952 in production). Provisioner mode only. */
+  pq_verifying_key_len?: number;
+  /**
+   * `true` for self-custodial (BYOK) registrations where the caller
+   * supplied both the classical and PQ public keys; `false` for the
+   * node-provisioned hybrid wallet path.
+   */
+  byok: boolean;
 }
 
+/**
+ * Mirrors the JSON shape returned by `tenzro_sendAgentMessage`.
+ */
 export interface AgentMessageResponse {
-  payload: string;
   message_id: string;
+  from: string;
+  to: string;
+  status: string;
+  /** Unix-millis timestamp the server stamped on the constructed message. */
+  timestamp: number;
+  /**
+   * `true` when the server attached both signature legs to the
+   * message; `false` when accepted unsigned (only possible on
+   * `enable_signing == false` routers).
+   */
+  signed: boolean;
 }
 
 export interface DelegateTaskResponse {

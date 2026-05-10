@@ -178,7 +178,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `auth` | `onboardHuman()`, `onboardDelegatedAgent()`, `onboardAutonomousAgent()`, `revokeJwt()`, `revokeDid()`, `listPendingApprovals()`, `decideApproval()` |
 | `wallet` | `createWallet()`, `getBalance()`, `sendTransaction()` |
 | `identity` | `registerHuman()`, `resolveDid()`, `setUsername()` |
-| `agent` | `register()`, `spawnAgent()`, `createSwarm()`, `delegateTask()` |
+| `agent` | `register(name, creator, capabilities)` (server-provisioned hybrid wallet), `registerWithKeys(name, creator, capabilities, publicKey, pqPublicKey)` (BYOK), `sendMessage(from, to, message)`, `sendMessageSigned({from, to, message, signature, pqSignature, messageType?, replyTo?})`, `spawnAgent()`, `createSwarm()`, `delegateTask()` |
 | `inference` | `listModels()`, `request()`, `estimateCost()`, plus multi-modal helpers for forecast, vision embed/similarity, text embedding, segmentation, detection, audio ASR, video embed (modality-aware routing via `tenzro_forecast`, `tenzro_visionEmbed`, `tenzro_textEmbed`, `tenzro_segment`, `tenzro_detect`, `tenzro_transcribe`, `tenzro_videoEmbed`) |
 | `token` | `createToken()`, `listTokens()`, `crossVmTransfer()` |
 | `nft` | `createCollection()`, `mintNft()`, `transferNft()` |

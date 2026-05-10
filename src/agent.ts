@@ -33,40 +33,120 @@ export class AgentClient {
   constructor(private rpc: RpcClient) {}
 
   /**
-   * Register a new AI agent on the network.
-   * @param agentId - Unique identifier for the agent
-   * @param name - Human-readable name
-   * @param capabilities - List of agent capabilities
-   * @returns Registration response with agent ID and status
+   * Register a new AI agent on the network. The node provisions a server-
+   * side hybrid (FROST Ed25519 + ML-DSA-65) wallet and binds it to a
+   * fresh `did:tenzro:machine:` identity. Returns the agent's `agent_id`,
+   * `wallet_address`, `tenzro_did`, the agent's `classical_public_key`
+   * (32-byte Ed25519 hex) and the `pq_verifying_key_len`.
+   *
+   * For self-custodial registration (no server-held keys), see
+   * {@link registerWithKeys}.
+   *
+   * @param name - Human-readable agent name
+   * @param creator - Hex-encoded address that will own this agent
+   * @param capabilities - Capability short names: `nlp`, `vision`, `code`,
+   *   `data`, `blockchain`, `smart_contract`, `api_integration`,
+   *   `coordination`. Anything else becomes a `Custom` capability.
    */
   async register(
-    agentId: string,
     name: string,
+    creator: string,
     capabilities: string[]
   ): Promise<RegisterAgentResponse> {
     return this.rpc.call<RegisterAgentResponse>("tenzro_registerAgent", [
       {
-        agent_id: agentId,
         name,
+        creator,
         capabilities,
       },
     ]);
   }
 
   /**
-   * Send a message to another agent.
-   * @param agentId - Target agent identifier
-   * @param message - Message content
-   * @returns Message response with payload and message ID
+   * BYOK registration: register an agent self-custodially with a
+   * caller-supplied hybrid keypair. Both `publicKey` (32 bytes, Ed25519)
+   * and `pqPublicKey` (1952 bytes, ML-DSA-65) must be supplied as hex
+   * (with or without `0x` prefix). The node performs no wallet
+   * provisioning; the caller retains full control of the signing keys
+   * and is responsible for producing all `sendAgentMessage` signatures
+   * off-node. The returned envelope sets `byok: true` and omits the
+   * `classical_public_key` / `pq_verifying_key_len` fields (the caller
+   * already has them).
+   */
+  async registerWithKeys(
+    name: string,
+    creator: string,
+    capabilities: string[],
+    publicKey: string,
+    pqPublicKey: string
+  ): Promise<RegisterAgentResponse> {
+    return this.rpc.call<RegisterAgentResponse>("tenzro_registerAgent", [
+      {
+        name,
+        creator,
+        capabilities,
+        public_key: publicKey,
+        pq_public_key: pqPublicKey,
+      },
+    ]);
+  }
+
+  /**
+   * Send an unsigned `AgentMessage` from one registered agent to another.
+   * Only valid when the local node's `MessageRouter` has
+   * `enable_signing == false` (test/dev configs). On the production
+   * router this call is rejected with a signature-required error — use
+   * {@link sendMessageSigned} instead.
    */
   async sendMessage(
-    agentId: string,
+    from: string,
+    to: string,
     message: string
   ): Promise<AgentMessageResponse> {
     return this.rpc.call<AgentMessageResponse>("tenzro_sendAgentMessage", [
       {
-        agent_id: agentId,
+        from,
+        to,
         message,
+      },
+    ]);
+  }
+
+  /**
+   * Send a hybrid-signed `AgentMessage`. Both signature legs are required
+   * when the router enforces signing (production default); half-signed
+   * messages are rejected to prevent downgrade attacks.
+   *
+   * The signing preimage is `SHA-256(AgentMessage::signing_data())`,
+   * which depends on `from`, `to`, the resolved sender/recipient wallet
+   * addresses, the message body, the message type, and the optional
+   * `replyTo`. Callers must construct the same preimage off-node and
+   * produce both an Ed25519 (64-byte) and an ML-DSA-65 (3309-byte)
+   * signature. Both signatures are passed as hex (with or without `0x`
+   * prefix).
+   *
+   * `replyTo` (if used) MUST be set on the message before signing,
+   * because it is part of `signing_data` — the SDK forwards it verbatim
+   * so the server reconstructs the same preimage the caller signed.
+   */
+  async sendMessageSigned(params: {
+    from: string;
+    to: string;
+    message: string;
+    signature: string;
+    pqSignature: string;
+    messageType?: "task_request" | "task_response" | "query" | "query_response" | "notification" | "coordination" | "error";
+    replyTo?: string;
+  }): Promise<AgentMessageResponse> {
+    return this.rpc.call<AgentMessageResponse>("tenzro_sendAgentMessage", [
+      {
+        from: params.from,
+        to: params.to,
+        message: params.message,
+        signature: params.signature,
+        pq_signature: params.pqSignature,
+        message_type: params.messageType,
+        reply_to: params.replyTo,
       },
     ]);
   }
