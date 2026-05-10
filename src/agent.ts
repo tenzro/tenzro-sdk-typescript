@@ -59,19 +59,26 @@ export class AgentClient {
    * Send a message to another agent.
    * @param agentId - Target agent identifier
    * @param message - Message content
-   * @returns Message response with payload and message ID
+   * @param fromAgentId - Sender agent identifier (defaults to `agentId`)
+   * @param signatures - Optional hybrid signature pair
    */
   async sendMessage(
     agentId: string,
     message: string,
-    fromAgentId?: string
+    fromAgentId?: string,
+    signatures?: { signature: string; pq_signature: string },
   ): Promise<AgentMessageResponse> {
+    const params: Record<string, unknown> = {
+      from: fromAgentId ?? agentId,
+      to: agentId,
+      message,
+    };
+    if (signatures) {
+      params.signature = signatures.signature;
+      params.pq_signature = signatures.pq_signature;
+    }
     return this.rpc.call<AgentMessageResponse>("tenzro_sendAgentMessage", [
-      {
-        from: fromAgentId ?? agentId,
-        to: agentId,
-        message,
-      },
+      params,
     ]);
   }
 
