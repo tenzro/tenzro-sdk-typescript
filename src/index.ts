@@ -98,6 +98,23 @@ export { QuotaClient } from "./quota";
 export { PrincipalChainClient } from "./principal-chain";
 export { LifecycleClient } from "./lifecycle";
 
+// Client-side signing module: DPoP proofs + hybrid agent-message signing.
+export {
+  generateDpopKeypair,
+  createDpopProof,
+  createDpopSession,
+  generateAgentSigningKeys,
+  canonicalAgentMessagePreimage,
+  canonicalAgentMessageHash,
+  signAgentMessage,
+} from "./sign";
+export type {
+  DpopKeyPair,
+  DpopSession,
+  AgentSigningKeys,
+  AgentMessageFields,
+} from "./sign";
+
 // SVM Cross-VM (native program) instruction builders
 export {
   TENZRO_CROSS_VM_PROGRAM_ID,
@@ -123,12 +140,11 @@ export type {
 } from "./svm-cross-vm";
 
 // Configuration
-export {
-  TenzroConfig,
-  MAINNET_CONFIG,
-  TESTNET_CONFIG,
-  LOCAL_CONFIG,
-} from "./config";
+export type { TenzroConfig } from "./config";
+export { MAINNET_CONFIG, TESTNET_CONFIG, LOCAL_CONFIG } from "./config";
+
+// Enums (have runtime representation — cannot use `export type`)
+export { VoteType, ProposalType, ProposalStatus, IdentityType } from "./types";
 
 // RPC
 export { RpcClient, RpcCallError, Eip1193Transport } from "./rpc";
@@ -201,9 +217,6 @@ export type {
   TerminateSwarmResponse,
   GovernanceProposal,
   GovernanceVote,
-  VoteType,
-  ProposalType,
-  ProposalStatus,
   VoteReceipt,
   VotingPower,
   BridgeMessage,
@@ -225,7 +238,6 @@ export type {
   HealthResponse,
   VerificationResponse,
   IdentityInfo,
-  IdentityType,
   DidDocument,
   VerificationMethod,
   DidService,

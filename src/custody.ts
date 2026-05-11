@@ -106,7 +106,9 @@ export class CustodyClient {
    * @param password - Password to decrypt the keystore
    */
   async importKeystore(keystore: string, password: string): Promise<MpcWallet> {
-    return this.rpc.call<MpcWallet>('tenzro_importKeystore', [{ keystore, password }]);
+    return this.rpc.call<MpcWallet>('tenzro_importKeystore', [
+      { keystore_json: keystore, password },
+    ]);
   }
 
   /**
