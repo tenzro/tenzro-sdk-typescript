@@ -23,7 +23,7 @@ export class SeedAgentClient {
    * @returns Current `TreasuryEarmark`
    */
   async getTreasuryEarmark(): Promise<any> {
-    return this.rpc.call("tenzro_getTreasuryEarmark", []);
+    return this.rpc.call("tenzro_getTreasuryEarmark", [{}]);
   }
 
   /**
@@ -32,7 +32,7 @@ export class SeedAgentClient {
    * @returns Charter record or null if not found
    */
   async getSeedAgentCharter(charterId: string): Promise<any> {
-    return this.rpc.call("tenzro_getSeedAgentCharter", [charterId]);
+    return this.rpc.call("tenzro_getSeedAgentCharter", [{ charter_id: charterId }]);
   }
 
   /**
@@ -40,7 +40,7 @@ export class SeedAgentClient {
    * @returns Array of charter records
    */
   async listSeedAgentCharters(): Promise<any[]> {
-    return this.rpc.call<any[]>("tenzro_listSeedAgentCharters", []);
+    return this.rpc.call<any[]>("tenzro_listSeedAgentCharters", [{}]);
   }
 
   /**
@@ -49,8 +49,8 @@ export class SeedAgentClient {
    * @returns Array of seed agent records
    */
   async listSeedAgents(charterId?: string): Promise<any[]> {
-    const params: unknown[] = charterId === undefined ? [] : [charterId];
-    return this.rpc.call<any[]>("tenzro_listSeedAgents", params);
+    const params = charterId === undefined ? {} : { charter_id: charterId };
+    return this.rpc.call<any[]>("tenzro_listSeedAgents", [params]);
   }
 
   /**
@@ -62,7 +62,7 @@ export class SeedAgentClient {
    * @returns Activity metrics snapshot
    */
   async getNetworkActivity(windowBlocks?: number): Promise<any> {
-    const params: unknown[] = windowBlocks === undefined ? [] : [windowBlocks];
-    return this.rpc.call("tenzro_getNetworkActivity", params);
+    const params = windowBlocks === undefined ? {} : { window_blocks: windowBlocks };
+    return this.rpc.call("tenzro_getNetworkActivity", [params]);
   }
 }

@@ -517,4 +517,67 @@ export class AgentClient {
       agent_id: agentId,
     });
   }
+
+  /**
+   * Fetch every capability attestation registered on this node for
+   * `capability`. `capability` accepts the same short-form tags as
+   * `register` (`nlp`, `vision`, `code`, `data`, `blockchain`,
+   * `smart_contract`, `api_integration`, `coordination`) — anything else
+   * is treated as a `Custom` capability with that name.
+   *
+   * When `verifiedOnly` is `true` the node re-runs query-time signature
+   * + expiry checks before returning (defence in depth on top of
+   * submit-time verification per #52). Default is `false`.
+   *
+   * Returns `{capability, verified_only, attestations: [...], total}`.
+   *
+   * @param capability - Capability short-form or custom name
+   * @param verifiedOnly - Force query-time re-verification before returning
+   */
+  async getCapabilityAttestations(
+    capability: string,
+    verifiedOnly: boolean = false
+  ): Promise<unknown> {
+    return this.rpc.call<unknown>("tenzro_getCapabilityAttestations", {
+      capability,
+      verified_only: verifiedOnly,
+    });
+  }
+
+  /**
+   * Fetch every capability attestation issued for a specific agent. The
+   * reply includes the agent's registered capability list, the full
+   * attestation envelopes, and the agent's registered wallet address
+   * (used by the self-attestation guard).
+   *
+   * Returns `{agent_id, capabilities, attestations: [...],
+   * total_attestations, registered_address}`.
+   *
+   * @param agentId - The agent ID to look up
+   */
+  async getAgentCapabilityAttestations(
+    agentId: string
+  ): Promise<unknown> {
+    return this.rpc.call<unknown>("tenzro_getAgentCapabilityAttestations", {
+      agent_id: agentId,
+    });
+  }
+
+  /**
+   * Pick the "best" agent on this node for `capability`. Selection prefers
+   * the most recent TEE-backed attestation, falling back to any agent that
+   * has registered the capability. `capability` is parsed with the same
+   * short-form/`Custom` rules as `getCapabilityAttestations`.
+   *
+   * Returns `{capability, best_agent: string | null, total_candidates}`.
+   *
+   * @param capability - Capability short-form or custom name
+   */
+  async findBestAgentForCapability(
+    capability: string
+  ): Promise<unknown> {
+    return this.rpc.call<unknown>("tenzro_findBestAgentForCapability", {
+      capability,
+    });
+  }
 }

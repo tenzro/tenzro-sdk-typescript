@@ -651,15 +651,17 @@ export enum IdentityType {
 
 export interface IdentityInfo {
   did: string;
-  identityType: IdentityType;
-  displayName: string;
   status: string;
-  keyCount: number;
-  credentialCount: number;
-  serviceCount: number;
-  isHuman: boolean;
-  isMachine: boolean;
-  controllerDid?: string;
+  display_name: string;
+  is_human: boolean;
+  is_machine: boolean;
+  key_count: number;
+  credential_count: number;
+  service_count: number;
+  public_keys: Array<{ key_id: string; key_type: string; public_key: string }>;
+  credentials: Array<{ credential_type: string; issuer: string; subject: string; issued_at: string }>;
+  services: Array<{ id: string; service_type: string; endpoint: string }>;
+  metadata: Record<string, unknown>;
 }
 
 export interface DidDocument {
@@ -851,9 +853,12 @@ export interface PostTaskParams {
   task_type: TaskType;
   max_price: string;
   input: string;
+  /** Poster address (required by `tenzro_postTask` RPC handler). */
+  poster: string;
   priority?: TaskPriority;
   deadline?: number;
   required_model?: string;
+  preferred_model_id?: string;
 }
 
 // ─── Agent Marketplace ─────────────────────────────────────────────────────────
@@ -913,7 +918,7 @@ export interface AgentTemplate {
   content_hash?: string;
   docs_url?: string;
   metadata: Record<string, string>;
-  /** Optional DID binding (`did:tenzro:...` / `did:pdis:...`) set at registration time. */
+  /** Optional DID binding (`did:tenzro:...`) set at registration time. */
   creator_did?: string;
   /**
    * Creator payout wallet — **mandatory** for any non-free pricing; receives the
@@ -1227,13 +1232,21 @@ export interface UnstakeResult {
 
 export interface AssignTaskResult {
   task_id: string;
-  agent_id: string;
   status: string;
+}
+
+export interface TaskSettlement {
+  final_price_wei?: string;
+  remainder_wei?: string;
+  agent_balance_wei?: string;
+  poster_balance_wei?: string;
+  skipped?: string;
 }
 
 export interface CompleteTaskResult {
   task_id: string;
   status: string;
+  settlement?: TaskSettlement;
   tx_hash?: string;
 }
 

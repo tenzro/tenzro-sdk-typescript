@@ -205,25 +205,50 @@ export class SettlementClient {
   async getEscrow(escrowId: string): Promise<any> {
     const escrowIdBytes = parseEscrowId(escrowId);
     const escrowIdHex = "0x" + bytesToHex(escrowIdBytes);
-    return this.rpc.call("tenzro_getEscrow", [{ escrow_id: escrowIdHex }]);
+    return this.rpc.call("tenzro_getEscrow", { escrow_id: escrowIdHex });
   }
 
   /**
-   * List every escrow whose `payer` matches the given address.
+   * List every escrow funded by `payer`. Returns
+   * `{payer, count, escrows: [...]}`. Backed by the `escrow_payer:`
+   * secondary index in `CF_SETTLEMENTS`.
+   *
    * @param payer - Payer address (the wallet that created the escrow)
-   * @returns Array of escrow records (empty if payer has none)
    */
-  async listEscrowsByPayer(payer: string): Promise<any[]> {
-    return this.rpc.call<any[]>("tenzro_listEscrowsByPayer", [payer]);
+  async listEscrowsByPayer(payer: string): Promise<any> {
+    return this.rpc.call("tenzro_listEscrowsByPayer", { payer });
   }
 
   /**
-   * List every escrow whose `payee` matches the given address.
+   * List every escrow held for `payee`. Returns
+   * `{payee, count, escrows: [...]}`. Backed by the `escrow_payee:`
+   * secondary index in `CF_SETTLEMENTS`.
+   *
    * @param payee - Payee address (the recipient on successful release)
-   * @returns Array of escrow records (empty if payee has none)
    */
-  async listEscrowsByPayee(payee: string): Promise<any[]> {
-    return this.rpc.call<any[]>("tenzro_listEscrowsByPayee", [payee]);
+  async listEscrowsByPayee(payee: string): Promise<any> {
+    return this.rpc.call("tenzro_listEscrowsByPayee", { payee });
+  }
+
+  /**
+   * Fetch a single channel dispute by id. Returns the full
+   * `ChannelDispute` record (challenger, evidence blobs, status,
+   * opened_at / timeout_at / resolved_at, resolution). Returns
+   * JSON-RPC `-32004` if no dispute with that id exists.
+   */
+  async getDispute(disputeId: string): Promise<any> {
+    return this.rpc.call("tenzro_getDispute", { dispute_id: disputeId });
+  }
+
+  /**
+   * List every dispute (open or historical) attached to a channel.
+   * Returns `{channel_id, count, disputes: [...]}`. Empty list is not
+   * an error — a channel with no disputes returns `count: 0`.
+   */
+  async listDisputesByChannel(channelId: string): Promise<any> {
+    return this.rpc.call("tenzro_listDisputesByChannel", {
+      channel_id: channelId,
+    });
   }
 
   /** Internal helper: fetch nonce + chain_id with safe defaults. */

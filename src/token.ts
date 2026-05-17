@@ -44,14 +44,14 @@ export interface ListTokensParams {
 /** Parameters for a cross-VM token transfer. */
 export interface CrossVmTransferParams {
   /** Sender address */
-  from: string;
+  from_address: string;
   /** Recipient address */
-  to: string;
+  to_address: string;
   /** Amount as a decimal string */
   amount: string;
-  /** Source VM: "evm", "svm", or "daml" */
+  /** Source VM: "evm", "svm", "daml", or "native" */
   from_vm: string;
-  /** Destination VM: "evm", "svm", or "daml" */
+  /** Destination VM: "evm", "svm", "daml", or "native" */
   to_vm: string;
   /** Token symbol (default: "TNZO") */
   token?: string;
@@ -89,16 +89,50 @@ export interface TokenListResult {
   total: number;
 }
 
-/** Token balance across VMs. */
+/** Native TNZO view (18 decimals). */
+export interface NativeBalance {
+  /** Balance in wei (decimal string) */
+  balance_wei: string;
+  /** Number of decimals (always 18) */
+  decimals: number;
+}
+
+/** EVM wTNZO ERC-20 view — same wei as native, 18 decimals. */
+export interface EvmBalance {
+  /** Balance in wei (decimal string) */
+  balance_wei: string;
+  /** Number of decimals (always 18) */
+  decimals: number;
+}
+
+/** SVM wTNZO SPL view — 9-decimal truncation of native balance. */
+export interface SvmBalance {
+  /** Balance in SPL base units (decimal string, 9 decimals) */
+  balance_base_units: string;
+  /** Number of decimals (always 9) */
+  decimals: number;
+}
+
+/** DAML CIP-56 holding view — same wei as native, 18 decimals. */
+export interface DamlBalance {
+  /** Holding amount in wei (decimal string) */
+  amount_wei: string;
+  /** Number of decimals (always 18) */
+  decimals: number;
+}
+
+/** Token balance across all four VM views (pointer model). */
 export interface TokenBalance {
   /** Address queried */
   address: string;
-  /** Token symbol */
-  token: string;
-  /** Total balance as a decimal string */
-  balance: string;
-  /** Per-VM breakdown */
-  balances?: Record<string, string>;
+  /** Native TNZO balance (18-decimal wei) */
+  native: NativeBalance;
+  /** EVM wTNZO ERC-20 view — tracks native 1:1 */
+  evm_wtnzo: EvmBalance;
+  /** SVM wTNZO SPL view — 9-decimal truncation */
+  svm_wtnzo: SvmBalance;
+  /** DAML CIP-56 holding view — tracks native 1:1 */
+  daml_holding: DamlBalance;
 }
 
 /** Result of wrapping native TNZO into a VM representation. */

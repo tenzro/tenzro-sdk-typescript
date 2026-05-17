@@ -19,7 +19,7 @@ export class AdaptiveBurnClient {
    * @returns Active burn-rate configuration
    */
   async getBurnRateConfig(): Promise<any> {
-    return this.rpc.call("tenzro_getBurnRateConfig", []);
+    return this.rpc.call("tenzro_getBurnRateConfig", [{}]);
   }
 
   /**
@@ -28,7 +28,7 @@ export class AdaptiveBurnClient {
    * @returns Latest `SupplyMetricsSnapshot`
    */
   async getSupplyMetrics(): Promise<any> {
-    return this.rpc.call("tenzro_getSupplyMetrics", []);
+    return this.rpc.call("tenzro_getSupplyMetrics", [{}]);
   }
 
   /**
@@ -38,7 +38,7 @@ export class AdaptiveBurnClient {
    * @returns `BurnRateRecommendation`
    */
   async getBurnRateRecommendation(): Promise<any> {
-    return this.rpc.call("tenzro_getBurnRateRecommendation", []);
+    return this.rpc.call("tenzro_getBurnRateRecommendation", [{}]);
   }
 
   /**
@@ -46,6 +46,6 @@ export class AdaptiveBurnClient {
    * @returns Array of proposal records
    */
   async listAdaptiveBurnProposals(): Promise<any[]> {
-    return this.rpc.call<any[]>("tenzro_listAdaptiveBurnProposals", []);
+    return this.rpc.call<any[]>("tenzro_listAdaptiveBurnProposals", [{}]);
   }
 }

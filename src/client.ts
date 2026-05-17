@@ -28,9 +28,12 @@ import { BridgeClient } from "./bridge";
 import { AgentPaymentClient } from "./agent-payments";
 import { CircuitBreakerClient } from "./circuit-breaker";
 import { NanopaymentClient } from "./nanopayment";
+import { Eip7702Client } from "./eip7702";
+import { Erc7683Client } from "./erc7683";
 import { Erc7802Client } from "./erc7802";
 import { Erc8004Client } from "./erc8004";
 import { WormholeClient } from "./wormhole";
+import { IrohClient } from "./iroh";
 import { CctClient } from "./cct";
 import { NftClient } from "./nft";
 import { ComplianceClient } from "./compliance";
@@ -44,6 +47,12 @@ import { SeedAgentClient } from "./seed-agent";
 import { QuotaClient } from "./quota";
 import { PrincipalChainClient } from "./principal-chain";
 import { LifecycleClient } from "./lifecycle";
+import { MultimodalClient } from "./multimodal";
+import { MemoryClient } from "./memory";
+import { ValidatorClient } from "./validator";
+import { TrainingInspectionClient } from "./training";
+import { SlaClient } from "./sla";
+import { SnapshotClient } from "./snapshot";
 import {
   Block,
   BlockRange,
@@ -148,6 +157,31 @@ export class TenzroClient {
     return new NanopaymentClient(this.rpc);
   }
 
+  /**
+   * Access the ERC-7683 cross-chain intent settler client.
+   *
+   * Read RPCs on the origin side (`get_order` / `list_orders` over
+   * `7683_origin:` keyspace) plus destination-side fill recording
+   * (`record_fill` / `get_fill` / `list_fills` over `7683_dest:`).
+   * Order state machine: Open → AwaitingProof → Settled / Refunded /
+   * ForceRefundEligible.
+   */
+  erc7683(): Erc7683Client {
+    return new Erc7683Client(this.rpc);
+  }
+
+  /**
+   * Access the EIP-7702 (Set EOA Account Code) helper client. Wraps
+   * `tenzro_eip7702SigningHash`, `tenzro_eip7702BuildDesignator`,
+   * `tenzro_eip7702ParseDesignator`, and `tenzro_eip7702ProtocolInfo`.
+   * These are stateless helpers — the EOA's secp256k1 signature and
+   * the on-chain installation of the designator are performed out of
+   * band by the caller.
+   */
+  eip7702(): Eip7702Client {
+    return new Eip7702Client(this.rpc);
+  }
+
   /** Access the ERC-7802 cross-chain token client. */
   erc7802(): Erc7802Client {
     return new Erc7802Client(this.rpc);
@@ -161,6 +195,17 @@ export class TenzroClient {
   /** Access the Wormhole cross-chain client. */
   wormhole(): WormholeClient {
     return new WormholeClient(this.rpc);
+  }
+
+  /**
+   * Access the Iroh consumer surface client for the `tenzro_iroh_*`
+   * namespace — endpoint id / ALPNs / publish / fetch over the shared
+   * `IrohBackedResolver` (QUIC + Pkarr + iroh-blobs substrate that
+   * also backs DA, training gradients, sealed shards, model fetch,
+   * agent memory archive, and A2A-over-iroh).
+   */
+  iroh(): IrohClient {
+    return new IrohClient(this.rpc);
   }
 
   /** Access the TNZO CCT (Chainlink Cross-Chain Token) pool registry client. */
@@ -221,6 +266,69 @@ export class TenzroClient {
   /** Access the agent lifecycle / kill-switch client. */
   lifecycle(): LifecycleClient {
     return new LifecycleClient(this.rpc);
+  }
+
+  /**
+   * Access the multi-modal AI client — forecast (timeseries), vision
+   * encoders, text embeddings, segmentation, detection, audio (ASR),
+   * and video. Each modality exposes catalog browse, list-loaded,
+   * load, unload, and one inference verb.
+   *
+   * Four of the seven `load*Model` paths are wave-1 stubs that return
+   * JSON-RPC `-32004` from the node — see `MultimodalClient` rustdoc.
+   */
+  multimodal(): MultimodalClient {
+    return new MultimodalClient(this.rpc);
+  }
+
+  /**
+   * Access the per-agent memory tier client — Lance vector kNN +
+   * Tantivy BM25 with Reciprocal Rank Fusion at k=60 for hybrid
+   * search, with DA-backed archival.
+   */
+  memory(): MemoryClient {
+    return new MemoryClient(this.rpc);
+  }
+
+  /**
+   * Access the validator registry read client — `getValidatorState` /
+   * `listValidators` / `listActiveValidators`. Read-only; validators
+   * self-register via the staking transaction path.
+   */
+  validators(): ValidatorClient {
+    return new ValidatorClient(this.rpc);
+  }
+
+  /**
+   * Access the Tenzro Train read-side inspection client — list runs,
+   * fetch a single run by task_id, fetch a sealed receipt, and fetch
+   * the installed Confidential-tier sealed-shard manifest. Safe to
+   * expose to monitoring agents — no write surface.
+   */
+  trainingInspection(): TrainingInspectionClient {
+    return new TrainingInspectionClient(this.rpc);
+  }
+
+  /**
+   * Access the validator-side SLA fault-detector inspection client.
+   * Wraps `tenzro_slaIssueProbe`, `tenzro_slaListOutstandingProbes`,
+   * and `tenzro_slaGetParams`. The probe-issuing call is
+   * validator-only; on a non-validator node it returns
+   * `-32000 SlaManager not initialized`.
+   */
+  sla(): SlaClient {
+    return new SlaClient(this.rpc);
+  }
+
+  /**
+   * State-sync snapshot client. Wraps `tenzro_listSnapshots`,
+   * `tenzro_getSnapshotManifest`, `tenzro_getSnapshotChunk`,
+   * `tenzro_offerSnapshot`, and `tenzro_applySnapshotChunk`. Callers
+   * MUST verify a manifest's `state_root_hex` against a trusted QC at
+   * the same height before calling `offerSnapshot` / `applySnapshotChunk`.
+   */
+  snapshot(): SnapshotClient {
+    return new SnapshotClient(this.rpc);
   }
 
   static mainnet(): TenzroClient {

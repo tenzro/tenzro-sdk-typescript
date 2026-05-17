@@ -57,7 +57,7 @@ export class IdentityClient {
 
   /**
    * Resolve a DID to get identity information.
-   * @param did - The DID to resolve (e.g., "did:tenzro:human:..." or "did:pdis:...")
+   * @param did - The DID to resolve (e.g., "did:tenzro:human:..." or "did:tenzro:machine:...")
    * @returns Identity information
    */
   async resolve(did: string): Promise<IdentityInfo> {

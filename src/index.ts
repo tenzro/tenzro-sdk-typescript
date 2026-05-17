@@ -82,9 +82,18 @@ export { BridgeClient } from "./bridge";
 export { AgentPaymentClient } from "./agent-payments";
 export { CircuitBreakerClient } from "./circuit-breaker";
 export { NanopaymentClient } from "./nanopayment";
+export { Eip7702Client } from "./eip7702";
+export type {
+  Eip7702SigningHash,
+  Eip7702Designator,
+  Eip7702ParsedDesignator,
+  Eip7702ProtocolInfo,
+} from "./eip7702";
+export { Erc7683Client } from "./erc7683";
 export { Erc7802Client } from "./erc7802";
 export { Erc8004Client } from "./erc8004";
 export { WormholeClient } from "./wormhole";
+export { IrohClient } from "./iroh";
 export { CctClient } from "./cct";
 export { NftClient } from "./nft";
 export { ComplianceClient } from "./compliance";
@@ -97,6 +106,77 @@ export { SeedAgentClient } from "./seed-agent";
 export { QuotaClient } from "./quota";
 export { PrincipalChainClient } from "./principal-chain";
 export { LifecycleClient } from "./lifecycle";
+export { MultimodalClient } from "./multimodal";
+export type {
+  ForecastCatalogEntry,
+  LoadForecastModelParams,
+  ForecastParams,
+  VisionCatalogEntry,
+  LoadVisionModelParams,
+  ImageEmbedParams,
+  ImageEmbedResult,
+  ImageTextSimilarityResult,
+  TextEmbeddingCatalogEntry,
+  TextEmbedParams,
+  SegmentationCatalogEntry,
+  SegmentPrompt,
+  SegmentParams,
+  DetectionCatalogEntry,
+  DetectParams,
+  Detection,
+  AudioCatalogEntry,
+  AudioFamily,
+  WhisperVariant,
+  LoadAudioModelParams,
+  TranscribeParams,
+  VideoCatalogEntry,
+  VideoEmbedParams,
+  LoadedModelsList,
+  LoadModelResult,
+  UnloadModelResult,
+} from "./multimodal";
+export { MemoryClient } from "./memory";
+export type {
+  MemoryKind,
+  MemorySource,
+  MemorySearchMode,
+  MemoryRecord,
+  RecallResult,
+  ListMemoryResult,
+  MemoryGrantParams,
+  MemoryRecallParams,
+} from "./memory";
+export { ValidatorClient } from "./validator";
+export type {
+  ValidatorStatus,
+  ValidatorRegistryEntry,
+  ListValidatorsResult,
+} from "./validator";
+export { SlaClient } from "./sla";
+export type {
+  SlaProbeIssued,
+  SlaOutstandingProbe,
+  SlaOutstandingProbes,
+  SlaParams,
+} from "./sla";
+export { SnapshotClient } from "./snapshot";
+export type {
+  SnapshotSummary,
+  SnapshotList,
+  SnapshotManifest,
+  SnapshotChunk,
+  SnapshotOfferAccepted,
+  SnapshotChunkApplied,
+} from "./snapshot";
+export { TrainingInspectionClient } from "./training";
+export type {
+  TrainingRunStatus,
+  TrainingRun,
+  TrainingReceipt,
+  SealedDatasetManifest,
+  SealedShardEnvelope,
+  ListTrainingRunsResult,
+} from "./training";
 
 // SVM Cross-VM (native program) instruction builders
 export {
@@ -355,6 +435,21 @@ export type {
   WormholeTransferResult,
 } from "./wormhole";
 
+// ERC-7683 types
+export type {
+  Erc7683Output,
+  Erc7683OrderList,
+} from "./erc7683";
+
+// Iroh types
+export type {
+  IrohInfo,
+  IrohEndpointId,
+  IrohAlpnEntry,
+  IrohAlpnList,
+  IrohPublishResult,
+} from "./iroh";
+
 // CCT (Chainlink Cross-Chain Token) types
 export type {
   CctPool,
@@ -435,8 +530,9 @@ export type {
   GetEventsParams,
   Subscription,
   WebhookRegistration,
+  WebhookList,
+  WebhookDeletion,
   UnsubscribeResult,
-  WebhookRemoveResult,
 } from "./events";
 
 // deBridge types
@@ -457,6 +553,10 @@ export type {
   TokenInfo,
   TokenListResult,
   TokenBalance,
+  NativeBalance,
+  EvmBalance,
+  SvmBalance,
+  DamlBalance,
   WrapResult,
   TransferResult,
 } from "./token";
@@ -554,6 +654,7 @@ export type {
   RevokeResponse,
   PendingApprovals,
   ApprovalDecision,
+  ApprovalRecord,
   TokenExchangeResult,
   IntrospectionResult,
   OAuthDiscovery,

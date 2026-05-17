@@ -197,6 +197,18 @@ export class AuthClient {
   }
 
   /**
+   * Fetch a single approval record by id. The engine lazy-transitions
+   * an expired `Pending` record to `Expired` on this read path, so a
+   * returned `Pending` record is guaranteed to still be live. Returns
+   * JSON-RPC `-32000` if the id is unknown.
+   */
+  async getApproval(approvalId: string): Promise<ApprovalRecord> {
+    return this.rpc.call<ApprovalRecord>("tenzro_getApproval", {
+      approval_id: approvalId,
+    });
+  }
+
+  /**
    * **RFC 8693 OAuth 2.0 Token Exchange.** Exchange a parent JWT for a
    * narrower child JWT bound to a different DPoP key, with a strictly
    * subset of the parent's RAR grants and AAP capabilities. The child
@@ -347,6 +359,37 @@ export interface ApprovalDecision {
   status?: string;
   /** Echo of the approval id. */
   approval_id?: string;
+}
+
+/**
+ * Result of `getApproval` — a single approval record. Matches the wire
+ * shape produced by `approval_to_json` in `tenzro-node`.
+ */
+export interface ApprovalRecord {
+  /** Engine-assigned unique identifier for this approval. */
+  approval_id?: string;
+  /** DID that initiated the request and is waiting on a decision. */
+  requester_did?: string;
+  /** DID that must approve or deny the request. */
+  approver_did?: string;
+  /** Creation time (Unix epoch, ms). */
+  created_at_ms?: number;
+  /**
+   * Hard expiry — past this point the engine lazy-transitions the
+   * record to `Expired` on the next read.
+   */
+  expires_at_ms?: number;
+  /**
+   * Lifecycle state as a debug-printed enum string
+   * (`"Pending"` / `"Approved"` / `"Denied"` / `"Expired"`).
+   */
+  status?: string;
+  /** Decision timestamp (Unix epoch, ms). `null`/absent while pending. */
+  decided_at_ms?: number | null;
+  /** Short human-readable summary of the request. */
+  summary?: string;
+  /** Action identifier (free-form, e.g. `"wallet.transfer"`). */
+  action?: string;
 }
 
 /**

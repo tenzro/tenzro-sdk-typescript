@@ -51,10 +51,28 @@ export interface WebhookRegistration {
   /** Callback URL where events will be POSTed */
   url: string;
   /** Event types the webhook is subscribed to */
-  event_types?: string[];
-  /** Whether HMAC verification is enabled */
-  hmac_enabled: boolean;
-  /** Webhook status */
+  event_types: string[];
+  /** Address filter (empty array = no address restriction) */
+  addresses: string[];
+  /** Whether the webhook is currently active. Defaults to true on freshly-registered hooks. */
+  active: boolean;
+  /** Cumulative deliveries attempted by the node */
+  total_deliveries: number;
+  /** Cumulative deliveries that returned a non-2xx response or timed out */
+  failed_deliveries: number;
+  /** Operation status (set on register/delete; empty on list) */
+  status: string;
+}
+
+/** Result of `tenzro_listWebhooks`. */
+export interface WebhookList {
+  webhooks: WebhookRegistration[];
+  total: number;
+}
+
+/** Result of `tenzro_deleteWebhook`. */
+export interface WebhookDeletion {
+  webhook_id: string;
   status: string;
 }
 
@@ -63,14 +81,6 @@ export interface UnsubscribeResult {
   /** Subscription identifier that was removed */
   subscription_id: string;
   /** Whether the unsubscription succeeded */
-  success: boolean;
-}
-
-/** Result of removing a webhook registration. */
-export interface WebhookRemoveResult {
-  /** Webhook identifier that was removed */
-  webhook_id: string;
-  /** Whether the removal succeeded */
   success: boolean;
 }
 
@@ -120,6 +130,9 @@ export class EventsClient {
    * Register a webhook to receive event notifications via HTTP POST.
    * Events matching the specified types will be POSTed to the callback URL.
    * An optional HMAC secret enables signature verification on the receiver side.
+   *
+   * The node enforces: webhook URL must be `https://`; if a secret is provided
+   * it must be at least 16 characters.
    * @param url - Callback URL (must be HTTPS in production)
    * @param eventTypes - Optional event type filter; omit to receive all events
    * @param secret - Optional HMAC-SHA256 secret for webhook signature verification
@@ -130,18 +143,49 @@ export class EventsClient {
     eventTypes?: string[],
     secret?: string
   ): Promise<WebhookRegistration> {
-    return this.rpc.call<WebhookRegistration>('tenzro_registerWebhook', [
-      { url, event_types: eventTypes, secret },
-    ]);
+    return this.registerWebhookWithAddresses(url, eventTypes, undefined, secret);
   }
 
   /**
-   * Remove a previously registered webhook.
-   * @param webhookId - Webhook identifier to remove
-   * @returns Removal result
+   * Register a webhook with an optional `addresses` filter. When `addresses`
+   * is non-empty, the node only delivers events whose `addresses` array
+   * intersects this list. Use this for per-tenant / per-user webhook
+   * subscriptions.
+   *
+   * @param url - Callback URL (must be `https://`)
+   * @param eventTypes - Optional event type filter; omit to receive all events
+   * @param addresses - Optional address filter; omit for no restriction
+   * @param secret - Optional HMAC-SHA256 secret (≥16 characters when provided)
    */
-  async removeWebhook(webhookId: string): Promise<WebhookRemoveResult> {
-    return this.rpc.call<WebhookRemoveResult>('tenzro_removeWebhook', [
+  async registerWebhookWithAddresses(
+    url: string,
+    eventTypes?: string[],
+    addresses?: string[],
+    secret?: string
+  ): Promise<WebhookRegistration> {
+    const params: Record<string, unknown> = { url };
+    if (eventTypes !== undefined) params.event_types = eventTypes;
+    if (addresses !== undefined) params.addresses = addresses;
+    if (secret !== undefined) params.secret = secret;
+    return this.rpc.call<WebhookRegistration>('tenzro_registerWebhook', [params]);
+  }
+
+  /**
+   * List every registered webhook. Returns each webhook's id, url, active
+   * flag, event_types/addresses filters, and delivery counters. Secret
+   * hashes are NOT returned — secrets are write-only.
+   */
+  async listWebhooks(): Promise<WebhookList> {
+    return this.rpc.call<WebhookList>('tenzro_listWebhooks', [{}]);
+  }
+
+  /**
+   * Delete a webhook by id. Returns JSON-RPC error `-32602` if the id is
+   * unknown.
+   * @param webhookId - Webhook identifier to delete
+   */
+  async deleteWebhook(webhookId: string): Promise<WebhookDeletion> {
+    return this.rpc.call<WebhookDeletion>('tenzro_deleteWebhook', [
       { webhook_id: webhookId },
     ]);
   }

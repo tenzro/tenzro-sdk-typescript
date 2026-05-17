@@ -20,8 +20,8 @@ export class MarketplaceClient {
    * Register a new agent template on the marketplace.
    *
    * Paid-agent marketplace semantics:
-   * - `creator_did` (optional): bind the template to a `did:tenzro:` / `did:pdis:`
-   *   identity at registration time (immutable afterwards).
+   * - `creator_did` (optional): bind the template to a `did:tenzro:` identity at
+   *   registration time (immutable afterwards).
    * - `creator_wallet` (**mandatory** for non-free pricing): payout wallet. Each
    *   invocation fee is split 95/5 — 5% flows to the network treasury as
    *   `AGENT_MARKETPLACE_COMMISSION_BPS`, the remainder is paid here.
