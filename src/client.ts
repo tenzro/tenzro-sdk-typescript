@@ -54,6 +54,15 @@ import { TrainingInspectionClient } from "./training";
 import { SlaClient } from "./sla";
 import { SnapshotClient } from "./snapshot";
 import {
+  createDpopProof,
+  createDpopSession,
+  generateAgentSigningKeys,
+  generateDpopKeypair,
+  canonicalAgentMessageHash,
+  canonicalAgentMessagePreimage,
+  signAgentMessage,
+} from "./sign";
+import {
   Block,
   BlockRange,
   FeeHistory,
@@ -89,6 +98,21 @@ export class TenzroClient {
   public readonly tee: TeeClient;
   public readonly zk: ZkClient;
   public readonly streaming: StreamingClient;
+  /**
+   * Client-side signing helpers — DPoP proof minting for OAuth-bound
+   * RPCs (`wallet.signAndSend`, etc.) and hybrid Ed25519 + ML-DSA-65
+   * agent-message signing. See {@link sign} module docs.
+   */
+  public readonly sign = {
+    generateDpopKeypair,
+    createDpopProof,
+    createDpopSession: (displayName: string) =>
+      createDpopSession(this, displayName),
+    generateAgentSigningKeys,
+    canonicalAgentMessageHash,
+    canonicalAgentMessagePreimage,
+    signAgentMessage,
+  };
 
   private readonly rpc: RpcClient;
   private readonly config: TenzroConfig;

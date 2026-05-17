@@ -18,7 +18,7 @@ export class PrincipalChainClient {
    * @returns Principal chain (actor → … → controller) or null if unknown
    */
   async getReceiptPrincipalChain(receiptId: string): Promise<any> {
-    return this.rpc.call("tenzro_getReceiptPrincipalChain", [receiptId]);
+    return this.rpc.call("tenzro_getReceiptPrincipalChain", [{ receipt_id: receiptId }]);
   }
 
   /**
@@ -27,7 +27,7 @@ export class PrincipalChainClient {
    * @returns Array of receipt summaries
    */
   async listReceiptsByActor(actorDid: string): Promise<any[]> {
-    return this.rpc.call<any[]>("tenzro_listReceiptsByActor", [actorDid]);
+    return this.rpc.call<any[]>("tenzro_listReceiptsByActor", [{ did: actorDid }]);
   }
 
   /**
@@ -38,7 +38,7 @@ export class PrincipalChainClient {
    */
   async listReceiptsByController(controllerDid: string): Promise<any[]> {
     return this.rpc.call<any[]>("tenzro_listReceiptsByController", [
-      controllerDid,
+      { did: controllerDid },
     ]);
   }
 
@@ -49,6 +49,6 @@ export class PrincipalChainClient {
    * @returns Controller summary record
    */
   async summarizeController(controllerDid: string): Promise<any> {
-    return this.rpc.call("tenzro_summarizeController", [controllerDid]);
+    return this.rpc.call("tenzro_summarizeController", [{ did: controllerDid }]);
   }
 }

@@ -71,22 +71,24 @@ export interface TokenInfo {
   decimals: number;
   /** Total supply as a decimal string */
   total_supply: string;
-  /** Creator address */
-  creator: string;
-  /** VM type the token was deployed on */
-  vm_type: string;
+  /** Token type (e.g. "Erc20") — present on `getTokenInfo`, omitted on `listTokens` items. */
+  token_type?: string;
+  /** Creator address — present on `getTokenInfo`, omitted on `listTokens` items. */
+  creator?: string;
   /** EVM contract address (if applicable) */
-  evm_address?: string;
-  /** Transaction hash of the creation */
-  tx_hash?: string;
+  evm_address?: string | null;
+  /** SVM mint address (if applicable) */
+  svm_mint?: string | null;
+  /** Tempo / DAML address (if applicable) */
+  tempo_address?: string | null;
 }
 
 /** Result of listing tokens. */
 export interface TokenListResult {
   /** Array of registered tokens */
   tokens: TokenInfo[];
-  /** Total number of tokens matching the filter */
-  total: number;
+  /** Number of tokens matching the filter (server field name is `count`). */
+  count: number;
 }
 
 /** Native TNZO view (18 decimals). */
@@ -221,7 +223,7 @@ export class TokenClient {
    */
   async wrapTnzo(address: string, amount: string, toVm: string): Promise<WrapResult> {
     return this.rpc.call<WrapResult>('tenzro_wrapTnzo', [
-      { address, amount, vm_type: toVm },
+      { address, amount, to_vm: toVm },
     ]);
   }
 
@@ -231,6 +233,15 @@ export class TokenClient {
    * @returns Transfer result
    */
   async crossVmTransfer(params: CrossVmTransferParams): Promise<TransferResult> {
-    return this.rpc.call<TransferResult>('tenzro_crossVmTransfer', [params]);
+    return this.rpc.call<TransferResult>('tenzro_crossVmTransfer', [
+      {
+        from_address: params.from,
+        to_address: params.to,
+        amount: params.amount,
+        from_vm: params.from_vm,
+        to_vm: params.to_vm,
+        token: params.token,
+      },
+    ]);
   }
 }
