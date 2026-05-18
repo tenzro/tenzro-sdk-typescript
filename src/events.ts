@@ -121,7 +121,7 @@ export class EventsClient {
    * @returns Unsubscription result
    */
   async unsubscribeEvents(subscriptionId: string): Promise<UnsubscribeResult> {
-    return this.rpc.call<UnsubscribeResult>('tenzro_unsubscribe', [
+    return this.rpc.call<UnsubscribeResult>('tenzro_unsubscribeEvents', [
       { subscription_id: subscriptionId },
     ]);
   }

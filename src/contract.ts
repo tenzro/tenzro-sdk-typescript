@@ -8,8 +8,8 @@ export interface DeployContractParams {
   bytecode: string;
   /** Target VM: "evm", "svm", or "daml" */
   vm_type: string;
-  /** Deployer address (server expects `deployer`, not `from`) */
-  deployer: string;
+  /** Deployer address */
+  from: string;
   /** Optional constructor arguments (ABI-encoded hex for EVM) */
   constructor_args?: string;
   /** Optional gas limit */
@@ -90,7 +90,7 @@ export class ContractClient {
    */
   async decodeResult(data: string, outputTypes: string[]): Promise<unknown[]> {
     return this.rpc.call<unknown[]>('tenzro_decodeResult', [
-      { data_hex: data, output_types: outputTypes },
+      { data, output_types: outputTypes },
     ]);
   }
 }

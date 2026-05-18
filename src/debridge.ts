@@ -4,12 +4,12 @@ import type { RpcClient } from './rpc';
 
 /** A chain supported by deBridge DLN. */
 export interface DebridgeChain {
-  /** Chain ID as a string (deBridge MCP convention). */
-  chainId: string;
-  /** Aliases for the chain (e.g. ["Ethereum"], ["Arbitrum","Arbitrum One","ARB"]). */
-  chainNames: string[];
-  /** deBridge internal subscription ID, when available. */
-  debridgeSubscriptionId?: string;
+  /** Numeric chain ID */
+  chainId: number;
+  /** Human-readable chain name (e.g. "Ethereum", "Solana") */
+  name: string;
+  /** Chain type (e.g. "evm", "svm") */
+  chain_type?: string;
 }
 
 /** A token available on deBridge DLN. */
@@ -18,12 +18,12 @@ export interface DebridgeToken {
   address: string;
   /** Token ticker symbol (e.g. "USDC") */
   symbol: string;
-  /** Aliases for the token name (deBridge returns an array). */
-  names: string[];
+  /** Full token name */
+  name: string;
   /** Number of decimals */
   decimals: number;
-  /** Chain ID the token is on (string, deBridge convention). */
-  chainId?: string;
+  /** Chain ID the token is on */
+  chainId?: number;
 }
 
 /** A cross-chain order created via deBridge DLN. */
@@ -66,10 +66,14 @@ export interface DebridgeSwapResult {
   tx_data?: Record<string, unknown>;
 }
 
-/** deBridge usage instructions (server returns a workflow string list). */
+/** deBridge usage instructions and supported features. */
 export interface DebridgeInstructions {
-  /** Ordered workflow steps for using the deBridge MCP. */
-  workflow: string[];
+  /** Supported order types */
+  order_types: string[];
+  /** Supported features */
+  features: string[];
+  /** API version */
+  api_version: string;
 }
 
 // ── Client ──
@@ -95,22 +99,9 @@ export class DebridgeClient {
     query: string,
     chainId?: number
   ): Promise<DebridgeToken[]> {
-    // Server forwards `chain_id` to the deBridge MCP `search_tokens` tool,
-    // which expects a string `chainId`. Stringify here so the forwarded
-    // type matches; `createTx` / `sameChainSwap` need the same normalisation
-    // but their server-side validator rejects strings — see Known Issues.
-    // The server response wraps the array as `{ results: [...] }`; unwrap
-    // so callers always receive `DebridgeToken[]` as the type promises.
-    const raw = await this.rpc.call<
-      DebridgeToken[] | { results: DebridgeToken[] }
-    >('tenzro_debridgeSearchTokens', [
-      {
-        query,
-        ...(chainId !== undefined ? { chain_id: String(chainId) } : {}),
-      },
+    return this.rpc.call<DebridgeToken[]>('tenzro_debridgeSearchTokens', [
+      { query, chain_id: chainId },
     ]);
-    if (Array.isArray(raw)) return raw;
-    return raw?.results ?? [];
   }
 
   /**
@@ -152,8 +143,8 @@ export class DebridgeClient {
   ): Promise<DebridgeOrder> {
     return this.rpc.call<DebridgeOrder>('tenzro_debridgeCreateTx', [
       {
-        src_chain_id: srcChain,
-        dst_chain_id: dstChain,
+        src_chain: srcChain,
+        dst_chain: dstChain,
         src_token: srcToken,
         dst_token: dstToken,
         amount,

@@ -12,20 +12,14 @@ export interface TeeInfo {
   capabilities: string[];
 }
 
-/** TEE attestation report metadata. */
+/** TEE attestation report. */
 export interface AttestationResult {
-  /** TEE vendor name (e.g., "AmdSevSnp") */
-  vendor: string;
-  /** Hex-encoded user data committed in the attestation (64 bytes for AmdSevSnp) */
-  user_data_hex: string;
-  /** Hex-encoded measurement (PCR-equivalent) of the attested code */
-  measurement_hex: string;
-  /** Server timestamp when the attestation was generated */
-  timestamp: number;
-  /** Size of the underlying attestation_data blob */
-  attestation_data_size: number;
-  /** Number of certificates accompanying the report */
-  certificates_count: number;
+  /** Hex-encoded attestation report */
+  report: string;
+  /** Hex-encoded signature over the report */
+  signature: string;
+  /** X.509 certificate chain */
+  certificate_chain: string[];
 }
 
 /** TEE attestation verification result. */
@@ -38,8 +32,8 @@ export interface TeeVerifyResult {
 
 /** Data sealed within a TEE enclave. */
 export interface SealedData {
-  /** Hex-encoded sealed ciphertext (server-side field name is `sealed_hex`). */
-  sealed_hex: string;
+  /** Hex-encoded sealed ciphertext */
+  ciphertext: string;
   /** Key identifier used for sealing */
   key_id: string;
 }
@@ -92,7 +86,7 @@ export class TeeClient {
    */
   async verifyAttestation(attestation: string, teeType: string): Promise<TeeVerifyResult> {
     return this.rpc.call<TeeVerifyResult>('tenzro_verifyTeeAttestation', [
-      { report_hex: attestation, tee_type: teeType },
+      { attestation, tee_type: teeType },
     ]);
   }
 
@@ -102,9 +96,7 @@ export class TeeClient {
    * @param keyId - Key identifier for the sealing key
    */
   async sealData(data: string, keyId: string): Promise<SealedData> {
-    return this.rpc.call<SealedData>('tenzro_sealData', [
-      { data_hex: data, key_id: keyId },
-    ]);
+    return this.rpc.call<SealedData>('tenzro_sealData', [{ data, key_id: keyId }]);
   }
 
   /**
@@ -113,9 +105,7 @@ export class TeeClient {
    * @param keyId - Key identifier used during sealing
    */
   async unsealData(sealed: string, keyId: string): Promise<UnsealedData> {
-    return this.rpc.call<UnsealedData>('tenzro_unsealData', [
-      { sealed_hex: sealed, key_id: keyId },
-    ]);
+    return this.rpc.call<UnsealedData>('tenzro_unsealData', [{ sealed, key_id: keyId }]);
   }
 
   /**

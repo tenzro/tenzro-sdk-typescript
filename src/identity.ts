@@ -97,7 +97,7 @@ export class IdentityClient {
     issuerDid: string
   ): Promise<string> {
     return this.rpc.call<string>("tenzro_addCredential", [
-      { did, type: credentialType, issuer: issuerDid },
+      { did, credential_type: credentialType, issuer: issuerDid },
     ]);
   }
 
@@ -113,7 +113,7 @@ export class IdentityClient {
     endpoint: string
   ): Promise<void> {
     await this.rpc.call("tenzro_addService", [
-      { did, type: serviceType, endpoint },
+      { did, service_type: serviceType, service_endpoint: endpoint },
     ]);
   }
 
@@ -126,11 +126,10 @@ export class IdentityClient {
    */
   async registerMachineIdentity(
     name: string,
-    controller: string,
-    capabilities: string[] = []
+    controller: string
   ): Promise<IdentityInfo & { private_key?: string }> {
     return this.rpc.call("tenzro_registerMachineIdentity", [
-      { name, controller_did: controller, capabilities },
+      { name, controller },
     ]);
   }
 

@@ -24,25 +24,8 @@ export class AgentPaymentClient {
     agentDid: string,
     policy: Omit<SpendingPolicy, 'agent_did'>
   ): Promise<PolicyResult> {
-    const remapped = policy as Record<string, unknown>;
-    const toNum = (v: unknown): number | undefined => {
-      if (v === undefined || v === null) return undefined;
-      if (typeof v === "number") return v;
-      const n = Number(v);
-      return Number.isFinite(n) ? n : undefined;
-    };
-    const maxPerTx =
-      toNum(remapped.max_per_transaction) ?? toNum(remapped.per_tx_limit);
-    const maxDaily =
-      toNum(remapped.max_daily_spend) ?? toNum(remapped.daily_limit);
     return this.rpc.call<PolicyResult>('tenzro_setSpendingPolicy', [
-      {
-        agent_did: agentDid,
-        max_per_transaction: maxPerTx,
-        max_daily_spend: maxDaily,
-        active: remapped.active ?? true,
-        allowed_services: remapped.allowed_services ?? [],
-      },
+      { agent_did: agentDid, ...policy },
     ]);
   }
 

@@ -20,7 +20,7 @@ export class LifecycleClient {
    * @returns Lifecycle record or null if unknown
    */
   async getAgentLifecycle(agentId: string): Promise<any> {
-    return this.rpc.call("tenzro_getAgentLifecycle", [{ agent_id: agentId }]);
+    return this.rpc.call("tenzro_getAgentLifecycle", [agentId]);
   }
 
   /**
@@ -29,9 +29,7 @@ export class LifecycleClient {
    * @returns Array of kill-switch receipts
    */
   async listKillSwitchByAgent(agentId: string): Promise<any[]> {
-    return this.rpc.call<any[]>("tenzro_listKillSwitchByAgent", [
-      { agent_did: agentId },
-    ]);
+    return this.rpc.call<any[]>("tenzro_listKillSwitchByAgent", [agentId]);
   }
 
   /**
@@ -41,7 +39,7 @@ export class LifecycleClient {
    */
   async listKillSwitchByController(controllerDid: string): Promise<any[]> {
     return this.rpc.call<any[]>("tenzro_listKillSwitchByController", [
-      { controller_did: controllerDid },
+      controllerDid,
     ]);
   }
 

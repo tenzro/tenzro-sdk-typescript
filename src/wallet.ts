@@ -45,7 +45,7 @@ export class WalletClient {
    * Returns balance as string (human-readable with decimals).
    */
   async getTokenBalance(address: Address): Promise<string> {
-    return this.rpc.call<string>("tenzro_tokenBalance", [{ address }]);
+    return this.rpc.call<string>("tenzro_tokenBalance", [address]);
   }
 
   /**

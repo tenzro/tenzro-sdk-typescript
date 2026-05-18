@@ -31,7 +31,7 @@ export class GovernanceClient {
    */
   async getProposal(proposalId: string): Promise<GovernanceProposal> {
     return this.rpc.call<GovernanceProposal>("tenzro_getProposal", [
-      { proposal_id: proposalId },
+      proposalId,
     ]);
   }
 
@@ -74,7 +74,7 @@ export class GovernanceClient {
    * @returns Voting power information
    */
   async getVotingPower(address: string): Promise<VotingPower> {
-    return this.rpc.call<VotingPower>("tenzro_getVotingPower", [{ address }]);
+    return this.rpc.call<VotingPower>("tenzro_getVotingPower", [address]);
   }
 
   /**

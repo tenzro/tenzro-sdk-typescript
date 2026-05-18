@@ -35,7 +35,7 @@ export class QuotaClient {
    * @returns Lane snapshot
    */
   async getMempoolLane(lane: string): Promise<any> {
-    return this.rpc.call("tenzro_getMempoolLane", [{ lane }]);
+    return this.rpc.call("tenzro_getMempoolLane", [lane]);
   }
 
   /**

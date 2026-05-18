@@ -22,8 +22,8 @@ export class BondClient {
    * @param bondId - 32-byte bond identifier (hex with or without 0x)
    * @returns Bond record or null if not found
    */
-  async getAgentBond(agentDid: string): Promise<any> {
-    return this.rpc.call("tenzro_getAgentBond", [{ agent_did: agentDid }]);
+  async getAgentBond(bondId: string): Promise<any> {
+    return this.rpc.call("tenzro_getAgentBond", [bondId]);
   }
 
   /**
@@ -33,7 +33,7 @@ export class BondClient {
    */
   async listAgentBondsByController(controllerDid: string): Promise<any[]> {
     return this.rpc.call<any[]>("tenzro_listAgentBondsByController", [
-      { controller_did: controllerDid },
+      controllerDid,
     ]);
   }
 
