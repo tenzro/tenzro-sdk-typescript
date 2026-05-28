@@ -115,6 +115,14 @@ export class RpcClient {
       if (dpop && dpop.length > 0) {
         headers["DPoP"] = dpop;
       }
+      // API key for scope-gated namespaces (currently `tenzro_*Canton*`).
+      // The operator (RPC node) holds the upstream credentials (Auth0 for
+      // Canton devnet) and proxies on the caller's behalf. Callers present
+      // a `tnz_<base64url>` key with the required scope.
+      const apiKey = env.TENZRO_API_KEY;
+      if (apiKey && apiKey.length > 0) {
+        headers["X-Tenzro-Api-Key"] = apiKey;
+      }
     }
 
     try {

@@ -1162,52 +1162,90 @@ export interface ToolExecutionResult {
 // Events use /v2/events/events-by-contract-id
 
 export interface CantonDomain {
-  domain_id: string;
+  /** Synchronizer / domain identifier */
+  id: string;
+  /** Human-readable domain name */
   name: string;
-  status: string;
-  participants: string[];
-  sequencer_url?: string;
+  /** Native settlement token for this domain */
+  native_token: string;
+  /** Expected finality time in seconds */
+  finality_time_secs: number;
+}
+
+/** Response envelope from `tenzro_listCantonDomains`. */
+export interface CantonDomainList {
+  /** Whether Canton/DAML is enabled on this node */
+  enabled: boolean;
+  /** Configured synchronizer domains */
+  domains: CantonDomain[];
+  /** Optional human-readable status (present when `enabled` is false) */
+  message?: string;
 }
 
 export interface DamlContract {
   contract_id: string;
+  /** DAML template ID (e.g. "Tenzro.Workflow:WorkflowAnchor") */
   template_id: string;
+  /** Contract payload (create arguments) */
   payload: Record<string, unknown>;
-  signatories: string[];
-  observers: string[];
-  created_at?: number;
 }
 
+/**
+ * Query parameters for `tenzro_listDamlContracts`.
+ *
+ * The Canton v2 active-contracts endpoint requires at least one template id —
+ * pass them via `template_ids`. The optional `query` object is applied
+ * client-side against `createArguments` as a structural filter.
+ */
 export interface ListDamlContractsParams {
-  domain_id?: string;
-  /** Template ID filter (passed as `identifierFilter` to Canton 3.x API v2) */
-  template_id?: string;
-  party?: string;
-  limit?: number;
-  offset?: number;
+  template_ids: string[];
+  query?: Record<string, unknown>;
 }
 
-export interface DamlCommandParams {
-  domain_id: string;
-  command_type: 'create' | 'exercise';
-  template_id: string;
-  payload: Record<string, unknown>;
-  contract_id?: string;
-  choice?: string;
+/** Response envelope from `tenzro_listDamlContracts`. */
+export interface DamlContractsResponse {
+  contracts: DamlContract[];
+  /** Template ids echoed back for traceability */
+  template_ids: string[];
+  /** Structural filter echoed back for traceability */
+  query: unknown;
 }
+
+/** Parameters for a DAML `create` command. */
+export interface DamlCreateCommandParams {
+  command_type: 'create';
+  template_id: string;
+  create_arguments: Record<string, unknown>;
+}
+
+/** Parameters for a DAML `exercise` command. */
+export interface DamlExerciseCommandParams {
+  command_type: 'exercise';
+  template_id: string;
+  contract_id: string;
+  choice: string;
+  choice_argument: Record<string, unknown>;
+}
+
+export type DamlCommandParams =
+  | DamlCreateCommandParams
+  | DamlExerciseCommandParams;
 
 export interface DamlCommandResult {
-  command_id: string;
-  status: string;
-  contract_id?: string;
-  events: DamlEvent[];
-}
-
-export interface DamlEvent {
-  event_type: string;
-  contract_id: string;
+  /** "create" or "exercise" */
+  command_type: string;
+  /** DAML template ID the command was submitted against */
   template_id: string;
+  /** Created contract ID (for create commands) */
+  contract_id?: string;
+  /** Contract payload returned by the participant (for create commands) */
   payload?: Record<string, unknown>;
+  /** Choice name (for exercise commands) */
+  choice?: string;
+  /** Exercise result (for exercise commands) */
+  exercise_result?: unknown;
+  /** Ledger events produced by the command (for exercise commands) */
+  events?: unknown;
 }
 
 // ─── Staking ─────────────────────────────────────────────────────────────────

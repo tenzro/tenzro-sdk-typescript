@@ -1,6 +1,6 @@
 {
   "name": "tenzro-sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Tenzro Network SDK — wallets, identity, agents, inference, bridge, crypto, TEE, ZK proofs, custody, and settlement",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -36,6 +36,7 @@
     "LICENSE"
   ],
   "devDependencies": {
+    "@types/node": "^20.11.0",
     "typescript": "^5.9.3"
   }
 }

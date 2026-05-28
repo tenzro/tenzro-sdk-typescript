@@ -389,11 +389,14 @@ export type {
 // Canton / DAML types
 export type {
   CantonDomain,
+  CantonDomainList,
   DamlContract,
+  DamlContractsResponse,
   ListDamlContractsParams,
   DamlCommandParams,
+  DamlCreateCommandParams,
+  DamlExerciseCommandParams,
   DamlCommandResult,
-  DamlEvent,
 } from "./types";
 
 // Staking types

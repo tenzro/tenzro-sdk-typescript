@@ -1,50 +1,56 @@
 import type { RpcClient } from './rpc';
 import type {
-  CantonDomain,
-  DamlContract,
-  ListDamlContractsParams,
+  CantonDomainList,
   DamlCommandParams,
   DamlCommandResult,
+  DamlContractsResponse,
+  ListDamlContractsParams,
 } from './types';
 
 /**
  * Client for Canton / DAML enterprise ledger operations.
- * Interact with Canton synchronization domains and DAML smart contracts.
+ *
+ * Interacts with the shared Canton participant the Tenzro node is configured
+ * against. The node proxies all calls using its own bearer JWT — callers never
+ * see the Auth0 secret.
  *
  * Uses Canton 3.x JSON Ledger API v2 endpoints:
- * - Commands: `POST /v2/commands/submit-and-wait-for-transaction`
- * - Active contracts: `POST /v2/state/active-contracts` (with `identifierFilter`)
- * - Events: `POST /v2/events/events-by-contract-id`
+ * - Commands:        `POST /v2/commands/submit-and-wait-for-transaction`
+ * - Active contracts:`POST /v2/state/active-contracts` (with `identifierFilter`)
+ * - Events:          `POST /v2/events/events-by-contract-id`
  */
 export class CantonClient {
   constructor(private readonly rpc: RpcClient) {}
 
   /**
-   * List all Canton synchronization domains connected to this node.
-   * @returns Array of domain information
+   * List the Canton synchronizer domains this node is configured against.
+   *
+   * The envelope is returned even when Canton is not enabled — check
+   * `enabled` on the response before treating `domains` as live.
    */
-  async listDomains(): Promise<CantonDomain[]> {
-    return this.rpc.call<CantonDomain[]>('tenzro_listCantonDomains', []);
+  async listDomains(): Promise<CantonDomainList> {
+    return this.rpc.call<CantonDomainList>('tenzro_listCantonDomains', {});
   }
 
   /**
-   * List DAML contracts with optional filtering.
-   * Queries the Canton 3.x active-contracts endpoint with `identifierFilter`
-   * for template-based filtering.
-   * @param params - Optional filter by domain, template, party, with pagination
-   * @returns Array of DAML contracts
+   * Query active DAML contracts. Requires at least one template id.
    */
-  async listContracts(params?: ListDamlContractsParams): Promise<DamlContract[]> {
-    return this.rpc.call<DamlContract[]>('tenzro_listDamlContracts', [params ?? {}]);
+  async listContracts(
+    params: ListDamlContractsParams,
+  ): Promise<DamlContractsResponse> {
+    return this.rpc.call<DamlContractsResponse>(
+      'tenzro_listDamlContracts',
+      params as unknown as Record<string, unknown>,
+    );
   }
 
   /**
-   * Submit a DAML command (create or exercise) to a Canton domain.
-   * Uses the Canton 3.x `submit-and-wait-for-transaction` endpoint.
-   * @param params - Command parameters including domain, template, payload, and optional choice
-   * @returns Command result with status and events
+   * Submit a DAML `create` or `exercise` command to the Canton participant.
    */
   async submitCommand(params: DamlCommandParams): Promise<DamlCommandResult> {
-    return this.rpc.call<DamlCommandResult>('tenzro_submitDamlCommand', [params]);
+    return this.rpc.call<DamlCommandResult>(
+      'tenzro_submitDamlCommand',
+      params as unknown as Record<string, unknown>,
+    );
   }
 }
