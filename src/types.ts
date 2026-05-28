@@ -635,6 +635,40 @@ export interface HealthResponse {
   verification_service: string;
 }
 
+/**
+ * Snapshot of libp2p network metrics exposed by `tenzro_getNetworkStats`.
+ *
+ * Counter fields are monotonically-increasing totals since process start.
+ * Gauge fields (`peers_connected`, `kad_routing_table_size`,
+ * `gossipsub_mesh_size`) are instantaneous values.
+ */
+export interface NetworkStats {
+  /** `false` when the network service has not been initialized. */
+  available: boolean;
+  /** Set when `available` is `false`. */
+  reason?: string;
+  events_dropped?: number;
+  dials_rejected_per_ip?: number;
+  dials_rejected_global?: number;
+  gossip_rejected_validator_only?: number;
+  gossip_rejected_invalid?: number;
+  gossip_rejected_duplicate?: number;
+  gossip_published?: number;
+  gossip_accepted?: number;
+  connections_established?: number;
+  connections_inbound_total?: number;
+  connections_outbound_total?: number;
+  peers_banned?: number;
+  peers_connected?: number;
+  kad_routing_table_size?: number;
+  gossipsub_mesh_size?: number;
+  /**
+   * Counter incremented on every observed remote-multiaddr change for an
+   * already-known peer (QUIC path migration, mobile network switch, NAT rebinding).
+   */
+  peer_address_migrations_total?: number;
+}
+
 export interface VerificationResponse {
   valid: boolean;
   details?: string;

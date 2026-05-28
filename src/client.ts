@@ -61,6 +61,7 @@ import {
   NodeStatus,
   FaucetResponse,
   HealthResponse,
+  NetworkStats,
 } from "./types";
 
 /**
@@ -561,6 +562,17 @@ export class TenzroClient {
   async peerCount(): Promise<number> {
     const hex = await this.rpc.call<string>("tenzro_peerCount");
     return parseHex(hex);
+  }
+
+  /**
+   * Gets the libp2p network metrics snapshot.
+   *
+   * Returns counters and gauges from `tenzro_network::NetworkMetrics`,
+   * including `peer_address_migrations_total` for QUIC path migration /
+   * mobile network switch / NAT rebinding observability.
+   */
+  async getNetworkStats(): Promise<NetworkStats> {
+    return this.rpc.call<NetworkStats>("tenzro_getNetworkStats");
   }
 
   async isSyncing(): Promise<boolean> {
