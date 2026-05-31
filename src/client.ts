@@ -39,6 +39,7 @@ import { NftClient } from "./nft";
 import { ComplianceClient } from "./compliance";
 import { EventsClient } from "./events";
 import { DebridgeClient } from "./debridge";
+import { ApiKeyClient } from "./api-key";
 import { AuthClient } from "./auth";
 import { BondClient } from "./bond";
 import { InsuranceClient } from "./insurance";
@@ -70,6 +71,7 @@ import {
  */
 export class TenzroClient {
   public readonly auth: AuthClient;
+  public readonly apiKey: ApiKeyClient;
   public readonly wallet: WalletClient;
   public readonly inference: InferenceClient;
   public readonly cortex: CortexClient;
@@ -103,6 +105,7 @@ export class TenzroClient {
       transport,
     );
     this.auth = new AuthClient(this.rpc);
+    this.apiKey = new ApiKeyClient(this.rpc);
     this.wallet = new WalletClient(this.rpc);
     this.inference = new InferenceClient(this.rpc);
     this.cortex = new CortexClient(this.rpc);

@@ -123,6 +123,14 @@ export class RpcClient {
       if (apiKey && apiKey.length > 0) {
         headers["X-Tenzro-Api-Key"] = apiKey;
       }
+      // Operator admin token for node-scoped mutation RPCs (API-key
+      // issuance / revocation / listing, staking, provider registration).
+      // Each node operator holds their own token on their own node — see
+      // `docs/api-keys.md` for the per-operator sovereignty model.
+      const adminToken = env.TENZRO_ADMIN_TOKEN;
+      if (adminToken && adminToken.length > 0) {
+        headers["X-Tenzro-Admin-Token"] = adminToken;
+      }
     }
 
     try {

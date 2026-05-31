@@ -5,6 +5,16 @@ export { TenzroClient } from "./client";
 export { AppClient } from "./app";
 
 // Sub-clients
+export { ApiKeyClient } from "./api-key";
+export type {
+  ApiKeyList,
+  ApiKeyRecord,
+  CreateApiKeyParams,
+  CreatedApiKey,
+  KeyClass,
+  MyApiKeyList,
+  RevokeApiKeyResult,
+} from "./api-key";
 export { AuthClient } from "./auth";
 export { WalletClient } from "./wallet";
 export { InferenceClient } from "./inference";
