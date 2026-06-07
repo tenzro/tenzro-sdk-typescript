@@ -130,3 +130,100 @@ export class TrainingInspectionClient {
     ]);
   }
 }
+
+/**
+ * Optional confidential-tier enrollment payload — required when the
+ * task being enrolled into has a sealed-shard manifest installed.
+ * The attestation proves the trainer is running inside a TEE enclave
+ * whose pubkey + measurements were sealed into the manifest by the
+ * task sponsor.
+ */
+export interface ConfidentialEnrollment {
+  attestation: string;
+  enclave_pubkey: string;
+  measurements_hex: string;
+}
+
+/**
+ * Write-side client for the Tenzro Train protocol. Backed by the
+ * `tenzro_training_postTask` / `enrollTrainer` / `submitOuterGradient` /
+ * `finalizeRound` / `installSealedManifest` RPCs.
+ *
+ * The wallet kernel signs every write through the configured custody
+ * quorum; this SDK class is the wire surface the wallet's training
+ * adapter (or any operator dashboard) routes through.
+ */
+export class TrainingClient {
+  constructor(private rpc: RpcClient) {}
+
+  /**
+   * Register a new training run with the local syncer. `taskSpec` is
+   * an opaque payload matching `tenzro_types::training::TrainingTaskSpec`
+   * — sponsor, tier, dataset_ref, aggregator config, witness committee.
+   */
+  async postTask(taskSpec: unknown): Promise<{ task_id: string }> {
+    return this.rpc.call("tenzro_training_postTask", [{ task_spec: taskSpec }]);
+  }
+
+  /**
+   * Enroll a trainer DID into an active training run. For
+   * Confidential-tier tasks, pass `confidential` carrying the
+   * trainer's TEE attestation + enclave pubkey + measurements — the
+   * node validates parity against the installed sealed-shard manifest
+   * before accepting.
+   */
+  async enrollTrainer(
+    taskId: string,
+    trainerDid: string,
+    confidential?: ConfidentialEnrollment,
+  ): Promise<unknown> {
+    const params: Record<string, unknown> = {
+      task_id: taskId,
+      trainer_did: trainerDid,
+    };
+    if (confidential) {
+      params.attestation = confidential.attestation;
+      params.enclave_pubkey = confidential.enclave_pubkey;
+      params.measurements_hex = confidential.measurements_hex;
+    }
+    return this.rpc.call("tenzro_training_enrollTrainer", [params]);
+  }
+
+  /**
+   * Submit an outer gradient for the current round. `gradient` is
+   * the opaque protocol-side `OuterGradient` payload (safetensors
+   * hash + signature + round + trainer DID).
+   */
+  async submitOuterGradient(taskId: string, gradient: unknown): Promise<unknown> {
+    return this.rpc.call("tenzro_training_submitOuterGradient", [
+      { task_id: taskId, gradient },
+    ]);
+  }
+
+  /**
+   * Finalize the current round. Idempotent under the k-of-N witness
+   * committee model: redundant submissions for the same
+   * `(round, state_root)` return Ok; conflicting state roots return
+   * `ConflictingFinalize` for fork detection.
+   */
+  async finalizeRound(taskId: string, syncRound: unknown): Promise<unknown> {
+    return this.rpc.call("tenzro_training_finalizeRound", [
+      { task_id: taskId, sync_round: syncRound },
+    ]);
+  }
+
+  /**
+   * Install a sealed-shard manifest for a Confidential-tier task.
+   * The manifest binds each trainer's encrypted shard to a TEE
+   * attestation; the node enforces parity between the manifest hash
+   * recorded here and the `dataset_ref` in the task spec.
+   */
+  async installSealedManifest(
+    taskId: string,
+    manifest: SealedDatasetManifest,
+  ): Promise<unknown> {
+    return this.rpc.call("tenzro_training_installSealedManifest", [
+      { task_id: taskId, manifest },
+    ]);
+  }
+}

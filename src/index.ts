@@ -144,6 +144,43 @@ export type {
 } from "./babylon";
 export { CaipClient } from "./caip";
 export type { Caip2Info, Caip10Info, Caip19Request, Caip19Info } from "./caip";
+
+// Pure helpers for the submitted `tenzro` CASA namespace — parsing,
+// validation, and constants. Safe to use without an RPC round-trip.
+export {
+  TENZRO_CAIP2_NAMESPACE,
+  TENZRO_SLIP44_COIN_INDEX,
+  isTenzroCaip2,
+  buildTenzroCaip2,
+  parseTenzroCaip2,
+  isTenzroCaip10,
+  parseTenzroCaip19,
+} from "./caip-helpers";
+export type { CaipAssetNamespace } from "./caip-helpers";
+
+// Pure helpers for the submitted did:tenzro DID method.
+export {
+  parseTenzroDid,
+  isTenzroDid,
+  buildHumanDid,
+  buildAutonomousMachineDid,
+  buildDelegatedMachineDid,
+} from "./did-tenzro-helpers";
+export type { TenzroDidClass, ParsedTenzroDid } from "./did-tenzro-helpers";
+
+// Tenzro A2A protocol extension constants + extraction helper.
+export {
+  TENZRO_A2A_EXTENSION_NAMESPACE,
+  TENZRO_A2A_DID_KEY,
+  TENZRO_A2A_SIG_KEY,
+  TENZRO_A2A_PUBKEY_KEY,
+  TENZRO_A2A_DELEGATION_KEY,
+  TENZRO_A2A_MANDATE_REF_KEY,
+  TENZRO_A2A_RECEIPT_REF_KEY,
+  extractTenzroA2aExtension,
+} from "./a2a-extension";
+export type { TenzroA2aExtension } from "./a2a-extension";
+
 export { WormholeClient } from "./wormhole";
 export { IrohClient } from "./iroh";
 export { CctClient } from "./cct";
@@ -220,7 +257,8 @@ export type {
   SnapshotOfferAccepted,
   SnapshotChunkApplied,
 } from "./snapshot";
-export { TrainingInspectionClient } from "./training";
+export { TrainingInspectionClient, TrainingClient } from "./training";
+export type { ConfidentialEnrollment } from "./training";
 export type {
   TrainingRunStatus,
   TrainingRun,

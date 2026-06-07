@@ -216,7 +216,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `contract` | `deployContract()`, `callContract()`, `encodeFunction()` |
 | `debridge` | `searchTokens()`, `getChains()`, `createTx()` |
 | `events` | `getEvents()`, `subscribeEvents()`, `registerWebhook()` |
-| `canton` | `listDomains()`, `submitCommand()` |
+| `canton` | Canton 3.5+ JSON Ledger API surface. Reads: `listDomains()`, `listContracts()`, `listParties()`, `listPackages()`, `health()`, `version()`, `getMyUser()`, `cantonCoinBalance()` (CIP-56), `feeSchedule()`, `connectedSynchronizers()`, `getTransaction(updateId)`. Writes: `submitCommand()`, `uploadDar(darBase64)`. The wallet/SDK never see the upstream Auth0 secret — the Tenzro node proxies every call with its own bearer JWT and resolves the participant's FQ party id via the CIP-26 user management service. Requires an API key with `canton` scope at the Tenzro node. |
 | `skill` | `listSkills()`, `registerSkill()` |
 | `tool` | `listTools()`, `registerTool()` |
 | `svm-cross-vm` | Tenzro Cross-VM SVM-native program: `TENZRO_CROSS_VM_PROGRAM_ID_BASE58`, `encodeBridgeToEvm()`, `encodeBridgeFromEvm()`, `encodeRegisterTokenPointer()`, `encodeTransferCrossVm()`, `decodeCrossVmInstruction()` |

@@ -1190,7 +1190,7 @@ export interface ToolExecutionResult {
   metadata?: Record<string, string>;
 }
 
-// ─── Canton / DAML (Canton 3.x JSON Ledger API v2) ──────────────────────────
+// ─── Canton / DAML (Canton 3.5+ JSON Ledger API v2) ──────────────────────────
 // Commands use /v2/commands/submit-and-wait-for-transaction
 // Active contracts use /v2/state/active-contracts with identifierFilter
 // Events use /v2/events/events-by-contract-id
