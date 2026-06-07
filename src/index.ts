@@ -102,6 +102,48 @@ export type {
 export { Erc7683Client } from "./erc7683";
 export { Erc7802Client } from "./erc7802";
 export { Erc8004Client } from "./erc8004";
+export { Permit2Client } from "./permit2";
+export type {
+  Permit2DomainSeparator,
+  Permit2DigestRequest,
+  Permit2Digest,
+  Permit2VerifyAndConsumeRequest,
+  Permit2VerifyAndConsumeResult,
+  Permit2NonceUsed,
+} from "./permit2";
+export { SecureMintClient } from "./secure-mint";
+export type {
+  SecureMintPolicy,
+  SecureMintCheck,
+  SecureMintApply,
+} from "./secure-mint";
+export { HyperlaneClient } from "./hyperlane";
+export type {
+  HyperlaneChain,
+  HyperlaneDispatchRequest,
+  HyperlaneDispatchQuote,
+  HyperlaneDispatchResult,
+  HyperlaneMessage,
+} from "./hyperlane";
+export { AxelarClient } from "./axelar";
+export type {
+  AxelarChain,
+  AxelarCallContractRequest,
+  AxelarCallContractResult,
+  AxelarPayGasRequest,
+  AxelarPayGasResult,
+  AxelarMessage,
+} from "./axelar";
+export { BabylonClient } from "./babylon";
+export type {
+  RegisterFinalityProviderRequest,
+  FinalityProvider,
+  BabylonTotalStake,
+  SubmitFinalitySignatureRequest,
+  BtcDelegation,
+} from "./babylon";
+export { CaipClient } from "./caip";
+export type { Caip2Info, Caip10Info, Caip19Request, Caip19Info } from "./caip";
 export { WormholeClient } from "./wormhole";
 export { IrohClient } from "./iroh";
 export { CctClient } from "./cct";
@@ -187,6 +229,29 @@ export type {
   SealedShardEnvelope,
   ListTrainingRunsResult,
 } from "./training";
+export { CapitalClient } from "./capital";
+export type {
+  CapitalSide,
+  AssetWeight,
+  CapitalObjective,
+  CapitalConstraints,
+  CapitalComplianceReq,
+  CapitalAuthorization,
+  CapitalSettlementReq,
+  CapitalIntent,
+  CapitalQuote,
+  CapitalLeg,
+  ReserveAttestation,
+} from "./capital";
+export { WorkflowClient } from "./workflow";
+export type {
+  WorkflowStatus,
+  SagaStepStatus,
+  SagaStep,
+  SagaWorkflow,
+  WorkflowPayload,
+  DidEnvelope,
+} from "./workflow";
 
 // SVM Cross-VM (native program) instruction builders
 export {

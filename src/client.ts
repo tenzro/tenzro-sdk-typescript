@@ -54,6 +54,14 @@ import { ValidatorClient } from "./validator";
 import { TrainingInspectionClient } from "./training";
 import { SlaClient } from "./sla";
 import { SnapshotClient } from "./snapshot";
+import { CapitalClient } from "./capital";
+import { WorkflowClient } from "./workflow";
+import { Permit2Client } from "./permit2";
+import { SecureMintClient } from "./secure-mint";
+import { HyperlaneClient } from "./hyperlane";
+import { AxelarClient } from "./axelar";
+import { BabylonClient } from "./babylon";
+import { CaipClient } from "./caip";
 import {
   Block,
   BlockRange,
@@ -92,6 +100,14 @@ export class TenzroClient {
   public readonly tee: TeeClient;
   public readonly zk: ZkClient;
   public readonly streaming: StreamingClient;
+  public readonly capital: CapitalClient;
+  public readonly workflow: WorkflowClient;
+  public readonly permit2: Permit2Client;
+  public readonly secureMint: SecureMintClient;
+  public readonly hyperlane: HyperlaneClient;
+  public readonly axelar: AxelarClient;
+  public readonly babylon: BabylonClient;
+  public readonly caip: CaipClient;
 
   private readonly rpc: RpcClient;
   private readonly config: TenzroConfig;
@@ -126,6 +142,14 @@ export class TenzroClient {
     this.tee = new TeeClient(this.rpc);
     this.zk = new ZkClient(this.rpc);
     this.streaming = new StreamingClient(this.rpc);
+    this.capital = new CapitalClient(this.rpc);
+    this.workflow = new WorkflowClient(this.rpc);
+    this.permit2 = new Permit2Client(this.rpc);
+    this.secureMint = new SecureMintClient(this.rpc);
+    this.hyperlane = new HyperlaneClient(this.rpc);
+    this.axelar = new AxelarClient(this.rpc);
+    this.babylon = new BabylonClient(this.rpc);
+    this.caip = new CaipClient(this.rpc);
   }
 
   task(): TaskClient {

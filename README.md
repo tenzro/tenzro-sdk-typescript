@@ -220,6 +220,16 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `skill` | `listSkills()`, `registerSkill()` |
 | `tool` | `listTools()`, `registerTool()` |
 | `svm-cross-vm` | Tenzro Cross-VM SVM-native program: `TENZRO_CROSS_VM_PROGRAM_ID_BASE58`, `encodeBridgeToEvm()`, `encodeBridgeFromEvm()`, `encodeRegisterTokenPointer()`, `encodeTransferCrossVm()`, `decodeCrossVmInstruction()` |
+| `capital` | Regulated capital-allocation intents: `openCapitalIntent()`, `quoteCapitalIntent()`, `assignCapitalIntent()`, `executeCapitalLeg()`, `verifyCapitalLeg()`, `compensateCapitalLeg()`, `settleCapitalIntent()`, `getCapitalIntent()`, `submitReserveAttestation()`, `getReserve()`, `attestedMint()` |
+| `workflow` | Multi-party saga workflows with AP2 / x402 / MPP / Stripe SPT / Visa TAP / Mastercard Agent Pay mandate binding: `openWorkflow()`, `executeStep()`, `verifyStep()`, `compensateStep()`, `finalizeWorkflow()`, `mirrorToCanton()`, `verifyDidEnvelope()`, `getWorkflow()`, `getWorkflowSaga()`, `getWorkflowLifecycle()`, `getWorkflowReceipt()`, `getWorkflowOperationalMetrics()`, `listWorkflowsByCreator()`, `listWorkflowsByParticipant()`, `listWorkflowsByStatus()`, `listWorkflowReceipts()` |
+| `eip7702` | Pectra Type-4 delegation registry: `install7702Delegation()`, `get7702Delegation()`, `revoke7702Delegation()` |
+| `erc7683` | Cross-chain intents origin opener + destination fill registry: `open7683Order()`, `get7683Order()`, `list7683Orders()`, `recordFill7683()`, `getFill7683()`, `listFills7683()` |
+| `permit2` | Permit2 `SignatureTransfer`: `domainSeparator()`, `digest()`, `verifyAndConsume()`, `nonceUsed()` (optional witness binding for ERC-7683 origin opens) |
+| `secureMint` | Per-token 1:1 reserve-attestation invariant for tokenized RWAs: `setPolicy()`, `getPolicy()`, `clearPolicy()`, `check()`, `apply()`, `recordBurn()` |
+| `hyperlane` | Hyperlane V3 messaging with sovereign Tenzro-validator-set ISM: `listChains()`, `quoteDispatch()`, `dispatch()`, `getMessage()` |
+| `axelar` | Axelar GMP — Cosmos / Move / Stellar / XRPL reach: `listChains()`, `callContract()`, `payGas()`, `getMessage()` |
+| `babylon` | Babylon Bitcoin staking finality-providers + EOTS delegations: `registerFinalityProvider()`, `submitFinalitySignature()`, `totalStakeForProvider()`, `listDelegations()` |
+| `caip` | Tenzro CAIP namespace identifiers per `ChainAgnostic/namespaces#184`: `caip2()`, `caip10()`, `caip19()` |
 
 ## Auth (OAuth 2.1 + DPoP Onboarding)
 
