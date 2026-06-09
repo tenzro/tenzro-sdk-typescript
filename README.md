@@ -216,7 +216,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `contract` | `deployContract()`, `callContract()`, `encodeFunction()` |
 | `debridge` | `searchTokens()`, `getChains()`, `createTx()` |
 | `events` | `getEvents()`, `subscribeEvents()`, `registerWebhook()` |
-| `canton` | Canton 3.5+ JSON Ledger API surface. Reads: `listDomains()`, `listContracts()`, `listParties()`, `listPackages()`, `health()`, `version()`, `getMyUser()`, `cantonCoinBalance()` (CIP-56), `feeSchedule()`, `connectedSynchronizers()`, `getTransaction(updateId)`. Writes: `submitCommand()`, `uploadDar(darBase64)`. The wallet/SDK never see the upstream Auth0 secret — the Tenzro node proxies every call with its own bearer JWT and resolves the participant's FQ party id via the CIP-26 user management service. Requires an API key with `canton` scope at the Tenzro node. |
+| `canton` | Canton 3.5+ JSON Ledger API surface. Reads: `listDomains()`, `listContracts()`, `listParties()`, `listPackages()`, `health()`, `version()`, `getMyUser()`, `cantonCoinBalance()` (CIP-56), `feeSchedule()`, `connectedSynchronizers()`, `getTransaction(updateId)`, `listUserRights(userId?)`, `getMyAnalytics()`, `listApiKeyAnalytics(keyId?)`. Writes: `submitCommand()`, `allocateParty(hint, displayName?)`, `grantUserRights({party, userId?, canActAs?, canReadAs?})`, `uploadDar(darBase64)`. Wire shape verified against Canton 3.5.1: the `submit-and-wait-for-transaction` request body nests `JsCommands` under a top-level `commands` key, each command is externally-tagged (`{CreateCommand: {...}}` / `{ExerciseCommand: {...}}`). When the presenting API key has a bound `canton_user_id`, the node auto-forwards `actAs` / `requestingParties` as the tenant's `primaryParty`. Stage 2.b (`identity_providers.enabled` on the node) auto-mints a per-tenant upstream OAuth client at issuance and returns the `tenant_oauth_client` (id + secret + token_url + issuer_url + jwks_url + audience) once on `apiKey.create(...)`. Tenants then present their own Canton JWT via `X-Canton-Auth: Bearer <jwt>` on subsequent canton-scoped calls. Requires an API key with `canton` scope at the Tenzro node. |
 | `skill` | `listSkills()`, `registerSkill()` |
 | `tool` | `listTools()`, `registerTool()` |
 | `svm-cross-vm` | Tenzro Cross-VM SVM-native program: `TENZRO_CROSS_VM_PROGRAM_ID_BASE58`, `encodeBridgeToEvm()`, `encodeBridgeFromEvm()`, `encodeRegisterTokenPointer()`, `encodeTransferCrossVm()`, `decodeCrossVmInstruction()` |
@@ -230,6 +230,12 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `axelar` | Axelar GMP — Cosmos / Move / Stellar / XRPL reach: `listChains()`, `callContract()`, `payGas()`, `getMessage()` |
 | `babylon` | Babylon Bitcoin staking finality-providers + EOTS delegations: `registerFinalityProvider()`, `submitFinalitySignature()`, `totalStakeForProvider()`, `listDelegations()` |
 | `caip` | Tenzro CAIP namespace identifiers per `ChainAgnostic/namespaces#184`: `caip2()`, `caip10()`, `caip19()` |
+| `bridgeFee` | Cross-chain bridge fees in TNZO: `quote()` for destination-native fees, `listSponsorshipPools()` for per-adapter vault state, `sponsor()` against a previously-quoted envelope, `getAnalytics()` for self-read CU consumption, `listAnalytics()` for operator cross-tenant read. Admin-only: `setRate()`, `setRefillThreshold()`. Read paths require `chainlink` API key scope on the node. |
+| `urwa` | ERC-7943 (uRWA) compliance surface: token freeze, kill-switch, forced-transfer mutations (admin-token-gated) |
+| `ivms101` | FATF Travel Rule IVMS101 v1.1.0 canonical envelope helpers for KYC payloads on cross-border transfers |
+| `attestedClock` | TEE-attested-timestamp envelope for saga step deadlines + obligation expiry (30s drift tolerance per Canton 3.5 guidance) |
+| `signedAgentCard` | A2A v1.0 SignedAgentCard JWS envelope + canonical-hash computation for verifier rebinding |
+| `wormholeNtt` | Wormhole NTT (Native Token Transfers) — NttManager registry + multi-transceiver chain catalog |
 
 ## Auth (OAuth 2.1 + DPoP Onboarding)
 

@@ -10,9 +10,9 @@ import type {
 /**
  * Client for Canton / DAML enterprise ledger operations.
  *
- * Interacts with the shared Canton participant the Tenzro node is configured
- * against. The node proxies all calls using its own bearer JWT — callers never
- * see the Auth0 secret.
+ * Interacts with the Canton participant the Tenzro node is configured
+ * against. The node mediates all calls — callers never handle the
+ * upstream credentials.
  *
  * Uses Canton 3.5+ JSON Ledger API v2 endpoints:
  * - Commands:        `POST /v2/commands/submit-and-wait-for-transaction`
@@ -52,6 +52,64 @@ export class CantonClient {
       'tenzro_submitDamlCommand',
       params as unknown as Record<string, unknown>,
     );
+  }
+
+  /**
+   * Allocate a new party on the participant via `POST /v2/parties`.
+   *
+   * Returns the fully-qualified party id
+   * `<partyIdHint>::<participant-hash>`. The newly-allocated party
+   * has no `CanActAs` / `CanReadAs` grants on any user by default —
+   * follow up with `grantUserRights()` so the operator's OAuth user
+   * can submit DAML commands on behalf of the new party.
+   */
+  async allocateParty(
+    partyIdHint: string,
+    displayName?: string,
+  ): Promise<{ party_id: string; party_id_hint: string }> {
+    const params: Record<string, unknown> = { party_id_hint: partyIdHint };
+    if (displayName !== undefined) params.display_name = displayName;
+    return this.rpc.call('tenzro_allocateParty', params);
+  }
+
+  /**
+   * Grant `CanActAs` / `CanReadAs` rights on a party to a user
+   * (Canton 3.5+ User Management Service / CIP-26 via
+   * `POST /v2/users/{userId}/rights`).
+   *
+   * Without these grants, the operator's OAuth user cannot submit
+   * DAML commands on behalf of a newly-allocated party even if the
+   * party exists — Canton returns "security-sensitive error" on
+   * active-contracts / submit calls.
+   *
+   * Pass `userId = undefined` to grant to the calling principal's own
+   * Canton user. `canActAs` defaults to `true`; `canReadAs` defaults
+   * to `false`.
+   */
+  async grantUserRights(args: {
+    userId?: string;
+    party: string;
+    canActAs?: boolean;
+    canReadAs?: boolean;
+  }): Promise<unknown> {
+    return this.rpc.call('tenzro_canton_grantUserRights', {
+      user_id: args.userId,
+      party: args.party,
+      can_act_as: args.canActAs ?? true,
+      can_read_as: args.canReadAs ?? false,
+    });
+  }
+
+  /**
+   * List the rights granted to a Canton user (CIP-26
+   * `GET /v2/users/{userId}/rights`). Returns
+   * `{ rights: [{ kind: { CanActAs: { value: { party } } } }, ...] }`.
+   *
+   * Pass `userId = undefined` to list rights for the OAuth principal's
+   * own user.
+   */
+  async listUserRights(userId?: string): Promise<unknown> {
+    return this.rpc.call('tenzro_canton_listUserRights', { user_id: userId });
   }
 
   // ── Canton 3.5+ JSON Ledger API extension methods ──
@@ -162,11 +220,8 @@ export class CantonClient {
   }
 
   /**
-   * Returns the OAuth principal's Canton user record via
-   * `GET /v2/users/<client_id>@clients` (CIP-26). The Tenzro node
-   * derives the user id from the configured OAuth client id; Canton
-   * 3.5.1 has no `/users/me` alias (returns 404 USER_NOT_FOUND), so
-   * the node constructs the explicit id. Returns
+   * Returns the Canton user record for the calling principal via
+   * CIP-26 User Management. Returns
    * `{user: {id, primaryParty, isDeactivated, metadata, identityProviderId}}`.
    * The `primaryParty` value is the participant's fully-qualified
    * party id.
@@ -181,5 +236,51 @@ export class CantonClient {
     };
   }> {
     return this.rpc.call('tenzro_canton_getMyUser', {});
+  }
+
+  /**
+   * Subject self-read: returns Canton call aggregates for the API
+   * key presented by this RPC client. Counters are maintained
+   * server-side in RocksDB (`CF_CANTON_ANALYTICS`) — every
+   * canton-scoped JSON-RPC call increments `calls_total` (or
+   * `errors_total`) plus the corresponding per-method bucket. Lets
+   * a tenant answer "how many DAML transactions have I submitted,
+   * and which methods am I hitting?" without operator help.
+   */
+  async getMyAnalytics(): Promise<{
+    key_id: string;
+    canton_user_id: string | null;
+    calls_total: number;
+    errors_total: number;
+    calls_by_method: Record<string, number>;
+    errors_by_method: Record<string, number>;
+    first_seen_at: number | null;
+    last_called_at: number | null;
+  }> {
+    return this.rpc.call('tenzro_canton_getMyAnalytics', {});
+  }
+
+  /**
+   * Operator admin-read: returns every per-tenant aggregate. Gated
+   * behind the operator admin token (`X-Tenzro-Admin-Token`) at the
+   * node — non-admin callers see `-32001`. Optional `keyId` filter
+   * narrows to a single tenant. Rows are sorted by
+   * `last_called_at` descending.
+   */
+  async listApiKeyAnalytics(keyId?: string): Promise<{
+    analytics: Array<{
+      key_id: string;
+      canton_user_id: string | null;
+      calls_total: number;
+      errors_total: number;
+      calls_by_method: Record<string, number>;
+      errors_by_method: Record<string, number>;
+      first_seen_at: number | null;
+      last_called_at: number | null;
+    }>;
+  }> {
+    const params: Record<string, unknown> = {};
+    if (keyId !== undefined) params.key_id = keyId;
+    return this.rpc.call('tenzro_canton_listApiKeyAnalytics', params);
   }
 }

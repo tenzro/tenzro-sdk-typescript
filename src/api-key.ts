@@ -26,6 +26,23 @@ export interface CreateApiKeyParams {
   scopes?: string[];
   /** Revocability class. Defaults to `subject` when omitted. */
   class?: KeyClass;
+  /**
+   * Optional Canton User Management Service user id (e.g.
+   * `tenzro-labs@clients`). When set with the `canton` scope, the node
+   * automatically:
+   * 1. Allocates a tenant party on the Canton participant.
+   * 2. Creates the Canton user with that party as primaryParty.
+   * 3. Grants the user `CanActAs` on its primary party.
+   *
+   * After issuance the key auto-forwards `actAs` /
+   * `requestingParties` as the user's primary party on every
+   * canton-scoped call. The response carries `canton_primary_party`
+   * + `canton_provisioning` summarizing the auto-provision step.
+   * Pass {@link autoProvisionCanton}=false to skip provisioning.
+   */
+  canton_user_id?: string;
+  /** Skip the Canton user/party auto-provision. Defaults to true. */
+  auto_provision_canton?: boolean;
 }
 
 /**
@@ -41,7 +58,50 @@ export interface CreatedApiKey {
   scopes: string[];
   class?: string | null;
   created_at: number;
+  /** Bound Canton User Management Service user id, if any. */
+  canton_user_id?: string | null;
+  /** FQ party id (`<hint>::<participant-hash>`) auto-provisioned for this user. */
+  canton_primary_party?: string | null;
+  /**
+   * Stage 2.b: Canton IdentityProviderConfig id auto-registered for
+   * this tenant when `canton.identity_providers.enabled` is on and a
+   * tenant-IdP provisioner is wired. The party + user live under this
+   * IDP so Canton's AuthService routes tenant JWTs to the tenant's
+   * IDP, not the operator default.
+   */
+  canton_identity_provider_id?: string | null;
+  /** Summary of the Canton provision step (allocate + create + grant). */
+  canton_provisioning?: CantonProvisioningSummary | null;
+  /**
+   * Stage 2.b: per-tenant OAuth2 client minted upstream and returned
+   * exactly once. `client_secret` is the tenant's responsibility to
+   * persist — the Tenzro node does not store it. Tenants run their
+   * own token-acquisition loop against `token_url` and present the
+   * resulting JWT on subsequent canton-scoped calls via the
+   * `X-Canton-Auth: Bearer <jwt>` header.
+   */
+  tenant_oauth_client?: TenantOAuthClient | null;
   note?: string | null;
+}
+
+/** Per-tenant OAuth2 client minted upstream (Stage 2.b). */
+export interface TenantOAuthClient {
+  client_id: string;
+  client_secret: string;
+  token_url: string;
+  issuer_url: string;
+  jwks_url: string;
+  audience: string;
+}
+
+/** Summary of the auto-provision step on Canton when `canton_user_id` is set. */
+export interface CantonProvisioningSummary {
+  /** `provisioned` if just created; `already_exists` for idempotent reissue. */
+  status: "provisioned" | "already_exists";
+  user_id: string;
+  primary_party?: string | null;
+  party_hint?: string;
+  rights_granted?: string[];
 }
 
 /** One row of the keyring as returned by `list` / `listMine`. */
@@ -117,6 +177,12 @@ export class ApiKeyClient {
     }
     if ((params.class ?? "subject") === "operator_protected") {
       body.confirm_operator_protected = true;
+    }
+    if (params.canton_user_id !== undefined) {
+      body.canton_user_id = params.canton_user_id;
+    }
+    if (params.auto_provision_canton !== undefined) {
+      body.auto_provision_canton = params.auto_provision_canton;
     }
     return this.rpc.call<CreatedApiKey>("tenzro_createApiKey", body);
   }

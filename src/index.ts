@@ -17,6 +17,35 @@ export type {
 } from "./api-key";
 export { AuthClient } from "./auth";
 export { WalletClient } from "./wallet";
+export { PasskeyRpcClient } from "./passkey-rpc";
+export type {
+  EnrollPasskeyParams,
+  EnrollPasskeyResponse,
+  SignWithPasskeyParams,
+  SignWithPasskeyResponse,
+  AddGuardianParams,
+  AddGuardianResponse,
+  InitiateRecoveryParams,
+  InitiateRecoveryResponse,
+  SubmitRecoverySignatureParams,
+  SubmitRecoverySignatureResponse,
+  FinalizeRecoveryParams,
+  FinalizeRecoveryResponse,
+  GrantSessionKeyParams,
+  GrantSessionKeyResponse,
+  RevokeSessionKeyParams,
+  RevokeSessionKeyResponse,
+  SetSpendingLimitParams,
+  SetSpendingLimitResponse,
+  AddHardwareSignerParams,
+  AddHardwareSignerResponse,
+  HardwareDeviceKind,
+  SmartAccountSummary,
+  ListSmartAccountsResponse,
+  PendingRecoverySummary,
+  ListPendingRecoveriesResponse,
+  InstalledValidatorSummary,
+} from "./passkey-rpc";
 export { InferenceClient } from "./inference";
 export { CortexClient } from "./cortex";
 export { SettlementClient } from "./settlement";
@@ -117,6 +146,37 @@ export type {
   SecureMintCheck,
   SecureMintApply,
 } from "./secure-mint";
+
+export { UrwaClient } from "./urwa";
+export type {
+  UrwaKillSwitchState,
+  UrwaFrozenAmount,
+  UrwaSetFrozenRequest,
+  UrwaFrozenRecord,
+  UrwaTriggerKillSwitchRequest,
+  UrwaKillSwitchTriggered,
+  UrwaKillSwitchCleared,
+} from "./urwa";
+
+export { Ivms101Client } from "./ivms101";
+export type { Ivms101HashResult } from "./ivms101";
+
+export { AttestedClockClient } from "./attested-clock";
+export type { AttestedTimestampEnvelope } from "./attested-clock";
+
+export { SignedAgentCardClient } from "./signed-agent-card";
+export type { SignedAgentCardHash } from "./signed-agent-card";
+
+export { WormholeNttClient } from "./wormhole-ntt";
+export type { WormholeNttChain, WormholeNttChains } from "./wormhole-ntt";
+
+export { BridgeFeeClient } from "./bridge-fee";
+export type {
+  QuoteBridgeFeeRequest,
+  QuoteBridgeFeeResponse,
+  BridgeSponsorshipPool,
+  BridgeSponsorshipPools,
+} from "./bridge-fee";
 export { HyperlaneClient } from "./hyperlane";
 export type {
   HyperlaneChain,

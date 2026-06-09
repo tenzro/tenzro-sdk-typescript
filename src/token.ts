@@ -77,6 +77,12 @@ export interface TokenInfo {
   vm_type: string;
   /** EVM contract address (if applicable) */
   evm_address?: string;
+  /** SVM SPL mint address (if applicable) */
+  svm_mint?: string;
+  /** Canton DAML CIP-56 template identifier (if applicable) */
+  daml_template_id?: string;
+  /** Tempo L1 TIP-20 contract address (if applicable) */
+  tempo_address?: string;
   /** Transaction hash of the creation */
   tx_hash?: string;
 }

@@ -2,6 +2,7 @@ import { TenzroConfig, MAINNET_CONFIG, TESTNET_CONFIG, LOCAL_CONFIG } from "./co
 import { discoverEip6963Provider } from "./eip6963";
 import { Eip1193Transport, RpcClient, RpcTransport } from "./rpc";
 import { WalletClient } from "./wallet";
+import { PasskeyRpcClient } from "./passkey-rpc";
 import { InferenceClient } from "./inference";
 import { CortexClient } from "./cortex";
 import { SettlementClient } from "./settlement";
@@ -59,6 +60,12 @@ import { WorkflowClient } from "./workflow";
 import { Permit2Client } from "./permit2";
 import { SecureMintClient } from "./secure-mint";
 import { HyperlaneClient } from "./hyperlane";
+import { UrwaClient } from "./urwa";
+import { Ivms101Client } from "./ivms101";
+import { AttestedClockClient } from "./attested-clock";
+import { SignedAgentCardClient } from "./signed-agent-card";
+import { WormholeNttClient } from "./wormhole-ntt";
+import { BridgeFeeClient } from "./bridge-fee";
 import { AxelarClient } from "./axelar";
 import { BabylonClient } from "./babylon";
 import { CaipClient } from "./caip";
@@ -81,6 +88,7 @@ export class TenzroClient {
   public readonly auth: AuthClient;
   public readonly apiKey: ApiKeyClient;
   public readonly wallet: WalletClient;
+  public readonly passkeyRpc: PasskeyRpcClient;
   public readonly inference: InferenceClient;
   public readonly cortex: CortexClient;
   public readonly settlement: SettlementClient;
@@ -108,6 +116,12 @@ export class TenzroClient {
   public readonly axelar: AxelarClient;
   public readonly babylon: BabylonClient;
   public readonly caip: CaipClient;
+  public readonly urwa: UrwaClient;
+  public readonly ivms101: Ivms101Client;
+  public readonly attestedClock: AttestedClockClient;
+  public readonly signedAgentCard: SignedAgentCardClient;
+  public readonly wormholeNtt: WormholeNttClient;
+  public readonly bridgeFee: BridgeFeeClient;
 
   private readonly rpc: RpcClient;
   private readonly config: TenzroConfig;
@@ -123,6 +137,7 @@ export class TenzroClient {
     this.auth = new AuthClient(this.rpc);
     this.apiKey = new ApiKeyClient(this.rpc);
     this.wallet = new WalletClient(this.rpc);
+    this.passkeyRpc = new PasskeyRpcClient(this.rpc);
     this.inference = new InferenceClient(this.rpc);
     this.cortex = new CortexClient(this.rpc);
     this.settlement = new SettlementClient(this.rpc);
@@ -150,6 +165,12 @@ export class TenzroClient {
     this.axelar = new AxelarClient(this.rpc);
     this.babylon = new BabylonClient(this.rpc);
     this.caip = new CaipClient(this.rpc);
+    this.urwa = new UrwaClient(this.rpc);
+    this.ivms101 = new Ivms101Client(this.rpc);
+    this.attestedClock = new AttestedClockClient(this.rpc);
+    this.signedAgentCard = new SignedAgentCardClient(this.rpc);
+    this.wormholeNtt = new WormholeNttClient(this.rpc);
+    this.bridgeFee = new BridgeFeeClient(this.rpc);
   }
 
   task(): TaskClient {
