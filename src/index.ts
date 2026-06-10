@@ -59,6 +59,38 @@ export { MarketplaceClient } from "./marketplace";
 export { SkillClient } from "./skill";
 export { ToolClient } from "./tool";
 export { CantonClient } from "./canton";
+export { CantonAgentClient } from "./canton-agent";
+export type {
+  Mandate,
+  SubmitWithMandateParams,
+  MandateBoundReceipt,
+  WatchPartySnapshot,
+  AggregateAnalytics,
+  AnalyticsBucket,
+} from "./canton-agent";
+export {
+  ResourcesClient,
+  KnowledgeClient,
+  McpHostClient,
+} from "./resources-and-mcp";
+export type {
+  ResourceFilter,
+  ResourceDescriptor,
+  UseResourceParams,
+  SpawnChildAgentParams,
+  SpawnChildAgentResponse,
+  KnowledgeKind,
+  RegisterKnowledgeParams,
+  KnowledgeFilter,
+  KnowledgeInfo,
+  UseKnowledgeParams,
+  KnowledgeInvocationResult,
+  UpstreamAuth,
+  StdioSpawnSpec,
+  StoreSecretResponse,
+  ForgetSecretResponse,
+  EvictSubprocessResponse,
+} from "./resources-and-mcp";
 export { StakingClient } from "./staking";
 export { TokenClient } from "./token";
 export { ContractClient } from "./contract";
