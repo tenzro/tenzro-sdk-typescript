@@ -191,6 +191,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `bond` | AgentBond stake operations (Spec 9): `getAgentBond()`, `listAgentBonds()`, `postAgentBond()`, `increaseAgentBond()`, `withdrawAgentBond()` |
 | `insurance` | AgentBond insurance claims (Spec 9): `fileInsuranceClaim()`, `listInsuranceClaims()`, `getInsurancePool()` |
 | `lifecycle` | Agent lifecycle + kill-switch audit trail: `getAgentLifecycle()`, `listKillSwitchReceiptsByTarget()` |
+| `memory` | Per-agent memory tier — `grant()`, `recall()`, `archive()`, `listRecords()`. Lance vector kNN + Tantivy BM25 hybrid search (RRF k=60). **Requires DPoP+JWT auth** — bearer's DID must match `agent_did` (or its `controller_did` for delegated agents). |
 | `principalChain` | Receipt principal-chain queries (Spec 5): walk every receipt back to its human/organisational controller |
 | `cortex` | Reasoning-tier inference with TEE / TEE+ZK attestation; `DEFAULT_CORTEX_PRICING`, `computeCortexCost()` |
 | `adaptiveBurn` | Adaptive-burn governance dial — `getBurnRateConfig()`, `getSupplyMetrics()`, `getBurnRateRecommendation()` |

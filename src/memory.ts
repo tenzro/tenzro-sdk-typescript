@@ -64,9 +64,13 @@ export interface MemoryRecallParams {
  * default). Records can be archived to the node's DA backend, which
  * replaces the on-tier row with `kind=archived` plus a `da_pointer`.
  *
- * Backed by the `tenzro_memory*` RPC namespace. Requires the node to
- * have a configured embedding model — calls otherwise fail with a
- * `NoEmbedder` error.
+ * Backed by the `tenzro_memory*` RPC namespace.
+ *
+ * **Auth required.** Every memory call requires DPoP+JWT bearer auth.
+ * The server matches the bearer's DID against the requested `agent_did`
+ * (or its `controller_did` for delegated agents) and rejects
+ * cross-agent reads with JSON-RPC `-32001`. Pass the headers on the
+ * underlying `RpcClient` via `setAuth(jwt, dpopProof)`.
  */
 export class MemoryClient {
   constructor(private rpc: RpcClient) {}
