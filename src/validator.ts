@@ -51,15 +51,59 @@ export interface ListValidatorsResult {
 }
 
 /**
- * Read-only client for the on-chain validator registry — used by
- * operator dashboards, SREs, and any client that needs to enumerate
- * the active validator set or inspect a single validator's stake,
- * activation epoch, or TEE-attestation status.
+ * Request shape for `tenzro_rotateValidatorKey`. All hex fields are
+ * 0x-prefixed. The signature is produced offline by the operator:
+ *
+ * ```text
+ * SHA-256("tenzro/rotate-validator-key" || address(32) ||
+ *         new_consensus(32) || new_pq(1952) || new_bls(48) ||
+ *         nonce_le(8))
+ * ```
+ *
+ * signed with the *current* Ed25519 consensus key.
+ */
+export interface RotateValidatorKeyRequest {
+  /** Validator operator address (0x-prefixed 32-byte hex). */
+  address: string;
+  /** New Ed25519 consensus pubkey (0x-prefixed 32-byte hex). */
+  new_consensus_pubkey: string;
+  /** New ML-DSA-65 verifying key (0x-prefixed 1952-byte hex). */
+  new_pq_pubkey: string;
+  /** New BLS12-381 G1 (min_pk) verifying key (0x-prefixed 48-byte hex). */
+  new_bls_pubkey: string;
+  /** Monotonic rotation nonce. */
+  nonce: number;
+  /** Ed25519 signature (0x-prefixed 64-byte hex). */
+  signature: string;
+}
+
+/**
+ * Result of `tenzro_rotateValidatorKey`. The rotation lands on the
+ * receiving node only — operators must fan out the same request to
+ * every active validator before the next epoch boundary to avoid a
+ * fork (see `tools/deploy/rotate-validator-key.sh`).
+ */
+export interface RotateValidatorKeyResult {
+  address: string;
+  status: string;
+  new_consensus_pubkey: string;
+  new_pq_pubkey: string;
+  new_bls_pubkey: string;
+  nonce: number;
+  message: string;
+}
+
+/**
+ * Client for the on-chain validator registry — used by operator
+ * dashboards, SREs, validator-fleet tooling, and any client that needs
+ * to enumerate the active set, inspect a single validator's stake,
+ * activation epoch, or TEE-attestation status, or rotate a validator's
+ * consensus / PQ / BLS keys.
  *
  * Backed by the `tenzro_getValidatorState` / `tenzro_listValidators` /
- * `tenzro_listActiveValidators` RPCs. All three are pure reads — no
- * write surface is exposed (validators self-register via the staking
- * transaction path, not via RPC).
+ * `tenzro_listActiveValidators` (read) and `tenzro_rotateValidatorKey`
+ * (write) RPCs. Validator self-registration still happens through the
+ * staking transaction path, not via RPC.
  */
 export class ValidatorClient {
   constructor(private rpc: RpcClient) {}
@@ -90,5 +134,22 @@ export class ValidatorClient {
    */
   async listActive(): Promise<ListValidatorsResult> {
     return this.rpc.call("tenzro_listActiveValidators", []);
+  }
+
+  /**
+   * Rotate a validator's consensus + PQ + BLS keys via
+   * `tenzro_rotateValidatorKey`. The signature in `req` must be
+   * produced offline with the *current* consensus key — see
+   * {@link RotateValidatorKeyRequest}.
+   *
+   * The rotation is recorded on the receiving node only. Operators
+   * must fan out the same call to every active validator before the
+   * next epoch boundary — see
+   * `tools/deploy/rotate-validator-key.sh`.
+   */
+  async rotateKeys(
+    req: RotateValidatorKeyRequest,
+  ): Promise<RotateValidatorKeyResult> {
+    return this.rpc.call("tenzro_rotateValidatorKey", [req]);
   }
 }
