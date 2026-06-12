@@ -73,24 +73,20 @@ export interface CreatedApiKey {
   /** Summary of the Canton provision step (allocate + create + grant). */
   canton_provisioning?: CantonProvisioningSummary | null;
   /**
-   * Stage 2.b: per-tenant OAuth2 client minted upstream and returned
-   * exactly once. `client_secret` is the tenant's responsibility to
-   * persist — the Tenzro node does not store it. Tenants run their
-   * own token-acquisition loop against `token_url` and present the
-   * resulting JWT on subsequent canton-scoped calls via the
-   * `X-Canton-Auth: Bearer <jwt>` header.
+   * Stage 2.b: non-secret metadata about the per-tenant OAuth2 client
+   * minted upstream. The credentials stay on the node, which mints
+   * and forwards the tenant's Canton JWT internally on every
+   * canton-scoped call — the `tnz_...` API key is the tenant's only
+   * credential.
    */
   tenant_oauth_client?: TenantOAuthClient | null;
   note?: string | null;
 }
 
-/** Per-tenant OAuth2 client minted upstream (Stage 2.b). */
+/** Non-secret per-tenant OAuth2 client metadata (Stage 2.b). */
 export interface TenantOAuthClient {
   client_id: string;
-  client_secret: string;
-  token_url: string;
   issuer_url: string;
-  jwks_url: string;
   audience: string;
 }
 

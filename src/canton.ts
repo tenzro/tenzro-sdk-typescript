@@ -84,20 +84,28 @@ export class CantonClient {
    *
    * Pass `userId = undefined` to grant to the calling principal's own
    * Canton user. `canActAs` defaults to `true`; `canReadAs` defaults
-   * to `false`.
+   * to `false`. For users that live under a non-default
+   * IdentityProviderConfig (Stage 2 tenants), pass
+   * `identityProviderId` — Canton otherwise resolves the user in the
+   * default IDP and returns 403.
    */
   async grantUserRights(args: {
     userId?: string;
     party: string;
     canActAs?: boolean;
     canReadAs?: boolean;
+    identityProviderId?: string;
   }): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_grantUserRights', {
+    const params: Record<string, unknown> = {
       user_id: args.userId,
       party: args.party,
       can_act_as: args.canActAs ?? true,
       can_read_as: args.canReadAs ?? false,
-    });
+    };
+    if (args.identityProviderId !== undefined) {
+      params.identity_provider_id = args.identityProviderId;
+    }
+    return this.rpc.call('tenzro_canton_grantUserRights', params);
   }
 
   /**

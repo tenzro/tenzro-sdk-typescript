@@ -251,15 +251,15 @@ export class AppClient {
     );
     const userAddress = walletInfo.address ?? "0x0";
 
-    // Fund from master
+    // Fund from master via the node's hybrid-signing path. The node signs
+    // both Ed25519 + ML-DSA-65 legs with the wallet resolved from the
+    // ambient auth context (DPoP-bound bearer JWT).
     if (initialFundingWei > 0n) {
-      await this.rpc.call<string>("eth_sendRawTransaction", [
-        {
-          from: this.masterWalletInfo.address,
-          to: userAddress,
-          value: `0x${initialFundingWei.toString(16)}`,
-        },
-      ]);
+      await this.rpc.call<string>("tenzro_signAndSendTransaction", {
+        from: this.masterWalletInfo.address,
+        to: userAddress,
+        value: initialFundingWei.toString(),
+      });
     }
 
     const user: UserWallet = {
@@ -280,13 +280,11 @@ export class AppClient {
     userAddress: string,
     amountWei: bigint,
   ): Promise<FundResult> {
-    const txHash = await this.rpc.call<string>("eth_sendRawTransaction", [
-      {
-        from: this.masterWalletInfo.address,
-        to: userAddress,
-        value: `0x${amountWei.toString(16)}`,
-      },
-    ]);
+    const txHash = await this.rpc.call<string>("tenzro_signAndSendTransaction", {
+      from: this.masterWalletInfo.address,
+      to: userAddress,
+      value: amountWei.toString(),
+    });
 
     this.state.stats.transactionCount += 1;
     return { txHash, amount: amountWei };
@@ -355,15 +353,11 @@ export class AppClient {
   ): Promise<TxResult> {
     this.enforceSpendingPolicy(userAddress, amountWei);
 
-    const txHash = await this.rpc.call<string>("eth_sendRawTransaction", [
-      {
-        from: this.masterWalletInfo.address,
-        to,
-        value: `0x${amountWei.toString(16)}`,
-        sponsor: this.masterWalletInfo.address,
-        on_behalf_of: userAddress,
-      },
-    ]);
+    const txHash = await this.rpc.call<string>("tenzro_signAndSendTransaction", {
+      from: this.masterWalletInfo.address,
+      to,
+      value: amountWei.toString(),
+    });
 
     this.state.stats.transactionCount += 1;
     this.state.stats.totalGasSpent += 21_000_000_000_000n;
