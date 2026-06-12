@@ -7,7 +7,7 @@ Fast reference guide for common operations.
 ```typescript
 import { TenzroClient, LOCAL_CONFIG } from "@tenzro/sdk";
 
-const client = await TenzroClient.connect(LOCAL_CONFIG);
+const client = new TenzroClient(LOCAL_CONFIG);
 ```
 
 ## Wallet Operations
@@ -204,19 +204,18 @@ try {
 import { MAINNET_CONFIG, TESTNET_CONFIG, LOCAL_CONFIG } from "@tenzro/sdk";
 
 // Mainnet
-const mainnet = await TenzroClient.connect(MAINNET_CONFIG);
+const mainnet = TenzroClient.mainnet();
 
 // Testnet
-const testnet = await TenzroClient.connect(TESTNET_CONFIG);
+const testnet = TenzroClient.testnet();
 
 // Local
-const local = await TenzroClient.connect(LOCAL_CONFIG);
+const local = TenzroClient.local();
 
 // Custom
-const custom = await TenzroClient.connect({
+const custom = new TenzroClient({
   endpoint: "https://custom.rpc",
   timeout: 30000,
-  apiKey: "your-key",
 });
 ```
 

@@ -984,10 +984,18 @@ export interface AgentTemplateFilter {
 export type AgentPricingSpec = string | AgentPricingModel;
 
 export interface RegisterAgentTemplateParams {
+  /**
+   * Stable template id (e.g. reference templates use `ref-*` ids). When
+   * omitted the node mints a UUID. Registration fails if the id already
+   * exists — updates flow through `updateAgentTemplate`.
+   */
+  template_id?: string;
   name: string;
   description: string;
   template_type: AgentTemplateType;
   system_prompt: string;
+  /** Hex-encoded (0x-prefixed) creator address. Required by the node. */
+  creator: string;
   tags?: string[];
   /**
    * Pricing model. May be supplied either as the canonical object form

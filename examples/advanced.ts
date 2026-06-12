@@ -1,44 +1,38 @@
 /**
  * Tenzro Network TypeScript SDK - Advanced Example
  *
- * This example demonstrates advanced features and patterns.
+ * This example demonstrates advanced features and patterns:
+ * - Retry logic with typed RPC errors
+ * - AI inference
+ * - Payment channels
+ * - Multi-agent task delegation
+ * - Transaction monitoring
+ * - Governance delegation
+ * - Block monitoring with analytics
  */
 
-import {
-  TenzroClient,
-  TESTNET_CONFIG,
-  ServiceType,
-  Capability,
-  RpcError,
-  RpcErrorCode,
-} from "../src/index";
+import { TenzroClient, TESTNET_CONFIG, RpcCallError } from "../src/index";
 
 async function main() {
   console.log("=== Tenzro Network TypeScript SDK - Advanced Examples ===\n");
 
   // ============================================================================
-  // 1. Custom Configuration with API Key
+  // 1. Custom Configuration
   // ============================================================================
   console.log("1. Connecting with custom configuration...");
-  const client = await TenzroClient.connect({
+  const client = new TenzroClient({
     ...TESTNET_CONFIG,
     timeout: 60000,
-    maxRetries: 5,
-    apiKey: "your-api-key-here",
-    headers: {
-      "X-Custom-Header": "custom-value",
-    },
   });
   console.log("   Connected!\n");
 
   // ============================================================================
-  // 2. Batch Operations
+  // 2. Wallet Provisioning
   // ============================================================================
-  console.log("2. Performing batch operations...");
+  console.log("2. Creating MPC wallets...");
 
-  // Import multiple wallets
-  const wallet1 = await client.wallet().createWallet();
-  const wallet2 = await client.wallet().createWallet();
+  const wallet1 = await client.wallet.createWallet();
+  const wallet2 = await client.wallet.createWallet();
 
   console.log(`   Wallet 1: ${wallet1.address}`);
   console.log(`   Wallet 2: ${wallet2.address}\n`);
@@ -56,14 +50,11 @@ async function main() {
       try {
         return await operation();
       } catch (error) {
-        if (error instanceof RpcError) {
+        if (error instanceof RpcCallError) {
           console.log(`   RPC Error [${error.code}]: ${error.message}`);
 
-          // Don't retry on certain errors
-          if (
-            error.code === RpcErrorCode.InvalidParams ||
-            error.code === RpcErrorCode.MethodNotFound
-          ) {
+          // Don't retry on invalid params (-32602) or method not found (-32601)
+          if (error.code === -32602 || error.code === -32601) {
             throw error;
           }
         }
@@ -81,62 +72,56 @@ async function main() {
   }
 
   try {
-    await requestWithRetry(async () => {
-      return await client.getBalance(wallet1.address);
-    });
-    console.log("   Operation succeeded!\n");
-  } catch (error) {
+    const balance = await requestWithRetry(() =>
+      client.getBalance(wallet1.address)
+    );
+    console.log(`   Operation succeeded! Balance: ${balance} wei\n`);
+  } catch {
     console.log("   Operation failed after retries\n");
   }
 
   // ============================================================================
-  // 4. Streaming Inference
+  // 4. AI Inference
   // ============================================================================
-  console.log("4. Streaming inference...");
+  console.log("4. AI inference...");
 
-  const models = await client.inference(wallet1.address).listModels();
+  const models = await client.inference.listModels();
+  console.log(`   ${models.length} models available`);
+
   if (models.length > 0) {
-    let streamedOutput = "";
-
-    await client.inference(wallet1.address).streamRequest(
-      models[0].modelId,
-      "Generate a long response about blockchain technology",
-      { maxTokens: 500 },
-      (chunk) => {
-        streamedOutput += chunk;
-        process.stdout.write(".");
-      }
-    );
-
-    console.log(`\n   Streamed ${streamedOutput.length} characters\n`);
+    try {
+      const result = await client.inference.request(
+        models[0].id,
+        "Summarize blockchain technology in one sentence.",
+        100
+      );
+      console.log(`   Model: ${models[0].name}`);
+      console.log(`   Output: ${JSON.stringify(result).substring(0, 120)}...`);
+    } catch (e) {
+      console.log(`   Note: Inference not available: ${e}`);
+    }
   }
+  console.log();
 
   // ============================================================================
   // 5. Payment Channel Management
   // ============================================================================
   console.log("5. Payment channel workflow...");
 
-  // Open payment channel
-  const channelId = await client.settlement(wallet1.address).openPaymentChannel(
-    wallet2.address,
-    "1000.0",
-    "TENZRO",
-    86400 // 1 day duration
-  );
-  console.log(`   Channel opened: ${channelId}`);
+  try {
+    // Open payment channel with a 1 TNZO deposit
+    const channelId = await client.settlement.openPaymentChannel(
+      wallet2.address,
+      1000000000000000000n // 1 TNZO in wei
+    );
+    console.log(`   Channel opened: ${channelId}`);
 
-  // Get channel info
-  const channel = await client.settlement(wallet1.address).getPaymentChannel(channelId);
-  console.log(`   Deposit: ${channel.deposit} ${channel.asset}`);
-  console.log(`   Status: ${channel.status}`);
-
-  // Close channel
-  const closeReceipt = await client.settlement(wallet1.address).closePaymentChannel(
-    channelId,
-    "500.0",
-    "signature_placeholder"
-  );
-  console.log(`   Channel closed: ${closeReceipt.receiptId}\n`);
+    // Close channel
+    await client.settlement.closePaymentChannel(channelId);
+    console.log("   Channel closed\n");
+  } catch (e) {
+    console.log(`   Note: Channel workflow failed: ${e}\n`);
+  }
 
   // ============================================================================
   // 6. Multi-Agent Task Orchestration
@@ -144,134 +129,96 @@ async function main() {
   console.log("6. Multi-agent task orchestration...");
 
   // Register multiple agents with different capabilities
-  const dataAgent = await client.agent(wallet1.address).registerAgent({
-    name: "Data Processing Agent",
-    description: "Specialized in data processing",
-    capabilities: [Capability.DataProcessing],
-    stake: "100.0",
-  });
-
-  const inferenceAgent = await client.agent(wallet1.address).registerAgent({
-    name: "Inference Agent",
-    description: "Specialized in AI inference",
-    capabilities: [Capability.Inference],
-    stake: "100.0",
-  });
-
-  console.log(`   Data Agent: ${dataAgent.agentId}`);
-  console.log(`   Inference Agent: ${inferenceAgent.agentId}`);
-
-  // Delegate tasks
-  const task1 = await client.agent(wallet1.address).delegateTask(
-    dataAgent.agentId,
-    {
-      description: "Process dataset",
-      taskType: "DataProcessing",
-      params: { dataset: "user_data.csv" },
-      maxPayment: "50.0",
-    }
+  const dataAgent = await client.agent.register(
+    "Data Processing Agent",
+    wallet1.address,
+    ["data"]
   );
 
-  const task2 = await client.agent(wallet1.address).delegateTask(
-    inferenceAgent.agentId,
-    {
-      description: "Run inference on processed data",
-      taskType: "Inference",
-      params: { modelId: "gpt-4", input: "processed_data" },
-      maxPayment: "30.0",
-    }
+  const inferenceAgent = await client.agent.register(
+    "Inference Agent",
+    wallet1.address,
+    ["nlp"]
   );
 
-  console.log(`   Task 1: ${task1}`);
-  console.log(`   Task 2: ${task2}\n`);
+  console.log(`   Data Agent: ${dataAgent.agent_id}`);
+  console.log(`   Inference Agent: ${inferenceAgent.agent_id}`);
+
+  // Delegate tasks via A2A
+  try {
+    const task1 = await client.agent.delegateTask(
+      dataAgent.agent_id,
+      "Process dataset user_data.csv and produce summary statistics"
+    );
+    const task2 = await client.agent.delegateTask(
+      inferenceAgent.agent_id,
+      "Run inference on the processed dataset and extract key insights"
+    );
+
+    console.log(`   Task 1: ${task1.id} (${task1.status})`);
+    console.log(`   Task 2: ${task2.id} (${task2.status})\n`);
+  } catch (e) {
+    console.log(`   Note: Task delegation failed: ${e}\n`);
+  }
 
   // ============================================================================
   // 7. Transaction Monitoring
   // ============================================================================
   console.log("7. Transaction monitoring...");
 
-  // Send transaction
-  const txHash = await client.wallet(wallet1.address).send(
-    wallet2.address,
-    "10.0",
-    "TENZRO"
-  );
+  try {
+    // Send 10 TNZO from wallet1 to wallet2 (server-side FROST signing)
+    const txHash = await client.wallet.signAndSend({
+      from: wallet1.address,
+      to: wallet2.address,
+      value: 10000000000000000000n, // 10 TNZO in wei
+    });
 
-  console.log(`   Transaction sent: ${txHash}`);
-  console.log("   Waiting for confirmation...");
+    console.log(`   Transaction sent: ${txHash}`);
+    console.log("   Waiting for inclusion...");
 
-  // Wait for confirmations
-  const receipt = await client.waitForTransaction(txHash, 3, 120000);
-  console.log(`   Confirmed in block: ${receipt.blockHeight}`);
-  console.log(`   Status: ${receipt.status}`);
-  console.log(`   Gas used: ${receipt.gasUsed}\n`);
+    // Poll until the transaction appears in a block
+    let included = false;
+    for (let i = 0; i < 30; i++) {
+      const tx = await client.getTransaction(txHash);
+      if (tx && tx.blockHeight !== undefined && tx.blockHeight !== null) {
+        console.log(`   Confirmed in block: ${tx.blockHeight}`);
+        included = true;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+    if (!included) {
+      console.log("   Transaction not yet included (timed out polling)");
+    }
+    console.log();
+  } catch (e) {
+    console.log(`   Note: Transfer failed: ${e}\n`);
+  }
 
   // ============================================================================
   // 8. Governance Participation
   // ============================================================================
   console.log("8. Advanced governance...");
 
-  // Get governance parameters
-  const params = await client.governance(wallet1.address).getGovernanceParams();
-  console.log(`   Proposal threshold: ${params.proposalThreshold}`);
-  console.log(`   Quorum: ${params.quorumPercentage}%`);
-  console.log(`   Pass threshold: ${params.passPercentage}%`);
+  try {
+    const power = await client.governance.getVotingPower(wallet1.address);
+    console.log(`   Voting power: ${power.power}`);
 
-  // Delegate voting power
-  await client.governance(wallet1.address).delegateVotingPower(
-    wallet2.address,
-    "500.0"
-  );
-  console.log("   Delegated 500.0 voting power");
-
-  // Get delegations
-  const delegations = await client.governance(wallet1.address).getDelegations();
-  console.log(`   Total delegated: ${delegations.totalDelegated}`);
-  console.log(`   Total received: ${delegations.totalReceived}\n`);
+    // Delegate voting power
+    const delegation = await client.governance.delegateVotingPower(
+      wallet2.address,
+      "500"
+    );
+    console.log(`   Delegated 500 voting power: ${delegation}\n`);
+  } catch (e) {
+    console.log(`   Note: Governance ops failed: ${e}\n`);
+  }
 
   // ============================================================================
-  // 9. Batch Settlement
+  // 9. Real-time Block Monitoring with Analytics
   // ============================================================================
-  console.log("9. Batch settlement...");
-
-  const settlements = [
-    {
-      payer: wallet1.address,
-      payee: wallet2.address,
-      amount: "10.0",
-      asset: "USDC" as const,
-      serviceType: ServiceType.Inference,
-      proof: "proof1",
-    },
-    {
-      payer: wallet1.address,
-      payee: wallet2.address,
-      amount: "20.0",
-      asset: "USDC" as const,
-      serviceType: ServiceType.Storage,
-      proof: "proof2",
-    },
-    {
-      payer: wallet1.address,
-      payee: wallet2.address,
-      amount: "15.0",
-      asset: "USDC" as const,
-      serviceType: ServiceType.Compute,
-      proof: "proof3",
-    },
-  ];
-
-  const receipts = await client.settlement(wallet1.address).batchSettle(settlements);
-  console.log(`   Settled ${receipts.length} payments`);
-  receipts.forEach((receipt, i) => {
-    console.log(`   Receipt ${i + 1}: ${receipt.receiptId} (${receipt.status})`);
-  });
-  console.log();
-
-  // ============================================================================
-  // 10. Real-time Block Monitoring with Analytics
-  // ============================================================================
-  console.log("10. Block monitoring with analytics (20 seconds)...");
+  console.log("9. Block monitoring with analytics (20 seconds)...");
 
   const analytics = {
     blocksProcessed: 0,
@@ -280,25 +227,35 @@ async function main() {
     lastBlockTime: 0,
   };
 
-  const unsubscribe = client.subscribeToBlocks((block) => {
-    const now = Date.now();
+  let lastHeight = await client.getBlockNumber();
+  const deadline = Date.now() + 20000;
 
-    if (analytics.lastBlockTime > 0) {
-      const blockTime = now - analytics.lastBlockTime;
-      analytics.averageBlockTime =
-        (analytics.averageBlockTime * analytics.blocksProcessed + blockTime) /
-        (analytics.blocksProcessed + 1);
+  while (Date.now() < deadline) {
+    const height = await client.getBlockNumber();
+
+    while (lastHeight < height) {
+      lastHeight++;
+      const block = await client.getBlock(lastHeight);
+      const now = Date.now();
+
+      if (analytics.lastBlockTime > 0) {
+        const blockTime = now - analytics.lastBlockTime;
+        analytics.averageBlockTime =
+          (analytics.averageBlockTime * analytics.blocksProcessed + blockTime) /
+          (analytics.blocksProcessed + 1);
+      }
+
+      analytics.blocksProcessed++;
+      analytics.totalTransactions += block.transactions.length;
+      analytics.lastBlockTime = now;
+
+      console.log(
+        `   Block ${block.header.height}: ${block.transactions.length} txs`
+      );
     }
 
-    analytics.blocksProcessed++;
-    analytics.totalTransactions += block.transactions.length;
-    analytics.lastBlockTime = now;
-
-    console.log(`   Block ${block.header.height}: ${block.transactions.length} txs`);
-  }, 2000); // Poll every 2 seconds
-
-  await new Promise((resolve) => setTimeout(resolve, 20000));
-  unsubscribe();
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
 
   console.log("\n   Analytics:");
   console.log(`   Blocks processed: ${analytics.blocksProcessed}`);
@@ -313,5 +270,4 @@ async function main() {
 // Run the example
 main().catch((error) => {
   console.error("Error:", error);
-  process.exit(1);
 });

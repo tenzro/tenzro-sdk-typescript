@@ -40,19 +40,20 @@ Main client for interacting with Tenzro Network.
 ### Constructor
 
 ```typescript
-static async connect(config: SdkConfig): Promise<TenzroClient>
+new TenzroClient(config: TenzroConfig, transport?: RpcTransport)
 ```
 
-Connects to Tenzro Network.
+Creates a client bound to a Tenzro Network endpoint.
 
 **Parameters:**
 - `config`: SDK configuration (endpoint, timeout, etc.)
+- `transport`: optional custom RPC transport
 
-**Returns:** Connected client instance
+**Static factories:** `TenzroClient.mainnet()`, `TenzroClient.testnet()`, `TenzroClient.local()`, `TenzroClient.fromInjected()`
 
 **Example:**
 ```typescript
-const client = await TenzroClient.connect(LOCAL_CONFIG);
+const client = new TenzroClient(LOCAL_CONFIG);
 ```
 
 ### Chain Methods

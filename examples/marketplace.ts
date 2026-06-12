@@ -12,11 +12,15 @@ async function main() {
   console.log("=== Tenzro SDK Marketplace Examples ===\n");
 
   // Connect to testnet
-  const client = await TenzroClient.connect({
+  const client = new TenzroClient({
     ...TESTNET_CONFIG,
     timeout: 60000,
   });
   console.log("Connected to testnet\n");
+
+  // A wallet used as task poster, quote provider, and template creator.
+  const creatorWallet = await client.wallet.createWallet();
+  console.log(`Using wallet ${creatorWallet.address}\n`);
 
   // ============================================================================
   // PART 1: TASK MARKETPLACE
@@ -27,7 +31,7 @@ async function main() {
   // 1. List open tasks
   // ============================================================================
   console.log("1. Listing open tasks...");
-  const openTasks = await client.task.listTasks({
+  const openTasks = await client.task().listTasks({
     status: "open",
     limit: 10,
     offset: 0,
@@ -47,7 +51,7 @@ async function main() {
   // 2. List tasks filtered by type
   // ============================================================================
   console.log("2. Listing code_review tasks...");
-  const reviewTasks = await client.task.listTasks({
+  const reviewTasks = await client.task().listTasks({
     status: "open",
     task_type: "code_review",
     limit: 5,
@@ -59,7 +63,7 @@ async function main() {
   // 3. Post a new task to the marketplace
   // ============================================================================
   console.log("3. Posting a new task to the marketplace...");
-  const posted = await client.task.postTask({
+  const posted = await client.task().postTask({
     title: "Code Review: TypeScript async refactor",
     description:
       "Review the attached TypeScript module and suggest improvements for " +
@@ -67,6 +71,7 @@ async function main() {
     task_type: "code_review",
     max_price: "50000000000000000000", // 50 TNZO in wei
     input: "async function fetchData(): Promise<Data> { ... }",
+    poster: creatorWallet.address,
     priority: "normal",
   });
 
@@ -80,7 +85,7 @@ async function main() {
   // ============================================================================
   console.log("4. Getting task details...");
   try {
-    const details = await client.task.getTask(posted.task_id);
+    const details = await client.task().getTask(posted.task_id);
     console.log(`   Task: ${details.title}`);
     console.log(`   Poster: ${details.poster}`);
     console.log(`   Status: ${details.status}`);
@@ -96,16 +101,19 @@ async function main() {
   // ============================================================================
   console.log("5. Submitting a quote for the task...");
   try {
-    const quote = await client.task.submitQuote({
-      task_id: posted.task_id,
-      price: "45000000000000000000", // 45 TNZO
-      model_id: "gemma3-270m",
-      estimated_duration_secs: 120,
-      confidence: 90,
-      notes:
-        "Can complete this within 2 minutes using Gemma 3 270M model. " +
-        "Will provide detailed line-by-line review.",
-    });
+    const quote = await client.task().quoteTask(
+      posted.task_id,
+      creatorWallet.address,
+      "45000000000000000000", // 45 TNZO
+      {
+        modelId: "gemma3-270m",
+        estimatedDurationSecs: 120,
+        confidence: 90,
+        notes:
+          "Can complete this within 2 minutes using Gemma 3 270M model. " +
+          "Will provide detailed line-by-line review.",
+      }
+    );
     console.log("   Quote submitted!");
     console.log(`   Price: ${quote.price} wei`);
     console.log(`   Model: ${quote.model_id}`);
@@ -119,13 +127,14 @@ async function main() {
   // 6. Post an inference task
   // ============================================================================
   console.log("6. Posting an AI inference task...");
-  const inferenceTask = await client.task.postTask({
+  const inferenceTask = await client.task().postTask({
     title: "Summarize research paper",
     description:
       "Summarize the following abstract in 3 bullet points for a non-technical audience.",
     task_type: "inference",
     max_price: "10000000000000000000", // 10 TNZO
     input: "Abstract: We present a novel approach to zero-knowledge proofs...",
+    poster: creatorWallet.address,
     priority: "normal",
   });
   console.log(`   Inference task posted: ${inferenceTask.task_id}\n`);
@@ -135,7 +144,7 @@ async function main() {
   // ============================================================================
   console.log("7. Cancelling the inference task...");
   try {
-    await client.task.cancelTask(inferenceTask.task_id);
+    await client.task().cancelTask(inferenceTask.task_id);
     console.log(`   Task ${inferenceTask.task_id} cancelled successfully\n`);
   } catch (e) {
     console.log(`   Note: Could not cancel task: ${e}\n`);
@@ -150,7 +159,7 @@ async function main() {
   // 8. Browse free templates
   // ============================================================================
   console.log("8. Browsing free agent templates...");
-  const freeTemplates = await client.marketplace.listAgentTemplates({
+  const freeTemplates = await client.marketplace().listAgentTemplates({
     free_only: true,
     limit: 10,
     offset: 0,
@@ -170,7 +179,7 @@ async function main() {
   // 9. Browse all templates (including paid)
   // ============================================================================
   console.log("9. Browsing all templates...");
-  const allTemplates = await client.marketplace.listAgentTemplates({
+  const allTemplates = await client.marketplace().listAgentTemplates({
     limit: 20,
     offset: 0,
   });
@@ -180,8 +189,9 @@ async function main() {
   // 10. Register a free specialist agent template
   // ============================================================================
   console.log("10. Registering a free TypeScript code reviewer template...");
-  const tsReviewer = await client.marketplace.registerAgentTemplate({
+  const tsReviewer = await client.marketplace().registerAgentTemplate({
     name: "TypeScript Code Reviewer",
+    creator: creatorWallet.address,
     description:
       "Autonomous agent that reviews TypeScript/JavaScript code for correctness, " +
       "type safety, performance, and adherence to modern best practices. " +
@@ -210,8 +220,9 @@ async function main() {
   console.log(
     "11. Registering a paid autonomous data analysis agent template..."
   );
-  const dataAgent = await client.marketplace.registerAgentTemplate({
+  const dataAgent = await client.marketplace().registerAgentTemplate({
     name: "Advanced Data Analyst",
+    creator: creatorWallet.address,
     description:
       "Specialist agent for statistical analysis, chart generation, and data visualization. " +
       "Processes CSV, JSON, and Excel data. Generates summaries, identifies trends, " +
@@ -227,6 +238,7 @@ async function main() {
       type: "per_execution",
       price: "5000000000000000000", // 5 TNZO per run
     },
+    creator_wallet: creatorWallet.address,
   });
 
   console.log("   Template registered!");
@@ -239,8 +251,9 @@ async function main() {
   console.log(
     "12. Registering a subscription-based orchestrator template..."
   );
-  const orchestrator = await client.marketplace.registerAgentTemplate({
+  const orchestrator = await client.marketplace().registerAgentTemplate({
     name: "Research Pipeline Orchestrator",
+    creator: creatorWallet.address,
     description:
       "Workflow orchestrator that coordinates multiple specialist agents to conduct " +
       "comprehensive research. Spawns web search agents, data analysis agents, and " +
@@ -256,6 +269,7 @@ async function main() {
       type: "subscription",
       monthly_rate: "50000000000000000000", // 50 TNZO per month
     },
+    creator_wallet: creatorWallet.address,
   });
 
   console.log("   Template registered!");
@@ -267,7 +281,7 @@ async function main() {
   // ============================================================================
   console.log("13. Fetching detailed template information...");
   try {
-    const details = await client.marketplace.getAgentTemplate(
+    const details = await client.marketplace().getAgentTemplate(
       tsReviewer.template_id
     );
     console.log(`   Template: ${details.name}`);
