@@ -44,14 +44,24 @@ export interface UnsealedData {
   data: string;
 }
 
-/** TEE provider on the network. */
+/** A TEE provider entry as stored on the network. */
 export interface TeeProvider {
-  /** Provider address (hex) */
-  address: string;
-  /** TEE vendor type */
-  vendor: string;
-  /** Whether the provider is currently available */
-  available: boolean;
+  /** Registry id (e.g. `tee:<address>`). */
+  id: string;
+  /** Stored provider info blob (vendor, capabilities, endpoint, etc.). */
+  info: unknown;
+}
+
+/** Result of `listTeeProviders` — network providers plus local detection. */
+export interface TeeProviderList {
+  /** TEE providers registered on the network. */
+  providers: TeeProvider[];
+  /** Number of registered providers. */
+  total: number;
+  /** Whether this node has locally-detected TEE hardware. */
+  local_tee_available: boolean;
+  /** Locally-detected TEE vendor, when present. */
+  local_vendor: string | null;
 }
 
 // ── Client ──
@@ -109,9 +119,9 @@ export class TeeClient {
   }
 
   /**
-   * List available TEE providers on the network.
+   * List TEE providers on the network, plus this node's local TEE detection.
    */
-  async listTeeProviders(): Promise<TeeProvider[]> {
-    return this.rpc.call<TeeProvider[]>('tenzro_listTeeProviders');
+  async listTeeProviders(): Promise<TeeProviderList> {
+    return this.rpc.call<TeeProviderList>('tenzro_listTeeProviders');
   }
 }

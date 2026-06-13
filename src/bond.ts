@@ -1,5 +1,17 @@
 import { RpcClient } from "./rpc";
 
+/** Wrapped bond list for a controller as returned by the node. */
+export interface ControllerBonds {
+  /** The controller DID the list belongs to. */
+  controller_did: string;
+  /** Number of bonds the controller has posted. */
+  count: number;
+  /** Sum of all bond amounts in TNZO base units (string-encoded). */
+  aggregate_bond: string;
+  /** The bond records. */
+  bonds: any[];
+}
+
 /**
  * Client for AgentBond operations (Agent-Swarm Spec 9).
  *
@@ -27,14 +39,18 @@ export class BondClient {
   }
 
   /**
-   * List all AgentBonds posted by a given controller DID.
+   * List all AgentBonds posted by a given controller DID. The node requires
+   * the `controller_did` param by name.
    * @param controllerDid - The controller DID (e.g. `did:tenzro:human:...`)
-   * @returns Array of bond records (empty if controller has none)
+   * @returns Wrapped bond list: `{controller_did, count, aggregate_bond, bonds}`
    */
-  async listAgentBondsByController(controllerDid: string): Promise<any[]> {
-    return this.rpc.call<any[]>("tenzro_listAgentBondsByController", [
-      controllerDid,
-    ]);
+  async listAgentBondsByController(
+    controllerDid: string,
+  ): Promise<ControllerBonds> {
+    return this.rpc.call<ControllerBonds>(
+      "tenzro_listAgentBondsByController",
+      { controller_did: controllerDid },
+    );
   }
 
   /**

@@ -91,17 +91,33 @@ export interface CapitalLeg {
 }
 
 /**
- * 1:1-backed reserve attestation that gates `attestedMint`.
+ * Origin of a reserve attestation — who is asserting the backing.
+ * Wire form is snake_case (`issuer` / `tee` / `chainlink_por` / `oracle`).
+ */
+export type ReserveSource = 'issuer' | 'tee' | 'chainlink_por' | 'oracle';
+
+/**
+ * 1:1-backed reserve attestation that gates `attestedMint`. Mirrors the
+ * canonical on-chain `ReserveAttestation`: the attestor signs the canonical
+ * payload (`signing_payload`) with their registered Ed25519 identity key, and
+ * the node rejects any submission whose signature is empty or does not verify.
  */
 export interface ReserveAttestation {
+  /** Human-readable asset label the reserve backs (e.g. ISIN, symbol). */
   asset_id: string;
-  source: string;
-  amount: string;
-  attester_did: string;
-  signature: string;
+  /** Attested reserve, base units. */
+  reserves: number;
+  /** Who is attesting the backing. */
+  source: ReserveSource;
+  /** Attestor DID — must be registered and hold an Ed25519 key. */
+  attestor_did: string;
+  /** Unix seconds the attestation was made. */
   attested_at: number;
-  proof?: unknown;
-  [extra: string]: unknown;
+  /**
+   * Ed25519 signature over `signing_payload()`, as a byte array. The node
+   * is fail-closed: an empty signature is rejected before any persist.
+   */
+  signature: number[];
 }
 
 // ── Client ──

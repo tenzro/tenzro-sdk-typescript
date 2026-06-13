@@ -175,8 +175,12 @@ export type {
 export { SecureMintClient } from "./secure-mint";
 export type {
   SecureMintPolicy,
+  SecureMintSetResult,
+  SecureMintGetResult,
+  SecureMintClearResult,
   SecureMintCheck,
   SecureMintApply,
+  SecureMintBurn,
 } from "./secure-mint";
 
 export { UrwaClient } from "./urwa";
@@ -281,7 +285,13 @@ export { ComplianceClient } from "./compliance";
 export { EventsClient } from "./events";
 export { DebridgeClient } from "./debridge";
 export { BondClient } from "./bond";
+export type { ControllerBonds } from "./bond";
 export { InsuranceClient } from "./insurance";
+export type {
+  FileClaimParams,
+  InsurancePool,
+  ClaimList,
+} from "./insurance";
 export { AdaptiveBurnClient } from "./adaptive-burn";
 export { SeedAgentClient } from "./seed-agent";
 export { QuotaClient } from "./quota";
@@ -371,6 +381,7 @@ export type {
   CapitalIntent,
   CapitalQuote,
   CapitalLeg,
+  ReserveSource,
   ReserveAttestation,
 } from "./capital";
 export { WorkflowClient } from "./workflow";
@@ -813,6 +824,7 @@ export type {
   SealedData,
   UnsealedData,
   TeeProvider,
+  TeeProviderList,
 } from "./tee";
 
 // ZK types
