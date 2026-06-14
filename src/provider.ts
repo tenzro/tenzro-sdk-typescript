@@ -24,6 +24,30 @@ export interface ChatResponse {
   tokens_used: number;
 }
 
+/**
+ * Optional generation knobs for {@link ProviderClient.chatWith}.
+ *
+ * MTP throughput uplift requires the target model to declare a
+ * drafter in its catalog entry (`HfModelEntry.drafter_id` +
+ * `mtp_kind`). Gemma 4 12B and 31B currently advertise this. When
+ * `draft_n` is set on a model whose runtime cannot satisfy it,
+ * the node returns a structured `MtpUnavailable` error.
+ */
+export interface ChatOptions {
+  /** Sampling temperature (0.0..=2.0). Default: 0.7. */
+  temperature?: number;
+  /** Top-p nucleus-sampling threshold. Default: 0.9. */
+  top_p?: number;
+  /** Maximum new tokens to generate. Default: 512. */
+  max_tokens?: number;
+  /**
+   * Multi-Token-Prediction draft count (1..=6). Only meaningful on
+   * MTP-eligible models. Unsloth recommends 2 as a starting point on
+   * Gemma 4; optimal value is hardware-dependent.
+   */
+  draft_n?: number;
+}
+
 export interface DownloadProgress {
   model_id: string;
   status: string;
@@ -192,6 +216,36 @@ export class ProviderClient {
    */
   async chat(modelId: string, messages: ChatMessage[]): Promise<ChatResponse> {
     return await this.rpc.call<ChatResponse>("tenzro_chat", [modelId, messages]);
+  }
+
+  /**
+   * Send a chat completion with generation options. Use this when
+   * you need to pass {@link ChatOptions} (Multi-Token Prediction
+   * `draft_n`, `max_tokens`, `temperature`, `top_p`, etc.).
+   *
+   * @example
+   * ```typescript
+   * const response = await client.provider.chatWith(
+   *   "gemma4-12b",
+   *   [{ role: "user", content: "..." }],
+   *   { draft_n: 2, max_tokens: 256 },
+   * );
+   * ```
+   */
+  async chatWith(
+    modelId: string,
+    messages: ChatMessage[],
+    opts: ChatOptions = {}
+  ): Promise<ChatResponse> {
+    const params: Record<string, unknown> = {
+      model_id: modelId,
+      messages,
+    };
+    if (opts.temperature !== undefined) params.temperature = opts.temperature;
+    if (opts.top_p !== undefined) params.top_p = opts.top_p;
+    if (opts.max_tokens !== undefined) params.max_tokens = opts.max_tokens;
+    if (opts.draft_n !== undefined) params.draft_n = opts.draft_n;
+    return await this.rpc.call<ChatResponse>("tenzro_chat", [params]);
   }
 
   /**

@@ -551,6 +551,7 @@ export type {
   ParticipateResponse,
   ProviderStats,
   ChatMessage,
+  ChatOptions,
   ChatResponse,
   DownloadProgress,
   HardwareProfile,
