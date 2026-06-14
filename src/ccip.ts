@@ -73,13 +73,12 @@ export interface CcipTransferResult {
 }
 
 /**
- * Client for the Chainlink CCIP regulated rail — Tenzro's
- * institutional cross-chain entry point. CCIP rides a Chainlink-
- * operated OCR commit-store committee plus an independent RMN ARM
- * (Risk Management Network) that must co-bless every inbound message.
+ * Client for Chainlink CCIP. CCIP uses a Chainlink-operated OCR
+ * commit-store committee plus an independent RMN ARM (Risk
+ * Management Network) that co-attest every inbound message.
  *
- * Use this client when the cross-chain leg must ride a regulated,
- * attested rail rather than a generic permissionless protocol. The 9
+ * Use this client when the cross-chain leg requires CCIP
+ * specifically rather than letting `BridgeRouter` pick. The 9
  * methods mirror the `tenzro_ccip*` JSON-RPC namespace on the node.
  */
 export class CcipClient {
@@ -210,10 +209,9 @@ export class CcipClient {
   }
 
   /**
-   * Bridge tokens through the node's BridgeRouter, pinned to the
-   * CCIP regulated rail. The router refuses the call if no CCIP
-   * adapter is registered rather than silently falling back to a
-   * generic adapter.
+   * Bridge tokens through the node's BridgeRouter with the CCIP
+   * adapter pinned. The router refuses the call if no CCIP adapter
+   * is registered rather than falling back to a generic adapter.
    */
   async bridge(
     sourceChain: string,

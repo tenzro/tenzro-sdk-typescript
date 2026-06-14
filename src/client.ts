@@ -193,9 +193,11 @@ export class TenzroClient {
   }
 
   /**
-   * Access the Chainlink CCIP client — the regulated-rail entry
-   * point for institutional cross-chain legs (OCR commit-store +
-   * RMN ARM blessing).
+   * Access the Chainlink CCIP client. Wraps the `tenzro_ccip*`
+   * JSON-RPC namespace on the node (fee quote, send, track,
+   * supported chains/tokens/lanes, CCT pool inspection, rate
+   * limits, and a router-mediated `bridge` that pins the route
+   * to the CCIP adapter).
    */
   ccip(): CcipClient {
     return new CcipClient(this.rpc);
