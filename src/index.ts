@@ -278,6 +278,14 @@ export {
 export type { TenzroA2aExtension } from "./a2a-extension";
 
 export { WormholeClient } from "./wormhole";
+export { CcipClient } from "./ccip";
+export type {
+  CcipTokenAmount,
+  CcipFeeQuote,
+  CcipSendEnvelope,
+  CcipExecutionState,
+  CcipTransferResult,
+} from "./ccip";
 export { IrohClient } from "./iroh";
 export { CctClient } from "./cct";
 export { NftClient } from "./nft";

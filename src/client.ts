@@ -26,6 +26,7 @@ import { ZkClient } from "./zk";
 import { StreamingClient } from "./streaming";
 import { Ap2Client } from "./ap2";
 import { BridgeClient } from "./bridge";
+import { CcipClient } from "./ccip";
 import { AgentPaymentClient } from "./agent-payments";
 import { CircuitBreakerClient } from "./circuit-breaker";
 import { NanopaymentClient } from "./nanopayment";
@@ -189,6 +190,15 @@ export class TenzroClient {
   /** Access the cross-chain bridge client. */
   bridge(): BridgeClient {
     return new BridgeClient(this.rpc);
+  }
+
+  /**
+   * Access the Chainlink CCIP client — the regulated-rail entry
+   * point for institutional cross-chain legs (OCR commit-store +
+   * RMN ARM blessing).
+   */
+  ccip(): CcipClient {
+    return new CcipClient(this.rpc);
   }
 
   /** Access the agent payment executor client. */
