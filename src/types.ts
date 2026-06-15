@@ -1258,6 +1258,16 @@ export interface DamlCreateCommandParams {
   command_type: 'create';
   template_id: string;
   create_arguments: Record<string, unknown>;
+  /**
+   * Optional override for the party the command is submitted as.
+   *
+   * When omitted, the node resolves the party from the calling API
+   * key's bound `canton_user_id` (`primaryParty`). Pass a fully-
+   * qualified party id (`<hint>::<participant-hash>`) to pin the
+   * command to a specific party — the node verifies the caller is
+   * authorized on that party before forwarding to Canton.
+   */
+  act_as?: string;
 }
 
 /** Parameters for a DAML `exercise` command. */
@@ -1267,6 +1277,8 @@ export interface DamlExerciseCommandParams {
   contract_id: string;
   choice: string;
   choice_argument: Record<string, unknown>;
+  /** Optional override for the party. See `DamlCreateCommandParams.act_as`. */
+  act_as?: string;
 }
 
 export type DamlCommandParams =
