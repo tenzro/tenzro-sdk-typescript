@@ -291,4 +291,99 @@ export class CantonClient {
     if (keyId !== undefined) params.key_id = keyId;
     return this.rpc.call('tenzro_canton_listApiKeyAnalytics', params);
   }
+
+  /**
+   * Watch active contracts for a specific party.
+   *
+   * The presenting API key must (a) carry a `canton_user_id` binding
+   * and (b) be authorized for `party`. Either the party matches the
+   * key's resolved `primaryParty`, or the party is on the key's
+   * `can_read_as_parties` / `can_act_as_parties` agent-delegation
+   * whitelist. Anything else returns `-32004`.
+   *
+   * Used by autonomous agents that need to subscribe to a specific
+   * counterparty party they have been granted read access on, rather
+   * than reading their own primary party.
+   */
+  async watchParty(
+    party: string,
+    templateIds: string[]
+  ): Promise<unknown> {
+    return this.rpc.call('tenzro_canton_watchParty', {
+      party,
+      template_ids: templateIds,
+    });
+  }
+
+  /**
+   * Operator-only: register a per-tenant Canton
+   * IdentityProviderConfig (Stage 2.b). Admin-token-gated at the
+   * node.
+   */
+  async createIdp(args: {
+    identityProviderId: string;
+    issuerUrl: string;
+    jwksUrl: string;
+    audience: string;
+  }): Promise<unknown> {
+    return this.rpc.call('tenzro_canton_createIdp', {
+      identity_provider_id: args.identityProviderId,
+      issuer_url: args.issuerUrl,
+      jwks_url: args.jwksUrl,
+      audience: args.audience,
+    });
+  }
+
+  /**
+   * Operator-only: list every Canton IdentityProviderConfig
+   * (Stage 2.b roster). Admin-token-gated.
+   */
+  async listIdps(): Promise<unknown> {
+    return this.rpc.call('tenzro_canton_listIdps', {});
+  }
+
+  /**
+   * Operator-only: delete a Canton IdentityProviderConfig. The
+   * tenant whose IDP is being deleted must already be revoked or
+   * migrated — Canton refuses to delete an IDP that has live users.
+   * Admin-token-gated.
+   */
+  async deleteIdp(identityProviderId: string): Promise<unknown> {
+    return this.rpc.call('tenzro_canton_deleteIdp', {
+      identity_provider_id: identityProviderId,
+    });
+  }
+
+  /**
+   * Operator-only: mirror a Tenzro workflow into a Canton
+   * synchronizer as a `Tenzro.Workflow:WorkflowAnchor` contract.
+   * The contract owner is the operator's participant-default party —
+   * the mirrored payload is internal node state, so this surface is
+   * admin-token-gated at the node.
+   */
+  async mirrorWorkflowToCanton(
+    workflowId: string,
+    synchronizerId: string
+  ): Promise<unknown> {
+    return this.rpc.call('tenzro_mirrorWorkflowToCanton', {
+      workflow_id: workflowId,
+      synchronizer_id: synchronizerId,
+    });
+  }
+
+  /**
+   * Operator-only: mirror an Obligation under an already-mirrored
+   * workflow as a `Tenzro.Workflow:ObligationAnchor` contract.
+   * `parentContractId` is the WorkflowAnchor created by
+   * `mirrorWorkflowToCanton`. Admin-token-gated.
+   */
+  async mirrorObligationToCanton(
+    obligationId: string,
+    parentContractId: string
+  ): Promise<unknown> {
+    return this.rpc.call('tenzro_mirrorObligationToCanton', {
+      obligation_id: obligationId,
+      parent_contract_id: parentContractId,
+    });
+  }
 }
