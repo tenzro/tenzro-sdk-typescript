@@ -241,6 +241,9 @@ export type {
 export { CaipClient } from "./caip";
 export type { Caip2Info, Caip10Info, Caip19Request, Caip19Info } from "./caip";
 
+export { DiscoveryClient } from "./discovery";
+export type { SiwtBuildPayload } from "./discovery";
+
 // Pure helpers for the submitted `tenzro` CASA namespace — parsing,
 // validation, and constants. Safe to use without an RPC round-trip.
 export {

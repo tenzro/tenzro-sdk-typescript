@@ -70,6 +70,7 @@ import { BridgeFeeClient } from "./bridge-fee";
 import { AxelarClient } from "./axelar";
 import { BabylonClient } from "./babylon";
 import { CaipClient } from "./caip";
+import { DiscoveryClient } from "./discovery";
 import {
   Block,
   BlockRange,
@@ -117,6 +118,7 @@ export class TenzroClient {
   public readonly axelar: AxelarClient;
   public readonly babylon: BabylonClient;
   public readonly caip: CaipClient;
+  public readonly discovery: DiscoveryClient;
   public readonly urwa: UrwaClient;
   public readonly ivms101: Ivms101Client;
   public readonly attestedClock: AttestedClockClient;
@@ -166,6 +168,7 @@ export class TenzroClient {
     this.axelar = new AxelarClient(this.rpc);
     this.babylon = new BabylonClient(this.rpc);
     this.caip = new CaipClient(this.rpc);
+    this.discovery = new DiscoveryClient(this.rpc);
     this.urwa = new UrwaClient(this.rpc);
     this.ivms101 = new Ivms101Client(this.rpc);
     this.attestedClock = new AttestedClockClient(this.rpc);
