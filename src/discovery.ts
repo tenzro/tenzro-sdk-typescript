@@ -102,4 +102,39 @@ export class DiscoveryClient {
   async validateLei(lei: string): Promise<unknown> {
     return this.rpc.call('tenzro_validateLei', { lei });
   }
+
+  /**
+   * Decentralized MoE shard map for `model_id`: providers holding each
+   * `(layer, expert)`, per-expert replication, under-replicated experts,
+   * hot experts, and role counts.
+   */
+  async moeShardMap(modelId: string): Promise<unknown> {
+    return this.rpc.call('tenzro_moeShardMap', { model_id: modelId });
+  }
+
+  /**
+   * Build a dispatch plan from per-token top-k routing decisions.
+   * `routings` is `[{token_index, experts: [{layer, expert}]}]`.
+   */
+  async moePlanDispatch(
+    modelId: string,
+    routings: Array<{ token_index: number; experts: Array<{ layer: number; expert: number }> }>,
+    allowCold = false,
+  ): Promise<unknown> {
+    return this.rpc.call('tenzro_moePlanDispatch', {
+      model_id: modelId,
+      routings,
+      allow_cold: allowCold,
+    });
+  }
+
+  /** Current governance-tuned replication policy. */
+  async moeReplicationPolicy(): Promise<unknown> {
+    return this.rpc.call('tenzro_moeReplicationPolicy', []);
+  }
+
+  /** Catalog-side MoE topology for `model_id`. */
+  async moeCatalogShape(modelId: string): Promise<unknown> {
+    return this.rpc.call('tenzro_moeCatalogShape', { model_id: modelId });
+  }
 }
