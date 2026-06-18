@@ -60,7 +60,7 @@ export class DiscoveryClient {
 
   /** Build a SIWT canonical-form message from a payload. */
   async siwtBuildMessage(payload: SiwtBuildPayload): Promise<unknown> {
-    return this.rpc.call('tenzro_siwtBuildMessage', payload);
+    return this.rpc.call('tenzro_siwtBuildMessage', payload as unknown as Record<string, unknown>);
   }
 
   /** Parse a SIWT canonical-form message. */
