@@ -154,7 +154,13 @@ export class ProviderClient {
   }
 
   /**
-   * Start serving a model on the network
+   * Start serving a model on the network.
+   *
+   * When a model is too large for a single host, the node auto-clusters: it
+   * reads the GGUF header for layer count and hidden dimension, discovers LAN
+   * members from gossiped cluster announcements, and runs a layer-wise
+   * pipeline across them. No extra arguments are required — the node decides
+   * single-host vs. cluster from the model shape and the reachable members.
    *
    * @param modelId - ID of the model to serve
    *
@@ -265,18 +271,30 @@ export class ProviderClient {
   }
 
   /**
-   * Set node role (validator, provider, light_client)
+   * Set this node's active roles. One stake backs every role.
    *
-   * @param role - Node role to set
+   * @param roles - Comma-separated role tokens: `validator`, `ai`, `storage`,
+   *   `tee`, `user`. The empty string resolves to a client node.
    *
    * @example
    * ```typescript
-   * await client.provider.setRole("provider");
-   * console.log("Role updated");
+   * await client.provider.setRoles("validator,storage,ai");
+   * console.log("Roles updated");
    * ```
    */
-  async setRole(role: string): Promise<void> {
-    await this.rpc.call("tenzro_setRole", [role]);
+  async setRoles(roles: string): Promise<void> {
+    await this.rpc.call("tenzro_setRole", [{ roles }]);
+  }
+
+  /**
+   * Get this node's active roles (normalized role-token strings).
+   */
+  async getRoles(): Promise<string[]> {
+    const result = await this.rpc.call<{ roles?: string[] }>(
+      "tenzro_getRole",
+      [],
+    );
+    return result.roles ?? [];
   }
 
   /**

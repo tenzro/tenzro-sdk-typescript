@@ -155,6 +155,17 @@ SDK consumers see consistent state across node upgrades and reboots:
 - **Swarms** — `SwarmManager` persists `SwarmState` under `swarm:<swarm_id>`
   in `CF_AGENTS` with write-through on create, status transitions, and
   termination.
+- **Wallets** — FROST key shares persist across restarts **when the host node
+  is built with a `KeystoreUnlocker`** (the source of the keystore password).
+  This is a node-build concern, not an RPC-client one: a wallet created via
+  `createPasskeyWallet` / `tenzro_createWallet` survives a node reboot only if
+  the operator's node binary supplies an unlocker. Desktop hosts inject a
+  biometric Secure-Enclave unlocker (macOS/iOS Touch ID, via the
+  `tenzro-device-key` crate); headless hosts inject an env/file/KMS unlocker.
+  Without one, the embedded node treats the wallet as **ephemeral** and
+  recreates it each launch — the historical default. Cross-restart Secure
+  Enclave persistence additionally requires the desktop app to ship a
+  `keychain-access-groups` entitlement + provisioning profile.
 
 ## AppClient (Developer Pattern)
 

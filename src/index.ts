@@ -18,6 +18,11 @@ export type {
 export { AuthClient } from "./auth";
 export { WalletClient } from "./wallet";
 export { PasskeyRpcClient } from "./passkey-rpc";
+export {
+  TenzroAgentWallet,
+  type SpawnAgentResult,
+  type AgentRiskSnapshot,
+} from "./agent-wallet";
 export type {
   EnrollPasskeyParams,
   EnrollPasskeyResponse,
@@ -54,6 +59,18 @@ export { GovernanceClient } from "./governance";
 export { IdentityClient } from "./identity";
 export { PaymentClient } from "./payment";
 export { ProviderClient } from "./provider";
+export { StorageClient } from "./storage";
+export type {
+  StoredObject,
+  ChargeOutcome as StorageChargeOutcome,
+  StorageStatus,
+} from "./storage";
+export { ComputeClient } from "./compute";
+export type {
+  ComputeRental,
+  EpochOutcome as ComputeEpochOutcome,
+  ComputeStatus,
+} from "./compute";
 export { TaskClient } from "./task";
 export { MarketplaceClient } from "./marketplace";
 export { SkillClient } from "./skill";

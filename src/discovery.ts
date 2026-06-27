@@ -137,4 +137,48 @@ export class DiscoveryClient {
   async moeCatalogShape(modelId: string): Promise<unknown> {
     return this.rpc.call('tenzro_moeCatalogShape', { model_id: modelId });
   }
+
+  /**
+   * Peer IDs currently discovered on this node's local segment via mDNS.
+   * Returns `{ local_peers, count, available }`; `available` is false when
+   * local discovery is not running.
+   */
+  async localPeers(): Promise<unknown> {
+    return this.rpc.call('tenzro_localPeers', []);
+  }
+
+  /**
+   * This node's sustained connectivity tier (`direct` / `relay_only` /
+   * `unreachable`). Returns `{ tier, available }`.
+   */
+  async nodeReachability(): Promise<unknown> {
+    return this.rpc.call('tenzro_nodeReachability', []);
+  }
+
+  /**
+   * This node's hardware self-profile from the ggml device API: build commit,
+   * CPU arch, OS, devices, and the derived serving VRAM / backend / capability
+   * key.
+   */
+  async nodeProfile(): Promise<unknown> {
+    return this.rpc.call('tenzro_nodeProfile', []);
+  }
+
+  /**
+   * Deterministic cluster placement for a model across candidate members.
+   * Returns the fit decision and, when a cluster forms, the ordered per-member
+   * layer stages. When `force` is true a cluster is requested even if one
+   * member fits the whole model.
+   */
+  async clusterPlan(
+    model: { layers: number; hidden_dim: number; total_vram_gb: number },
+    members: Array<Record<string, unknown>>,
+    force = false,
+  ): Promise<unknown> {
+    return this.rpc.call('tenzro_clusterPlan', {
+      model,
+      members,
+      user_forced: force,
+    });
+  }
 }

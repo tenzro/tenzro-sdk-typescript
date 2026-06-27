@@ -55,6 +55,38 @@ export interface ModelInfo {
   pricing?: ModelPricing;
   pricingConfig: PricingConfig;
   metadata?: Record<string, string>;
+  /**
+   * Whether the model accepts image input (vision-language). When true,
+   * `mmproj` carries the projector loaded via llama.cpp `--mmproj`.
+   */
+  multimodal?: boolean;
+  /** Multimodal projector for vision-capable models; absent for text-only. */
+  mmproj?: MmprojSpec;
+  /**
+   * Catalog-recommended serving profile (sampler defaults, chat-template
+   * requirement, reasoning default). Returned by `tenzro_modelMetadata`.
+   */
+  serving?: ServingProfile;
+}
+
+/** Multimodal projector descriptor for a vision-capable model. */
+export interface MmprojSpec {
+  /** Projector filename within the model's HF repo (e.g. `mmproj-F16.gguf`). */
+  filename: string;
+}
+
+/**
+ * Catalog-recommended serving configuration. Mirrors the `serving` object
+ * from `tenzro_modelMetadata`. These are the model author's recommended
+ * defaults; per-request parameters override them.
+ */
+export interface ServingProfile {
+  temperature: number;
+  top_p: number;
+  top_k: number;
+  min_p: number;
+  jinja_required: boolean;
+  reasoning_default: boolean;
 }
 
 export interface ModelLoadInfo {

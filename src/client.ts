@@ -3,6 +3,7 @@ import { discoverEip6963Provider } from "./eip6963";
 import { Eip1193Transport, RpcClient, RpcTransport } from "./rpc";
 import { WalletClient } from "./wallet";
 import { PasskeyRpcClient } from "./passkey-rpc";
+import { TenzroAgentWallet } from "./agent-wallet";
 import { InferenceClient } from "./inference";
 import { CortexClient } from "./cortex";
 import { SettlementClient } from "./settlement";
@@ -11,6 +12,8 @@ import { GovernanceClient } from "./governance";
 import { IdentityClient } from "./identity";
 import { PaymentClient } from "./payment";
 import { ProviderClient } from "./provider";
+import { StorageClient } from "./storage";
+import { ComputeClient } from "./compute";
 import { TaskClient } from "./task";
 import { MarketplaceClient } from "./marketplace";
 import { SkillClient } from "./skill";
@@ -91,6 +94,12 @@ export class TenzroClient {
   public readonly apiKey: ApiKeyClient;
   public readonly wallet: WalletClient;
   public readonly passkeyRpc: PasskeyRpcClient;
+  /** Composite agent-wallet surface — passkey + bond + Canton mandate
+   *  in one named class. The substrate sub-clients
+   *  (`passkey`/`bond`/`canton`) hang off `agentWallet` for drop-down
+   *  access; most callers use the composite methods (`spawn`,
+   *  `postBond`, `actAsParty`, `getRisk`). */
+  public readonly agentWallet: TenzroAgentWallet;
   public readonly inference: InferenceClient;
   public readonly cortex: CortexClient;
   public readonly settlement: SettlementClient;
@@ -99,6 +108,8 @@ export class TenzroClient {
   public readonly identity: IdentityClient;
   public readonly payment: PaymentClient;
   public readonly provider: ProviderClient;
+  public readonly storage: StorageClient;
+  public readonly compute: ComputeClient;
   public readonly skill: SkillClient;
   public readonly tool: ToolClient;
   public readonly canton: CantonClient;
@@ -141,6 +152,7 @@ export class TenzroClient {
     this.apiKey = new ApiKeyClient(this.rpc);
     this.wallet = new WalletClient(this.rpc);
     this.passkeyRpc = new PasskeyRpcClient(this.rpc);
+    this.agentWallet = new TenzroAgentWallet(this.rpc);
     this.inference = new InferenceClient(this.rpc);
     this.cortex = new CortexClient(this.rpc);
     this.settlement = new SettlementClient(this.rpc);
@@ -149,6 +161,8 @@ export class TenzroClient {
     this.identity = new IdentityClient(this.rpc);
     this.payment = new PaymentClient(this.rpc);
     this.provider = new ProviderClient(this.rpc);
+    this.storage = new StorageClient(this.rpc);
+    this.compute = new ComputeClient(this.rpc);
     this.skill = new SkillClient(this.rpc);
     this.tool = new ToolClient(this.rpc);
     this.canton = new CantonClient(this.rpc);
