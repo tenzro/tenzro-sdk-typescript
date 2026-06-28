@@ -211,7 +211,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `nanopayment` | Per-token streaming micropayment channels |
 | `circuitBreaker` | Provider health management for inference routing |
 | `erc7802` | Cross-chain token mint/burn primitive |
-| `provider` | Hardware detection, model serving, scheduling |
+| `provider` | Hardware detection, model serving, scheduling. `serveModel(id)` auto-clusters when a model is too large for one host — the node reads the GGUF header for layer count, discovers LAN members from gossiped cluster announcements, and runs a layer-wise pipeline across them, no extra options needed. `serveModel(id, { forceCluster, forceSingle, visibility })` overrides placement (force a split or pin single-host) and `visibility` (`"network"` gossips the model; `"private"` keeps it local/LAN-only). Preview the layer split first with `discovery.clusterPreview(id, { force, forceSingle })` (live node view; derives the shape from the GGUF header and discovers LAN members) |
 | `settlement` | `createEscrow()`, `releaseEscrow()`, `refundEscrow()`, `getEscrow()`, `openPaymentChannel()` |
 | `payment` | `createChallenge()`, `payMpp()`, `payX402()`, `listX402Schemes()` (pluggable scheme adapters: `exact`, `permit2`) |
 | `compliance` | `registerCompliance()`, `checkCompliance()`, `freezeAddress()` |

@@ -7,6 +7,19 @@ export interface ParticipateResponse {
   hardware_profile: Record<string, unknown>;
 }
 
+/** Whether a served model is announced to the network or kept local-only. */
+export type ServeVisibility = "network" | "private";
+
+/** Placement and visibility options for {@link ProviderClient.serveModel}. */
+export interface ServeOptions {
+  /** Split across the LAN cluster even when the model fits one host. */
+  forceCluster?: boolean;
+  /** Never form a cluster; serve single-host. */
+  forceSingle?: boolean;
+  /** Network (default) or private visibility. */
+  visibility?: ServeVisibility;
+}
+
 export interface ProviderStats {
   is_serving: boolean;
   models_served: string[];
@@ -159,10 +172,20 @@ export class ProviderClient {
    * When a model is too large for a single host, the node auto-clusters: it
    * reads the GGUF header for layer count and hidden dimension, discovers LAN
    * members from gossiped cluster announcements, and runs a layer-wise
-   * pipeline across them. No extra arguments are required — the node decides
+   * pipeline across them. No extra options are required — the node decides
    * single-host vs. cluster from the model shape and the reachable members.
    *
+   * Pass `opts` to override placement or visibility:
+   * - `forceCluster`: split across the LAN cluster even when the model fits
+   *   one host.
+   * - `forceSingle`: never form a cluster; serve single-host.
+   * - `visibility`: `"network"` (default) gossips the model so any peer can
+   *   route to it; `"private"` registers it locally without announcing.
+   *
+   * Use {@link Discovery.clusterPlan} to preview the layer split first.
+   *
    * @param modelId - ID of the model to serve
+   * @param opts - Optional placement and visibility overrides
    *
    * @example
    * ```typescript
@@ -170,8 +193,12 @@ export class ProviderClient {
    * console.log("Now serving model");
    * ```
    */
-  async serveModel(modelId: string): Promise<void> {
-    await this.rpc.call("tenzro_serveModel", [modelId]);
+  async serveModel(modelId: string, opts: ServeOptions = {}): Promise<void> {
+    const params: Record<string, unknown> = { model_id: modelId };
+    if (opts.forceCluster) params.user_forced = true;
+    if (opts.forceSingle) params.force_single = true;
+    params.visibility = opts.visibility ?? "network";
+    await this.rpc.call("tenzro_serveModel", params);
   }
 
   /**

@@ -575,6 +575,8 @@ export type {
   ChatResponse,
   DownloadProgress,
   HardwareProfile,
+  ServeOptions,
+  ServeVisibility,
 } from "./provider";
 
 // Task marketplace types

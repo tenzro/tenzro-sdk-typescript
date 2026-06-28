@@ -181,4 +181,25 @@ export class DiscoveryClient {
       user_forced: force,
     });
   }
+
+  /**
+   * Preview how a downloaded model would be placed using the node's live view:
+   * derives the model shape from the GGUF header and discovers LAN members from
+   * gossip — no manual dimensions or member list required. `force` requests a
+   * cluster even when the model fits one member; `forceSingle` previews
+   * single-host placement. Returns the fit decision, discovered members, any
+   * rejected members (with reasons), and the proposed per-member layer stages.
+   * Call this before {@link ProviderClient.serveModel} to show the operator
+   * what serving will do.
+   */
+  async clusterPreview(
+    modelId: string,
+    opts: { force?: boolean; forceSingle?: boolean } = {},
+  ): Promise<unknown> {
+    return this.rpc.call('tenzro_clusterPreview', {
+      model_id: modelId,
+      user_forced: opts.force ?? false,
+      force_single: opts.forceSingle ?? false,
+    });
+  }
 }
