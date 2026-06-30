@@ -23,6 +23,18 @@ export interface SecureMintPolicy {
   attested_at: number;
   /** Attestation freshness window in seconds. */
   ttl_secs: number;
+  /**
+   * Proof-of-reserve feed-liveness window in seconds (0 = disabled).
+   * Distinct from `ttl_secs`: gates mint on a *live* attestation
+   * heartbeat, not just a non-stale one.
+   */
+  heartbeat_secs?: number;
+  /** Max amount mintable per rolling window, base units (0 = uncapped). */
+  mint_window_cap?: string;
+  /** Length of the velocity window in seconds (0 = disabled). */
+  mint_window_secs?: number;
+  /** Install the policy already tripped (mint blocked until cleared). */
+  paused?: boolean;
 }
 
 /** Result of `setPolicy`. */
@@ -69,6 +81,17 @@ export interface SecureMintBurn {
   token: string;
   amount: string;
   policy: SecureMintPolicy;
+}
+
+/** Result of `setPaused` — per-token issuance circuit breaker. */
+export interface SecureMintPausedResult {
+  token: string;
+  paused: boolean;
+}
+
+/** Result of `setGlobalPause` — global issuance circuit breaker. */
+export interface SecureMintGlobalPauseResult {
+  global_paused: boolean;
 }
 
 /**
@@ -121,5 +144,27 @@ export class SecureMintClient {
     return this.rpc.call<SecureMintBurn>('tenzro_secureMintRecordBurn', [
       { token, amount },
     ]);
+  }
+
+  /** Trip or clear the per-token issuance circuit breaker. Admin-gated. */
+  async setPaused(
+    token: string,
+    paused: boolean
+  ): Promise<SecureMintPausedResult> {
+    return this.rpc.call<SecureMintPausedResult>('tenzro_setSecureMintPaused', [
+      { token, paused },
+    ]);
+  }
+
+  /**
+   * Trip or clear the global issuance circuit breaker, halting mint across
+   * every token at once. Admin-gated. Not persisted: a node restart clears
+   * it so it can never boot wedged on a forgotten pause.
+   */
+  async setGlobalPause(paused: boolean): Promise<SecureMintGlobalPauseResult> {
+    return this.rpc.call<SecureMintGlobalPauseResult>(
+      'tenzro_setGlobalIssuancePause',
+      [{ paused }]
+    );
   }
 }

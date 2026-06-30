@@ -237,7 +237,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `eip7702` | Pectra Type-4 delegation registry: `install7702Delegation()`, `get7702Delegation()`, `revoke7702Delegation()` |
 | `erc7683` | Cross-chain intents origin opener + destination fill registry: `open7683Order()`, `get7683Order()`, `list7683Orders()`, `recordFill7683()`, `getFill7683()`, `listFills7683()` |
 | `permit2` | Permit2 `SignatureTransfer`: `domainSeparator()`, `digest()`, `verifyAndConsume()`, `nonceUsed()` (optional witness binding for ERC-7683 origin opens) |
-| `secureMint` | Per-token 1:1 reserve-attestation invariant for tokenized RWAs: `setPolicy()`, `getPolicy()`, `clearPolicy()`, `check()`, `apply()`, `recordBurn()` |
+| `secureMint` | Per-token 1:1 reserve-attestation invariant for tokenized RWAs, token-keyed: `setPolicy()`, `getPolicy()`, `clearPolicy()`, `check()`, `apply()`, `recordBurn()`, `setPaused()`, `setGlobalPause()`; fail-closed gate with freshness/heartbeat/velocity guards + circuit breakers |
 | `stableAsset` | Issuer-agnostic stable-unit issuance on the Secure-Mint reserve floor: `register()`, `get()`, `mint()`, `redeem()`; register needs the `issuer` API-key scope |
 | `hyperlane` | Hyperlane V3 messaging with sovereign Tenzro-validator-set ISM: `listChains()`, `quoteDispatch()`, `dispatch()`, `getMessage()` |
 | `axelar` | Axelar GMP — Cosmos / Move / Stellar / XRPL reach: `listChains()`, `callContract()`, `payGas()`, `getMessage()` |
