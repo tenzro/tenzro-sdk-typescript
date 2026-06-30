@@ -238,6 +238,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `erc7683` | Cross-chain intents origin opener + destination fill registry: `open7683Order()`, `get7683Order()`, `list7683Orders()`, `recordFill7683()`, `getFill7683()`, `listFills7683()` |
 | `permit2` | Permit2 `SignatureTransfer`: `domainSeparator()`, `digest()`, `verifyAndConsume()`, `nonceUsed()` (optional witness binding for ERC-7683 origin opens) |
 | `secureMint` | Per-token 1:1 reserve-attestation invariant for tokenized RWAs: `setPolicy()`, `getPolicy()`, `clearPolicy()`, `check()`, `apply()`, `recordBurn()` |
+| `stableAsset` | Issuer-agnostic stable-unit issuance on the Secure-Mint reserve floor: `register()`, `get()`, `mint()`, `redeem()`; register needs the `issuer` API-key scope |
 | `hyperlane` | Hyperlane V3 messaging with sovereign Tenzro-validator-set ISM: `listChains()`, `quoteDispatch()`, `dispatch()`, `getMessage()` |
 | `axelar` | Axelar GMP — Cosmos / Move / Stellar / XRPL reach: `listChains()`, `callContract()`, `payGas()`, `getMessage()` |
 | `babylon` | Babylon Bitcoin staking finality-providers + EOTS delegations: `registerFinalityProvider()`, `submitFinalitySignature()`, `totalStakeForProvider()`, `listDelegations()` |

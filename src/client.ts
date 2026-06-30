@@ -63,6 +63,7 @@ import { CapitalClient } from "./capital";
 import { WorkflowClient } from "./workflow";
 import { Permit2Client } from "./permit2";
 import { SecureMintClient } from "./secure-mint";
+import { StableAssetClient } from "./stable-asset";
 import { HyperlaneClient } from "./hyperlane";
 import { UrwaClient } from "./urwa";
 import { Ivms101Client } from "./ivms101";
@@ -125,6 +126,7 @@ export class TenzroClient {
   public readonly workflow: WorkflowClient;
   public readonly permit2: Permit2Client;
   public readonly secureMint: SecureMintClient;
+  public readonly stableAsset: StableAssetClient;
   public readonly hyperlane: HyperlaneClient;
   public readonly axelar: AxelarClient;
   public readonly babylon: BabylonClient;
@@ -178,6 +180,7 @@ export class TenzroClient {
     this.workflow = new WorkflowClient(this.rpc);
     this.permit2 = new Permit2Client(this.rpc);
     this.secureMint = new SecureMintClient(this.rpc);
+    this.stableAsset = new StableAssetClient(this.rpc);
     this.hyperlane = new HyperlaneClient(this.rpc);
     this.axelar = new AxelarClient(this.rpc);
     this.babylon = new BabylonClient(this.rpc);

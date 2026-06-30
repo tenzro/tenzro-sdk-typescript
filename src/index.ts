@@ -200,6 +200,14 @@ export type {
   SecureMintBurn,
 } from "./secure-mint";
 
+export { StableAssetClient } from "./stable-asset";
+export type {
+  StableReserveSource,
+  CustodialReserve,
+  OnChainVaultReserve,
+  RegisterStableAsset,
+} from "./stable-asset";
+
 export { UrwaClient } from "./urwa";
 export type {
   UrwaKillSwitchState,
