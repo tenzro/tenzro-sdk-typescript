@@ -11,20 +11,27 @@ export class Erc7802Client {
 
   /**
    * Mint tokens on the current chain authorized by a source chain burn.
+   * The node dispatches `payload` through its bridge router for quorum
+   * verification; the verified message inside is the sole authority for
+   * recipient and amount. `recipient`/`amount` are optional cross-checks.
    * @param token - Token address or symbol
-   * @param recipient - Recipient address for the minted tokens
-   * @param amount - Amount to mint (decimal string)
    * @param sourceChain - Source chain that authorized this mint
+   * @param adapter - Bridge router adapter name that verifies the payload (e.g. 'wormhole')
+   * @param payload - Hex-encoded inbound bridge payload
+   * @param recipient - Expected recipient address (cross-check, optional)
+   * @param amount - Expected amount as decimal string (cross-check, optional)
    * @returns Mint result with transaction hash
    */
   async crosschainMint(
     token: string,
-    recipient: string,
-    amount: string,
-    sourceChain: string
+    sourceChain: string,
+    adapter: string,
+    payload: string,
+    recipient?: string,
+    amount?: string
   ): Promise<MintResult> {
     return this.rpc.call<MintResult>('tenzro_erc7802CrosschainMint', [
-      { token, recipient, amount, source_chain: sourceChain },
+      { token, source_chain: sourceChain, adapter, payload, recipient, amount },
     ]);
   }
 

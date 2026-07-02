@@ -870,8 +870,8 @@ Estimate bridge fee in native token and USD.
 
 ERC-7802 (SuperchainERC20) cross-chain token mint/burn interface.
 
-### `crosschainMint(token, recipient, amount, sourceChain)`
-Mint tokens from cross-chain transfer (called by bridge adapter).
+### `crosschainMint(token, sourceChain, adapter, payload, recipient?, amount?)`
+Mint tokens authorized by a source-chain burn. The node dispatches `payload` through its bridge router for quorum verification; the verified message inside is the sole authority for recipient and amount. `recipient`/`amount` are optional cross-checks.
 
 ### `crosschainBurn(token, from, amount, targetChain)`
 Burn tokens for cross-chain transfer.

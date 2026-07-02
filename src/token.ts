@@ -167,6 +167,83 @@ export interface TransferResult {
   status: string;
 }
 
+// ── Treasury multisig types ──
+
+/** Treasury withdrawer/threshold configuration */
+export interface TreasuryConfig {
+  /** Authorized withdrawer addresses (0x-prefixed hex) */
+  withdrawers: string[];
+  /** Approvals required per withdrawal */
+  threshold: number;
+}
+
+/** Parameters for approving a treasury withdrawal */
+export interface TreasuryApproveWithdrawalParams {
+  /** Withdrawal identifier shared by all approvers */
+  withdrawal_id: string;
+  /** Asset identifier (e.g. "TNZO") */
+  asset_id: string;
+  /** Amount in base units (decimal string) */
+  amount: string;
+  /** Approver address (0x-prefixed hex) — must be an authorized withdrawer */
+  approver: string;
+  /** Signature key type: "ed25519" (default) or "secp256k1" */
+  key_type?: string;
+  /** Approver public key (hex) */
+  public_key: string;
+  /**
+   * Hex signature over
+   * `"tenzro/treasury/withdrawal-approval" || withdrawal_id || asset_id || amount_le`
+   */
+  signature: string;
+}
+
+/** Result of approving a treasury withdrawal */
+export interface TreasuryApproval {
+  /** Withdrawal identifier */
+  withdrawal_id: string;
+  /** Asset identifier */
+  asset_id: string;
+  /** Amount in base units (decimal string) */
+  amount: string;
+  /** Distinct approvals recorded so far */
+  approvals: number;
+  /** Approvals required */
+  threshold: number;
+  /** Whether the threshold is now reached */
+  threshold_reached: boolean;
+}
+
+/** Result of executing a treasury withdrawal */
+export interface TreasuryExecution {
+  /** Withdrawal identifier */
+  withdrawal_id: string;
+  /** Asset identifier */
+  asset_id: string;
+  /** Amount in base units (decimal string) */
+  amount: string;
+  /** Whether the withdrawal executed */
+  executed: boolean;
+  /** Treasury balance for the asset after execution (decimal string) */
+  remaining_balance: string;
+}
+
+/** Pending withdrawal approval state */
+export interface PendingWithdrawal {
+  /** Withdrawal identifier */
+  withdrawal_id: string;
+  /** Asset identifier */
+  asset_id: string;
+  /** Amount in base units (decimal string) */
+  amount: string;
+  /** Approver addresses recorded so far (0x-prefixed hex) */
+  approvers: string[];
+  /** Distinct approvals recorded so far */
+  approvals: number;
+  /** Approvals required */
+  threshold: number;
+}
+
 // ── Client ──
 
 /**
@@ -238,5 +315,91 @@ export class TokenClient {
    */
   async crossVmTransfer(params: CrossVmTransferParams): Promise<TransferResult> {
     return this.rpc.call<TransferResult>('tenzro_crossVmTransfer', [params]);
+  }
+
+  // ── Treasury multisig withdrawals ──
+  //
+  // Withdrawer/threshold configuration requires the operator admin token
+  // (TENZRO_ADMIN_TOKEN). Approval and execution are authorized by the
+  // approver's signature over the domain-separated preimage and the
+  // configured threshold.
+
+  /**
+   * Authorize a treasury withdrawer address (admin token required).
+   * @param address - Withdrawer address (0x-prefixed hex)
+   * @returns Updated withdrawer set and threshold
+   */
+  async treasuryAddWithdrawer(address: string): Promise<TreasuryConfig> {
+    return this.rpc.call<TreasuryConfig>('tenzro_treasuryAddWithdrawer', [
+      { address },
+    ]);
+  }
+
+  /**
+   * Remove an authorized treasury withdrawer address (admin token required).
+   * @param address - Withdrawer address (0x-prefixed hex)
+   * @returns Updated withdrawer set and threshold
+   */
+  async treasuryRemoveWithdrawer(address: string): Promise<TreasuryConfig> {
+    return this.rpc.call<TreasuryConfig>('tenzro_treasuryRemoveWithdrawer', [
+      { address },
+    ]);
+  }
+
+  /**
+   * Set the treasury withdrawal approval threshold (admin token required).
+   * @param threshold - Distinct approvals required per withdrawal
+   * @returns Updated withdrawer set and threshold
+   */
+  async treasurySetWithdrawalThreshold(threshold: number): Promise<TreasuryConfig> {
+    return this.rpc.call<TreasuryConfig>('tenzro_treasurySetWithdrawalThreshold', [
+      { threshold },
+    ]);
+  }
+
+  /**
+   * Approve a treasury withdrawal with a signed approval.
+   * @param params - Withdrawal triple plus the approver's address, key, and signature
+   * @returns Approval count and whether the threshold is reached
+   */
+  async treasuryApproveWithdrawal(
+    params: TreasuryApproveWithdrawalParams
+  ): Promise<TreasuryApproval> {
+    return this.rpc.call<TreasuryApproval>('tenzro_treasuryApproveWithdrawal', [
+      params,
+    ]);
+  }
+
+  /**
+   * Execute a treasury withdrawal once the approval threshold is reached.
+   * The (withdrawal_id, asset_id, amount) triple must match the approved
+   * withdrawal exactly.
+   * @param withdrawalId - Withdrawal identifier
+   * @param assetId - Asset identifier (e.g. "TNZO")
+   * @param amount - Amount in base units (decimal string)
+   * @returns Execution result with the remaining treasury balance
+   */
+  async treasuryExecuteWithdrawal(
+    withdrawalId: string,
+    assetId: string,
+    amount: string
+  ): Promise<TreasuryExecution> {
+    return this.rpc.call<TreasuryExecution>('tenzro_treasuryExecuteWithdrawal', [
+      { withdrawal_id: withdrawalId, asset_id: assetId, amount },
+    ]);
+  }
+
+  /**
+   * Get a pending treasury withdrawal's approval state.
+   * @param withdrawalId - Withdrawal identifier
+   * @returns Pending withdrawal state, or null when none matches
+   */
+  async treasuryGetPendingWithdrawal(
+    withdrawalId: string
+  ): Promise<PendingWithdrawal | null> {
+    return this.rpc.call<PendingWithdrawal | null>(
+      'tenzro_treasuryGetPendingWithdrawal',
+      [{ withdrawal_id: withdrawalId }]
+    );
   }
 }

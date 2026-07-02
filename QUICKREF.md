@@ -330,8 +330,8 @@ const status = await client.bridge().getTransferStatus(transfer.transferId);
 ## ERC-7802 Cross-Chain Tokens
 
 ```typescript
-// Mint from cross-chain transfer
-await client.erc7802().crosschainMint("TNZO", recipient, amount, "ethereum");
+// Mint authorized by a verified inbound bridge payload
+await client.erc7802().crosschainMint("TNZO", "ethereum", "wormhole", payloadHex, recipient, amount);
 
 // Get supply breakdown
 const supply = await client.erc7802().getCrossChainSupply("TNZO");

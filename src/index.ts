@@ -817,6 +817,11 @@ export type {
   DamlBalance,
   WrapResult,
   TransferResult,
+  TreasuryConfig,
+  TreasuryApproveWithdrawalParams,
+  TreasuryApproval,
+  TreasuryExecution,
+  PendingWithdrawal,
 } from "./token";
 
 // Token constants
