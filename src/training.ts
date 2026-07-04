@@ -81,6 +81,18 @@ export interface ListTrainingRunsResult {
   runs: TrainingRun[];
 }
 
+/** Result of `tenzro_getTrainerDaemonStatus`. */
+export interface TrainerDaemonStatus {
+  /** `true` when the node runs the trainer auto-provisioning daemon. */
+  running: boolean;
+  /** DID the daemon enrolls trainers under. Absent when not running. */
+  trainer_did?: string;
+  /** Number of inner-loop trainer processes currently live. */
+  live_trainers: number;
+  /** Concurrency ceiling from the `[training]` config. Absent when not running. */
+  max_concurrent_trainers?: number;
+}
+
 /**
  * Read-only client for the Tenzro Train protocol-side run state —
  * the surface operators / dashboards / analytics use to inspect
@@ -128,6 +140,15 @@ export class TrainingInspectionClient {
     return this.rpc.call("tenzro_training_getSealedManifest", [
       { task_id: taskId },
     ]);
+  }
+
+  /**
+   * Report the trainer auto-provisioning daemon status. When the node
+   * has no `[training]` section (or `enabled = false`), `running` is
+   * `false` and the DID / concurrency fields are absent.
+   */
+  async daemonStatus(): Promise<TrainerDaemonStatus> {
+    return this.rpc.call("tenzro_getTrainerDaemonStatus", []);
   }
 }
 
@@ -225,5 +246,17 @@ export class TrainingClient {
     return this.rpc.call("tenzro_training_installSealedManifest", [
       { task_id: taskId, manifest },
     ]);
+  }
+
+  /**
+   * Ask the syncer whether the current round should finalize, keep waiting,
+   * or advance on a no-endorsement certificate. The decision follows the
+   * DiLoCo grace window: `wait` carries `remaining_ms`, while `finalize` and
+   * `no_quorum` carry the round number.
+   */
+  async decideRound(
+    taskId: string,
+  ): Promise<{ decision: string; remaining_ms?: number; round?: number }> {
+    return this.rpc.call("tenzro_training_decideRound", [{ task_id: taskId }]);
   }
 }

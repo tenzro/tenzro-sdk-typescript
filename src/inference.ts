@@ -42,4 +42,25 @@ export class InferenceClient {
   async listModelEndpoints(): Promise<ModelEndpoint[]> {
     return this.rpc.call<ModelEndpoint[]>("tenzro_listModelEndpoints");
   }
+
+  /**
+   * Read the inference router's live metrics snapshot: total requests routed,
+   * hedges dispatched, hedges won, and requests abandoned on the whole-request
+   * deadline.
+   */
+  async routerMetrics(): Promise<Record<string, unknown>> {
+    return this.rpc.call<Record<string, unknown>>("tenzro_getRouterMetrics");
+  }
+
+  /**
+   * Look up the cached provenance manifest for generated content by its
+   * 32-byte hex `contentHash` (with or without `0x` prefix). This is the
+   * machine-readable synthetic-content marker per EU AI Act Art. 50(2).
+   * Throws JSON-RPC `-32004` when no manifest is cached for the hash.
+   */
+  async getProvenance(contentHash: string): Promise<Record<string, unknown>> {
+    return this.rpc.call<Record<string, unknown>>("tenzro_getProvenance", [
+      { content_hash: contentHash },
+    ]);
+  }
 }

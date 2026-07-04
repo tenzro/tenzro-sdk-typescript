@@ -404,6 +404,7 @@ export type {
   SealedDatasetManifest,
   SealedShardEnvelope,
   ListTrainingRunsResult,
+  TrainerDaemonStatus,
 } from "./training";
 export { CapitalClient } from "./capital";
 export type {

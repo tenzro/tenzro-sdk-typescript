@@ -231,6 +231,52 @@ export class SettlementClient {
   }
 
   /**
+   * Pre-fund the streaming settlement path: lock `amount` (wei) of the
+   * renter's on-chain TNZO into the prepaid ledger. Storage/compute runtimes
+   * then stream per epoch out of this balance. Returns
+   * `{renter, asset, deposited, balance}`.
+   *
+   * @param renter - Renter address (hex)
+   * @param amount - Amount in base units (wei) as a decimal string
+   * @param asset - Asset id (only TNZO is streamable today)
+   */
+  async prepaidDeposit(
+    renter: string,
+    amount: string,
+    asset = "TNZO",
+  ): Promise<any> {
+    return this.rpc.call("tenzro_prepaidDeposit", { renter, amount, asset });
+  }
+
+  /**
+   * Withdraw up to `amount` (wei) of the renter's unspent prepaid balance
+   * back to their on-chain account. Returns `{renter, asset, withdrawn,
+   * balance}` — `withdrawn` is capped at the available balance.
+   *
+   * @param renter - Renter address (hex)
+   * @param amount - Amount in base units (wei) as a decimal string
+   * @param asset - Asset id (only TNZO is streamable today)
+   */
+  async prepaidWithdraw(
+    renter: string,
+    amount: string,
+    asset = "TNZO",
+  ): Promise<any> {
+    return this.rpc.call("tenzro_prepaidWithdraw", { renter, amount, asset });
+  }
+
+  /**
+   * Read the renter's current prepaid balance. Returns
+   * `{renter, asset, balance}` in wei.
+   *
+   * @param renter - Renter address (hex)
+   * @param asset - Asset id (defaults to TNZO)
+   */
+  async prepaidBalance(renter: string, asset = "TNZO"): Promise<any> {
+    return this.rpc.call("tenzro_prepaidBalance", { renter, asset });
+  }
+
+  /**
    * Fetch a single channel dispute by id. Returns the full
    * `ChannelDispute` record (challenger, evidence blobs, status,
    * opened_at / timeout_at / resolved_at, resolution). Returns

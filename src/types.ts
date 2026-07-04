@@ -103,6 +103,8 @@ export interface ModelEndpoint {
   api_endpoint: string;
   mcp_endpoint: string;
   location: string;
+  /** iroh EndpointId of the serving node (hex-encoded); empty for local services */
+  iroh_endpoint_id?: string;
   provider_name: string;
   status: string;
   availability?: ModelAvailability;
