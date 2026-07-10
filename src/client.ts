@@ -13,6 +13,7 @@ import { IdentityClient } from "./identity";
 import { PaymentClient } from "./payment";
 import { ProviderClient } from "./provider";
 import { StorageClient } from "./storage";
+import { DatabaseClient } from "./database";
 import { ComputeClient } from "./compute";
 import { TaskClient } from "./task";
 import { MarketplaceClient } from "./marketplace";
@@ -110,6 +111,7 @@ export class TenzroClient {
   public readonly payment: PaymentClient;
   public readonly provider: ProviderClient;
   public readonly storage: StorageClient;
+  public readonly database: DatabaseClient;
   public readonly compute: ComputeClient;
   public readonly skill: SkillClient;
   public readonly tool: ToolClient;
@@ -164,6 +166,7 @@ export class TenzroClient {
     this.payment = new PaymentClient(this.rpc);
     this.provider = new ProviderClient(this.rpc);
     this.storage = new StorageClient(this.rpc);
+    this.database = new DatabaseClient(this.rpc);
     this.compute = new ComputeClient(this.rpc);
     this.skill = new SkillClient(this.rpc);
     this.tool = new ToolClient(this.rpc);

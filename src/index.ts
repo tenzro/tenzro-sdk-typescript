@@ -52,6 +52,14 @@ export type {
   InstalledValidatorSummary,
 } from "./passkey-rpc";
 export { InferenceClient } from "./inference";
+export type {
+  UseCase,
+  IntentParams,
+  RouteDecision,
+  OrchestrateParams,
+  OrchestrationStep,
+  OrchestrationOutcome,
+} from "./inference";
 export { CortexClient } from "./cortex";
 export { SettlementClient } from "./settlement";
 export { AgentClient } from "./agent";
@@ -65,6 +73,13 @@ export type {
   ChargeOutcome as StorageChargeOutcome,
   StorageStatus,
 } from "./storage";
+export { DatabaseClient } from "./database";
+export type {
+  EngineCatalog,
+  CreatedDatabase,
+  DatabaseConnection,
+  AccessDecision,
+} from "./database";
 export { ComputeClient } from "./compute";
 export type {
   ComputeRental,

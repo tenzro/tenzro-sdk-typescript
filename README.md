@@ -190,7 +190,7 @@ const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
 | `wallet` | `createWallet()`, `getBalance()`, `sendTransaction()` |
 | `identity` | `registerHuman()`, `resolveDid()`, `setUsername()` |
 | `agent` | `register(name, creator, capabilities)` (server-provisioned hybrid wallet), `registerWithKeys(name, creator, capabilities, publicKey, pqPublicKey)` (BYOK), `sendMessage(from, to, message)`, `sendMessageSigned({from, to, message, signature, pqSignature, messageType?, replyTo?})`, `spawnAgent()`, `createSwarm()`, `delegateTask()` |
-| `inference` | `listModels()`, `request()`, `estimateCost()`, `getProvenance(contentHash)` (cached synthetic-content manifest, EU AI Act Art. 50(2)), plus multi-modal helpers for forecast, vision embed/similarity, text embedding, segmentation, detection, audio ASR, video embed (modality-aware routing via `tenzro_forecast`, `tenzro_visionEmbed`, `tenzro_textEmbed`, `tenzro_segment`, `tenzro_detect`, `tenzro_transcribe`, `tenzro_videoEmbed`) |
+| `inference` | `listModels()`, `request()`, `estimateCost()`, `getProvenance(contentHash)` (cached synthetic-content manifest, EU AI Act Art. 50(2)), intent routing `routeIntent(params)` / `chatByIntent(params)` / `orchestrate(params)` (resolve an intent to a model without naming one, resolve-and-run, or plan+run an ordered set of models/skills/tools/agent delegation for a goal), plus multi-modal helpers for forecast, vision embed/similarity, text embedding, segmentation, detection, audio ASR, video embed (modality-aware routing via `tenzro_forecast`, `tenzro_visionEmbed`, `tenzro_textEmbed`, `tenzro_segment`, `tenzro_detect`, `tenzro_transcribe`, `tenzro_videoEmbed`) |
 | `token` | `createToken()`, `listTokens()`, `crossVmTransfer()` |
 | `nft` | `createCollection()`, `mintNft()`, `transferNft()` |
 | `bridge` | `bridgeTokens()`, `getRoutes()`, `getBridgeStatus()` |
@@ -296,6 +296,7 @@ JWT with your Ed25519 holder key and the JWS-compact form lands in
 npx ts-node examples/quickstart.ts
 npx ts-node examples/advanced.ts
 npx ts-node examples/marketplace.ts        # 14 sections covering tasks, agents, skills, tools, NFTs, governance, payments, bridges
+npx ts-node examples/intent-orchestration.ts   # route an intent to a model, run by intent, or orchestrate a goal
 npx ts-node examples/app_developer.ts
 npx ts-node examples/auth-session.ts
 npx ts-node examples/cortex.ts

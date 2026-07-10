@@ -62,7 +62,8 @@ export class StorageClient {
 
   /**
    * Stores an object: erasure-codes `data` and publishes its shards over the
-   * transport.
+   * transport. `ownerDid` gates who may retrieve the object (owner-only); it
+   * defaults to the `owner` address when omitted.
    *
    * @example
    * ```typescript
@@ -70,6 +71,9 @@ export class StorageClient {
    *   "photo-1",
    *   "0xowner",
    *   new TextEncoder().encode("hello"),
+   *   4,
+   *   2,
+   *   "did:tenzro:human:alice",
    * );
    * console.log(`stored ${stored.size_bytes} bytes`);
    * ```
@@ -80,16 +84,19 @@ export class StorageClient {
     data: Uint8Array,
     dataShards = 4,
     parityShards = 2,
+    ownerDid?: string,
   ): Promise<StoredObject> {
-    return this.rpc.call<StoredObject>("tenzro_storageStoreObject", [
-      {
-        object_id: objectId,
-        owner,
-        data: toBase64(data),
-        data_shards: dataShards,
-        parity_shards: parityShards,
-      },
-    ]);
+    const params: Record<string, unknown> = {
+      object_id: objectId,
+      owner,
+      data: toBase64(data),
+      data_shards: dataShards,
+      parity_shards: parityShards,
+    };
+    if (ownerDid !== undefined) {
+      params.owner_did = ownerDid;
+    }
+    return this.rpc.call<StoredObject>("tenzro_storageStoreObject", [params]);
   }
 
   /**
