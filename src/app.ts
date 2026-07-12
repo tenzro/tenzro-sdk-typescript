@@ -149,7 +149,7 @@ function newAppState(): AppState {
  *
  * @example
  * ```ts
- * const app = await AppClient.create("https://rpc.tenzro.network", "your-master-wallet-private-key");
+ * const app = await AppClient.create("https://rpc.tenzro.xyz", "your-master-wallet-private-key");
  *
  * // Create a user wallet (funded from master)
  * const user = await app.createUserWallet("alice", 100_000_000_000_000_000n);

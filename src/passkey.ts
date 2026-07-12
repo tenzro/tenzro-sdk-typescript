@@ -8,7 +8,7 @@
  * import { createPasskeyWallet, signWithPasskey } from "@tenzro/sdk";
  *
  * const wallet = await createPasskeyWallet({
- *   rpId: "keys.tenzro.network",
+ *   rpId: "keys.tenzro.xyz",
  * });
  * const sig = await signWithPasskey(wallet, userOp);
  * ```

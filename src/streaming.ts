@@ -49,8 +49,8 @@ export class StreamingClient {
   constructor(private readonly rpc: RpcClient) {
     this.endpoint = rpc.getEndpoint();
     const ep = this.endpoint;
-    if (ep.includes('rpc.tenzro.network')) {
-      this.apiEndpoint = ep.replace('rpc.tenzro.network', 'api.tenzro.network');
+    if (ep.includes('rpc.tenzro.xyz')) {
+      this.apiEndpoint = ep.replace('rpc.tenzro.xyz', 'api.tenzro.xyz');
     } else if (ep.includes('localhost:8545') || ep.includes('127.0.0.1:8545')) {
       this.apiEndpoint = ep.replace('8545', '8080');
     } else {

@@ -8,15 +8,15 @@ export interface TenzroConfig {
 // Note: Mainnet is not yet live. This configuration is a placeholder.
 // Use TESTNET_CONFIG to connect to the live Tenzro testnet (chainId: 1337).
 export const MAINNET_CONFIG: TenzroConfig = {
-  endpoint: "https://rpc.tenzro.network",
-  apiEndpoint: "https://api.tenzro.network",
+  endpoint: "https://rpc.tenzro.xyz",
+  apiEndpoint: "https://api.tenzro.xyz",
   chainId: 1,
   timeout: 30000,
 };
 
 export const TESTNET_CONFIG: TenzroConfig = {
-  endpoint: "https://rpc.tenzro.network",
-  apiEndpoint: "https://api.tenzro.network",
+  endpoint: "https://rpc.tenzro.xyz",
+  apiEndpoint: "https://api.tenzro.xyz",
   chainId: 1337,
   timeout: 30000,
 };

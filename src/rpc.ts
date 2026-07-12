@@ -72,8 +72,8 @@ export class RpcClient {
     // Derive API endpoint from RPC endpoint if not provided
     if (apiEndpoint) {
       this.apiEndpoint = apiEndpoint;
-    } else if (endpoint.includes("rpc.tenzro.network")) {
-      this.apiEndpoint = endpoint.replace("rpc.tenzro.network", "api.tenzro.network");
+    } else if (endpoint.includes("rpc.tenzro.xyz")) {
+      this.apiEndpoint = endpoint.replace("rpc.tenzro.xyz", "api.tenzro.xyz");
     } else if (endpoint.includes("localhost:8545") || endpoint.includes("127.0.0.1:8545")) {
       this.apiEndpoint = endpoint.replace("8545", "8080");
     } else {

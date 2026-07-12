@@ -43,7 +43,7 @@ interface EIP6963AnnounceProviderEvent extends Event {
  * formally-registered RDNS once the CAIP-2 `tenzro:` namespace PR
  * lands upstream.
  */
-export const TENZRO_PROVIDER_RDNS = "network.tenzro.wallet";
+export const TENZRO_PROVIDER_RDNS = "xyz.tenzro.wallet";
 
 /**
  * Listen for EIP-6963 announcements and resolve when a provider

@@ -24,7 +24,7 @@ async function main() {
     "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
 
   const app = await AppClient.create(
-    "https://rpc.tenzro.network",
+    "https://rpc.tenzro.xyz",
     masterKey,
   );
 

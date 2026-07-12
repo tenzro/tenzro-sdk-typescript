@@ -59,7 +59,7 @@ try {
 ```
 
 `fromInjected()` discovers the Tenzro provider via EIP-6963
-(default `rdns: network.tenzro.wallet`, override with the `rdns`
+(default `rdns: xyz.tenzro.wallet`, override with the `rdns`
 option), wraps it in an `Eip1193Transport`, and returns a
 `TenzroClient` whose `rpc.call(...)` becomes `provider.request(...)`.
 No extra dependency to install — the EIP-6963 listener is bundled in
@@ -173,7 +173,7 @@ SDK consumers see consistent state across node upgrades and reboots:
 import { AppClient } from 'tenzro-sdk';
 
 // Developer funds a master wallet, users never see gas
-const app = await AppClient.create('https://rpc.tenzro.network', process.env.MASTER_KEY!);
+const app = await AppClient.create('https://rpc.tenzro.xyz', process.env.MASTER_KEY!);
 
 // Create user wallet (funded from master)
 const user = await app.createUserWallet('alice', 1000000000000000000n);
@@ -308,10 +308,10 @@ See the [examples/](examples/) directory and [Tenzro Cookbook](https://github.co
 
 | Endpoint | URL |
 |----------|-----|
-| JSON-RPC | `https://rpc.tenzro.network` |
-| Web API | `https://api.tenzro.network` |
-| MCP Server | `https://mcp.tenzro.network/mcp` |
-| A2A Server | `https://a2a.tenzro.network` |
+| JSON-RPC | `https://rpc.tenzro.xyz` |
+| Web API | `https://api.tenzro.xyz` |
+| MCP Server | `https://mcp.tenzro.xyz/mcp` |
+| A2A Server | `https://a2a.tenzro.xyz` |
 
 ## Documentation
 

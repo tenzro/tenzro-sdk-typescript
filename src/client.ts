@@ -433,11 +433,11 @@ export class TenzroClient {
    *
    * The Tenzro provider handles auth (DPoP-bound JWT) and CAIP-25
    * sessions on its own — the SDK never sees the user's keys or tokens
-   * and never opens a direct fetch to `rpc.tenzro.network`. All
+   * and never opens a direct fetch to `rpc.tenzro.xyz`. All
    * `client.rpc.call(...)` calls become `provider.request(...)` calls.
    *
    * Defaults to the mainnet config for `endpoint` / `apiEndpoint` so
-   * REST surfaces (`api.tenzro.network`) still work for direct fetches
+   * REST surfaces (`api.tenzro.xyz`) still work for direct fetches
    * (e.g., `/health`, `/faucet`). Override via `options.config` when
    * targeting testnet or a local node.
    *

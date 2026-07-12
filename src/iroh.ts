@@ -87,7 +87,7 @@ function base64ToBytes(b64: string): Uint8Array {
  *
  * @example
  * ```ts
- * const client = new TenzroClient({ endpoint: 'https://rpc.tenzro.network' });
+ * const client = new TenzroClient({ endpoint: 'https://rpc.tenzro.xyz' });
  * const iroh = client.iroh();
  *
  * const info = await iroh.getInfo();
