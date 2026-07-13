@@ -80,7 +80,9 @@ export class DatabaseClient {
    * Registers a database this node serves, computing and persisting its
    * partition placement over the live cluster. `ownerDid` becomes the
    * database's admin authority (an owner-only access policy). `placement` is
-   * `local | lan_cluster | network`.
+   * `local | lan_cluster | network`. `replication` is the min/max
+   * holders-per-partition policy — writes below `min` fail, repair never grows
+   * past `max`; the node default is `{ min: 2, max: 4 }`.
    *
    * @example
    * ```typescript
@@ -90,7 +92,7 @@ export class DatabaseClient {
    *   "did:tenzro:human:alice",
    *   "lan_cluster",
    *   3,
-   *   2,
+   *   { min: 2, max: 4 },
    *   { vector_size: 1536 },
    * );
    * console.log(`${created.partitions.length} partitions`);
@@ -102,7 +104,7 @@ export class DatabaseClient {
     ownerDid: string,
     placement: "local" | "lan_cluster" | "network" = "local",
     partitions = 1,
-    replicas = 1,
+    replication?: { min: number; max: number },
     engineConfig?: Record<string, unknown>,
   ): Promise<CreatedDatabase> {
     const params: Record<string, unknown> = {
@@ -111,8 +113,13 @@ export class DatabaseClient {
       owner_did: ownerDid,
       placement,
       partitions,
-      replicas,
     };
+    if (replication !== undefined) {
+      params.replication = {
+        min_replication: replication.min,
+        max_replication: replication.max,
+      };
+    }
     if (engineConfig !== undefined) {
       params.engine_config = engineConfig;
     }
@@ -182,7 +189,9 @@ export class DatabaseClient {
    * authorized against the access policy (writes require the admin action,
    * reads the read action) before any engine is touched. `body` is the engine
    * dialect; `write` gates the query against the admin action; `capability` is
-   * an AAP token when the caller is not the owner.
+   * an AAP token when the caller is not the owner. `consistency` is the write
+   * acknowledgement level — `"quorum"` (default) or `"all"`; ignored on the
+   * read path.
    *
    * When this node holds the target partition the result carries
    * `served_here=true` and the engine `result`; otherwise it carries the holder
@@ -205,6 +214,7 @@ export class DatabaseClient {
       partitionIndex?: number;
       write?: boolean;
       capability?: string;
+      consistency?: "quorum" | "all";
     } = {},
   ): Promise<Record<string, unknown>> {
     const params: Record<string, unknown> = {
@@ -215,6 +225,7 @@ export class DatabaseClient {
       write: opts.write ?? false,
     };
     if (opts.capability !== undefined) params.capability = opts.capability;
+    if (opts.consistency !== undefined) params.consistency = opts.consistency;
     return this.rpc.call("tenzro_databaseQuery", [params]);
   }
 
@@ -240,8 +251,8 @@ export class DatabaseClient {
   /**
    * Grows or shrinks a database along the local → LAN-cluster → network
    * continuum in place. Administrative — gated on the write action.
-   * `partitions`/`replicas` default to the database's current counts when
-   * omitted.
+   * `partitions`/`replication` default to the database's current values when
+   * omitted; `replication` is the min/max holders-per-partition policy.
    */
   async rescale(
     databaseId: string,
@@ -249,7 +260,7 @@ export class DatabaseClient {
     placement: "local" | "lan_cluster" | "network",
     opts: {
       partitions?: number;
-      replicas?: number;
+      replication?: { min: number; max: number };
       capability?: string;
     } = {},
   ): Promise<Record<string, unknown>> {
@@ -259,7 +270,12 @@ export class DatabaseClient {
       placement,
     };
     if (opts.partitions !== undefined) params.partitions = opts.partitions;
-    if (opts.replicas !== undefined) params.replicas = opts.replicas;
+    if (opts.replication !== undefined) {
+      params.replication = {
+        min_replication: opts.replication.min,
+        max_replication: opts.replication.max,
+      };
+    }
     if (opts.capability !== undefined) params.capability = opts.capability;
     return this.rpc.call("tenzro_rescaleDatabase", [params]);
   }

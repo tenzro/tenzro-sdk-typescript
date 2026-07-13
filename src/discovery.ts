@@ -139,6 +139,58 @@ export class DiscoveryClient {
   }
 
   /**
+   * Resident experts and gates on this node's expert runtime, each with its
+   * residency tier (`Warm` in memory / `Cold` on disk) and byte footprint,
+   * plus the memory budget and whether GPU compute is active.
+   */
+  async moeExpertStatus(): Promise<unknown> {
+    return this.rpc.call('tenzro_moeExpertStatus', []);
+  }
+
+  /**
+   * Slice a catalog checkpoint into per-expert blobs, optionally
+   * block-quantizing each projection, and publish them for holders to load.
+   * `quant` is a preset (`q4_k_m` / `q8_0` / `q4_k` / `q6_k`) or a
+   * per-projection object like `{ gate: 'q4_k', up: 'q4_k', down: 'q6_k' }`;
+   * omit for dense f32 blobs. Empty `experts` prepares every expert in the
+   * layer.
+   */
+  async moePrepareExperts(
+    modelId: string,
+    layer: number,
+    opts: { experts?: number[]; includeGate?: boolean; quant?: string | Record<string, string> } = {},
+  ): Promise<unknown> {
+    const params: Record<string, unknown> = {
+      model_id: modelId,
+      layer,
+      include_gate: opts.includeGate ?? true,
+    };
+    if (opts.experts && opts.experts.length > 0) params.experts = opts.experts;
+    if (opts.quant !== undefined) params.quant = opts.quant;
+    return this.rpc.call('tenzro_moePrepareExperts', params);
+  }
+
+  /**
+   * Run one distributed MoE layer forward: gate `hidden` locally, fan the
+   * selected experts out to holders over the `tenzro/moe` transport, and
+   * combine the gate-weighted outputs. `hidden` is the row-major
+   * `[numTokens, dModel]` activation.
+   */
+  async moeForward(
+    modelId: string,
+    layer: number,
+    dModel: number,
+    hidden: number[],
+  ): Promise<unknown> {
+    return this.rpc.call('tenzro_moeForward', {
+      model_id: modelId,
+      layer,
+      d_model: dModel,
+      hidden,
+    });
+  }
+
+  /**
    * Peer IDs currently discovered on this node's local segment via mDNS.
    * Returns `{ local_peers, count, available }`; `available` is false when
    * local discovery is not running.
