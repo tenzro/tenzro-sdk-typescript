@@ -330,6 +330,13 @@ export type {
   CcipTransferResult,
 } from "./ccip";
 export { IrohClient } from "./iroh";
+export { HostingClient } from "./hosting";
+export type {
+  SiteRoute,
+  PublishSiteOptions,
+  DeployFunctionOptions,
+  DeployMachineOptions,
+} from "./hosting";
 export { CctClient } from "./cct";
 export { NftClient } from "./nft";
 export { ComplianceClient } from "./compliance";

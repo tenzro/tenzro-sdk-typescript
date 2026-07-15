@@ -40,6 +40,7 @@ import { Erc7802Client } from "./erc7802";
 import { Erc8004Client } from "./erc8004";
 import { WormholeClient } from "./wormhole";
 import { IrohClient } from "./iroh";
+import { HostingClient } from "./hosting";
 import { CctClient } from "./cct";
 import { NftClient } from "./nft";
 import { ComplianceClient } from "./compliance";
@@ -290,6 +291,17 @@ export class TenzroClient {
    */
   iroh(): IrohClient {
     return new IrohClient(this.rpc);
+  }
+
+  /**
+   * Access the decentralized app hosting client for the
+   * `tenzro_site*` / `tenzro_function*` / `tenzro_machine*` namespaces —
+   * publish static sites, deploy wasm functions and microVM machines,
+   * manage aliases, domains, placement, and leases. Mutations are
+   * DID-owner-authorized via `withDidEnvelope()`.
+   */
+  hosting(): HostingClient {
+    return new HostingClient(this.rpc);
   }
 
   /** Access the TNZO CCT (Chainlink Cross-Chain Token) pool registry client. */
