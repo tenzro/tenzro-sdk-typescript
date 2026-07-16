@@ -17,6 +17,7 @@ export type {
 } from "./api-key";
 export { AuthClient } from "./auth";
 export { WalletClient } from "./wallet";
+export type { HybridSigner } from "./wallet";
 export { PasskeyRpcClient } from "./passkey-rpc";
 export {
   TenzroAgentWallet,

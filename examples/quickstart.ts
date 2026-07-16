@@ -5,6 +5,31 @@
  */
 
 import { TenzroClient } from "../src/index";
+import type { HybridSigner } from "../src/index";
+
+/**
+ * A stand-in for a real self-custody signer. In production this wraps a
+ * TEE-sealed key (SEV-SNP / TDX / Nitro), a WebAuthn/passkey-backed signer,
+ * or an offline hardware signer that holds the Ed25519 + ML-DSA-65 keypair
+ * and never exposes the secret. The runner's raw 32-byte Ed25519 public key
+ * IS its account address.
+ */
+class DemoSigner implements HybridSigner {
+  ed25519PublicKey(): Uint8Array {
+    return new Uint8Array(32);
+  }
+
+  mlDsaVerifyingKey(): Uint8Array {
+    return new Uint8Array(1952);
+  }
+
+  async signHybrid(_message: Uint8Array): Promise<[Uint8Array, Uint8Array]> {
+    // A real signer returns an Ed25519 signature (64 bytes) and an
+    // ML-DSA-65 signature (3309 bytes) over `message` (= Transaction::hash()).
+    // Both legs are mandatory; the node rejects a raw send that omits either.
+    return [new Uint8Array(64), new Uint8Array(3309)];
+  }
+}
 
 async function main() {
   console.log("=== Tenzro Network TypeScript SDK - Quick Start ===\n");
@@ -50,6 +75,28 @@ async function main() {
   console.log("4. Checking balance...");
   const balance = await client.wallet.getBalance(account.address);
   console.log(`   Balance: ${balance}n (smallest unit)\n`);
+
+  // Self-custody send (client-side hybrid signing).
+  //
+  // The signer holds the Ed25519 + ML-DSA-65 keypair locally. The SDK fetches
+  // nonce + chain id, builds the canonical Transaction::hash() preimage
+  // (including the PQ verifying key), asks the signer for both legs over that
+  // hash, and submits via eth_sendRawTransaction — the node never sees the
+  // secret. The signer's raw 32-byte Ed25519 public key is the `from` account.
+  console.log("4b. Sending self-custody transaction...");
+  const signer = new DemoSigner();
+  try {
+    const txHash = await client.wallet.sendSelfCustody({
+      signer,
+      to: account.address,
+      value: 1_000_000_000_000_000_000n, // 1.0 TNZO in wei
+    });
+    console.log(`   Self-custody tx hash: ${txHash}\n`);
+  } catch (err) {
+    // The demo signer returns zeroed signatures, which the node rejects —
+    // wire a real TEE / passkey / hardware signer to complete the submit.
+    console.log(`   Self-custody submit (demo signer): ${err}\n`);
+  }
 
   // ============================================================================
   // 3. AI Inference
