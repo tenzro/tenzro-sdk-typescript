@@ -251,7 +251,7 @@ export class TrainingClient {
   /**
    * Ask the syncer whether the current round should finalize, keep waiting,
    * or advance on a no-endorsement certificate. The decision follows the
-   * DiLoCo grace window: `wait` carries `remaining_ms`, while `finalize` and
+   * grace window: `wait` carries `remaining_ms`, while `finalize` and
    * `no_quorum` carry the round number.
    */
   async decideRound(

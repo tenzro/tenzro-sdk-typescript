@@ -1,199 +1,185 @@
 /**
- * App Developer example for Tenzro TypeScript SDK
+ * App developer example — on-chain app registry + non-custodial settlement.
  *
- * Demonstrates the developer-funded app pattern:
- * - Creating an AppClient with a master wallet
- * - Spawning and funding user sub-wallets
- * - Sponsoring transactions, inference, agents, bridges, and tasks
- * - Setting spending policies and session keys
- * - Tracking usage statistics
+ * Demonstrates the flow a developer follows to bill fiat-priced usage on
+ * Tenzro without Tenzro ever holding custody of their payment-provider secrets
+ * or their funds:
+ *
+ *   1. register an app on-chain (permissionless — signed with the developer's
+ *      own DID key)
+ *   2. (fund the app's own TNZO wallet — omitted here; a normal transfer)
+ *   3. after charging the end user fiat on the developer's own PSP, sign a
+ *      settlement authorization and have any node execute the TNZO movement
+ *   4. deactivate the app when done
+ *
+ * The developer's key never leaves this process — the SDK computes the
+ * canonical hashes and asks a local signer to sign them. For a fully
+ * non-custodial backend the signature + DID envelope can be produced in the
+ * developer's own service and passed to the `*Presigned` methods instead.
+ *
+ * Ed25519 here comes from Node's built-in `node:crypto`; the SDK itself carries
+ * no runtime dependencies.
  */
 
-import { AppClient } from "../src";
+import {
+  createPrivateKey,
+  createPublicKey,
+  randomBytes,
+  sign as nodeSign,
+} from "node:crypto";
+import type { KeyObject } from "node:crypto";
+import {
+  AppClient,
+  didKeyFromEd25519,
+  type AppSigningKeySpec,
+  type EnvelopeSigner,
+  type SettlementAuthorization,
+  type SignContext,
+  type Signer,
+  type SignerKind,
+  type SignerSignature,
+} from "../src";
+
+/** Raw 32-byte Ed25519 seed → a `node:crypto` PrivateKey. */
+function privateKeyFromSeed(seed: Buffer): KeyObject {
+  // PKCS#8 prefix for an Ed25519 private key, followed by the 32-byte seed.
+  const pkcs8 = Buffer.concat([
+    Buffer.from("302e020100300506032b657004220420", "hex"),
+    seed,
+  ]);
+  return createPrivateKey({ key: pkcs8, format: "der", type: "pkcs8" });
+}
+
+/** Extract the raw 32-byte Ed25519 verifying key from a private key. */
+function verifyingKeyFromPrivate(priv: KeyObject): Uint8Array {
+  // Node exports the public key as SPKI DER; the last 32 bytes are the key.
+  const der = createPublicKey(priv).export({ format: "der", type: "spki" });
+  return new Uint8Array(der.subarray(der.length - 32));
+}
+
+/**
+ * A local Ed25519 key that satisfies both SDK signing seams:
+ *  - {@link EnvelopeSigner} signs the RAW DID-envelope preimage (the node
+ *    verifies Ed25519 over those exact bytes).
+ *  - {@link Signer} signs the 32-byte settlement authorization hash.
+ */
+class LocalEd25519 implements EnvelopeSigner, Signer {
+  readonly verifyingKey: Uint8Array;
+  private readonly key: KeyObject;
+
+  constructor(seed: Buffer) {
+    this.key = privateKeyFromSeed(seed);
+    this.verifyingKey = verifyingKeyFromPrivate(this.key);
+  }
+
+  static generate(): LocalEd25519 {
+    return new LocalEd25519(randomBytes(32));
+  }
+
+  describe(): SignerKind {
+    return { kind: "ed25519" };
+  }
+
+  async sign(hash: Uint8Array, _ctx: SignContext): Promise<SignerSignature> {
+    const sig = nodeSign(null, Buffer.from(hash), this.key);
+    return { bytes: new Uint8Array(sig), aux: new Uint8Array(0) };
+  }
+
+  async signPreimage(preimage: Uint8Array): Promise<Uint8Array> {
+    const sig = nodeSign(null, Buffer.from(preimage), this.key);
+    return new Uint8Array(sig);
+  }
+}
+
+function nowMs(): bigint {
+  return BigInt(Date.now());
+}
 
 async function main() {
-  console.log("=== Tenzro SDK App Developer Example ===\n");
-
-  // ==========================================================================
-  // 1. Initialize the AppClient with a master wallet
-  // ==========================================================================
-  console.log("1. Initializing AppClient with master wallet...");
-
-  const masterKey =
-    process.env.TENZRO_MASTER_KEY ??
-    "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
-
-  const app = await AppClient.create(
-    "https://rpc.tenzro.xyz",
-    masterKey,
+  console.log(
+    "=== Tenzro SDK — app registry + non-custodial settlement ===\n",
   );
 
-  console.log(`   Master wallet: ${app.masterWallet.address}`);
-  const balance = await app.getMasterBalance();
-  console.log(`   Master balance: ${balance} wei\n`);
+  const app = AppClient.connect("https://rpc.tenzro.xyz");
 
-  // ==========================================================================
-  // 2. Create user wallets
-  // ==========================================================================
-  console.log("2. Creating user wallets...");
+  // ------------------------------------------------------------------
+  // Developer identity: a did:key derived from a local Ed25519 key.
+  // ------------------------------------------------------------------
+  const dev = LocalEd25519.generate();
+  const developerDid = didKeyFromEd25519(dev.verifyingKey);
+  console.log(`developer DID: ${developerDid}`);
 
-  const alice = await app.createUserWallet("alice", 500_000_000_000_000_000n);
-  console.log(`   Alice: ${alice.address} (label: ${alice.label})`);
+  // ------------------------------------------------------------------
+  // Backend signing key: a separate Ed25519 key the developer's server
+  // uses to authorize settlements. Its verifying key goes on-chain.
+  // ------------------------------------------------------------------
+  const backend = LocalEd25519.generate();
 
-  const bob = await app.createUserWallet("bob", 100_000_000_000_000_000n);
-  console.log(`   Bob:   ${bob.address} (label: ${bob.label})\n`);
-
-  // ==========================================================================
-  // 3. Set spending policies
-  // ==========================================================================
-  console.log("3. Setting spending policies...");
-
-  const alicePolicy = await app.setUserLimits(
-    alice.address,
-    1_000_000_000_000_000_000n, // 1 TNZO daily
-    200_000_000_000_000_000n, // 0.2 TNZO per tx
+  // ------------------------------------------------------------------
+  // 1. Register the app on-chain (5% developer margin).
+  // ------------------------------------------------------------------
+  console.log("\n1. Registering app...");
+  const appWallet =
+    "0x00000000000000000000000000000000000000000000000000000000000000aa";
+  const keys: AppSigningKeySpec[] = [
+    { keyId: "backend-1", publicKey: backend.verifyingKey },
+  ];
+  const record = await app.registerApp(
+    dev,
+    "demo-app",
+    developerDid,
+    appWallet,
+    keys,
+    500, // marginBps = 5%
+    0n, // minBalance
+    true,
   );
   console.log(
-    `   Alice policy: daily=${alicePolicy.dailyLimit} per_tx=${alicePolicy.perTxLimit}`,
+    `   registered ${record.app_id} (margin ${record.margin_bps} bps, active=${record.active})`,
   );
 
-  const bobPolicy = await app.setUserLimits(
-    bob.address,
-    500_000_000_000_000_000n, // 0.5 TNZO daily
-    100_000_000_000_000_000n, // 0.1 TNZO per tx
-  );
+  // ------------------------------------------------------------------
+  // 2. (Fund the app wallet with the developer's own TNZO — a normal
+  //    transfer via WalletClient; omitted for brevity.)
+  // ------------------------------------------------------------------
+
+  // ------------------------------------------------------------------
+  // 3. After charging the end user fiat on the developer's own PSP,
+  //    authorize a TNZO settlement to the payer. `externalRef` is the
+  //    PSP charge id and is the idempotency key.
+  // ------------------------------------------------------------------
+  console.log("\n3. Settling an authorized charge...");
+  const auth: SettlementAuthorization = {
+    appId: "demo-app",
+    chainId: 1337n,
+    payerDid: "did:tenzro:human:payer",
+    amountTnzo: 1_000_000_000_000_000_000n, // 1 TNZO
+    externalRef: "pi_3NqSampleCharge",
+    nonce: new Uint8Array(randomBytes(32)),
+    expiry: nowMs() + 60_000n,
+    keyId: "backend-1",
+  };
+  const outcome = await app.settleAuthorized(backend, auth);
   console.log(
-    `   Bob policy:   daily=${bobPolicy.dailyLimit} per_tx=${bobPolicy.perTxLimit}\n`,
+    `   success=${outcome.success} gross=${outcome.amount_tnzo} net=${outcome.payer_net_tnzo} commission=${outcome.commission_tnzo} duplicate=${outcome.duplicate}`,
   );
 
-  // ==========================================================================
-  // 4. Create session keys
-  // ==========================================================================
-  console.log("4. Creating session keys...");
+  // A replay of the same (appId, externalRef) returns the recorded outcome
+  // with duplicate=true — no double charge.
+  const replay = await app.settleAuthorized(backend, auth);
+  console.log(`   replay duplicate=${replay.duplicate}`);
 
-  const aliceSession = await app.createSessionKey(
-    alice.address,
-    3600, // 1 hour
-    ["transfer", "inference"],
-  );
-  console.log(
-    `   Alice session: ${aliceSession.sessionId} (expires: ${aliceSession.expiresAt}, ops: ${aliceSession.operations.join(", ")})\n`,
-  );
-
-  // ==========================================================================
-  // 5. Sponsor transactions (master pays gas)
-  // ==========================================================================
-  console.log("5. Sponsoring a transfer for Alice...");
-
-  const tx = await app.sponsorTransaction(
-    alice.address,
-    bob.address,
-    50_000_000_000_000_000n, // 0.05 TNZO
-  );
-  console.log(`   Tx hash: ${tx.txHash}\n`);
-
-  // ==========================================================================
-  // 6. Sponsor inference (master pays)
-  // ==========================================================================
-  console.log("6. Sponsoring inference for Bob...");
-
-  const inference = await app.sponsorInference(
-    bob.address,
-    "gemma3-270m",
-    "Explain Tenzro Network in one sentence.",
-  );
-  console.log(`   Model: ${inference.modelId}`);
-  console.log(`   Output: ${inference.output}`);
-  console.log(`   Tokens: ${inference.tokens}, Cost: ${inference.cost} TNZO\n`);
-
-  // ==========================================================================
-  // 7. Sponsor agent registration (master pays)
-  // ==========================================================================
-  console.log("7. Sponsoring agent registration for Alice...");
-
-  const agent = await app.sponsorAgent(alice.address, "alice-trading-bot", [
-    "inference",
-    "settlement",
-  ]);
-  console.log(`   Agent ID: ${agent.agentId}`);
-  console.log(`   Agent wallet: ${agent.walletAddress}\n`);
-
-  // ==========================================================================
-  // 8. Sponsor bridge (master pays fees)
-  // ==========================================================================
-  console.log("8. Sponsoring bridge transfer for Bob...");
-
-  const bridge = await app.sponsorBridge(
-    bob.address,
-    "TNZO",
-    "tenzro",
-    "ethereum",
-    "100000000000000000", // 0.1 TNZO
-    "0xRecipientOnEthereum",
-  );
-  console.log(`   Bridge tx: ${bridge.txHash}`);
-  console.log(`   Status: ${bridge.status}\n`);
-
-  // ==========================================================================
-  // 9. Sponsor task posting (master pays budget)
-  // ==========================================================================
-  console.log("9. Sponsoring task posting for Alice...");
-
-  const task = await app.sponsorTask(
-    alice.address,
-    "Summarize whitepaper",
-    "Read and summarize the Tenzro Network whitepaper in 500 words.",
-    "text_generation",
-    100_000_000_000_000_000n, // 0.1 TNZO budget
-  );
-  console.log(`   Task ID: ${task.taskId}\n`);
-
-  // ==========================================================================
-  // 10. Fund an existing wallet
-  // ==========================================================================
-  console.log("10. Topping up Bob's wallet...");
-
-  const fund = await app.fundUserWallet(
-    bob.address,
-    200_000_000_000_000_000n,
-  );
-  console.log(`   Fund tx: ${fund.txHash} (amount: ${fund.amount} wei)\n`);
-
-  // ==========================================================================
-  // 11. List user wallets
-  // ==========================================================================
-  console.log("11. Listing all user wallets...");
-
-  const users = await app.listUserWallets();
-  for (const u of users) {
-    console.log(
-      `   - ${u.address} (label: ${u.label}, created: ${u.createdAt})`,
-    );
-  }
-  console.log();
-
-  // ==========================================================================
-  // 12. Usage statistics
-  // ==========================================================================
-  console.log("12. Usage statistics...");
-
-  const stats = await app.getUsageStats();
-  console.log(`   Users created:       ${stats.userCount}`);
-  console.log(`   Transactions:        ${stats.transactionCount}`);
-  console.log(`   Total gas spent:     ${stats.totalGasSpent} wei`);
-  console.log(`   Total inference cost: ${stats.totalInferenceCost} TNZO`);
-  console.log(`   Total bridge fees:   ${stats.totalBridgeFees} wei`);
-  console.log();
-
-  // ==========================================================================
-  // 13. Access the full TenzroClient for advanced ops
-  // ==========================================================================
-  console.log("13. Using the underlying TenzroClient...");
-
-  const block = await app.client.getBlockNumber();
-  console.log(`   Current block: ${block}`);
+  // ------------------------------------------------------------------
+  // 4. Deactivate the app.
+  // ------------------------------------------------------------------
+  console.log("\n4. Deactivating app...");
+  const updated = await app.setAppStatus(dev, developerDid, "demo-app", false);
+  console.log(`   active=${updated.active}`);
 
   console.log("\n=== Done ===");
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

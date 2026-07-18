@@ -169,17 +169,41 @@ SDK consumers see consistent state across node upgrades and reboots:
 
 ## AppClient (Developer Pattern)
 
+You charge fiat on your own payment provider and settle the corresponding TNZO
+from your own app wallet — the network never holds custody of your processor
+keys or your funds. See [Developer payments](https://tenzro.com/docs/developer-payments).
+
 ```typescript
 import { AppClient } from 'tenzro-sdk';
 
-// Developer funds a master wallet, users never see gas
-const app = await AppClient.create('https://rpc.tenzro.xyz', process.env.MASTER_KEY!);
+const app = AppClient.connect('https://rpc.tenzro.xyz');
 
-// Create user wallet (funded from master)
-const user = await app.createUserWallet('alice', 1000000000000000000n);
+// Register the app in the on-chain registry (developer-signed DID envelope).
+// The app wallet is your own TNZO treasury; margin is a pricing input, capped at 20%.
+await app.registerApp(
+  signer,                              // your EnvelopeSigner
+  'my-app',
+  'did:tenzro:machine:...',            // developer DID that owns the app
+  '0x<app-wallet-hex>',
+  [{ keyId: 'key-1', publicKey: enrolledEd25519Pubkey }],
+  500,                                 // margin_bps
+  0n,                                  // min_balance
+  true                                 // active
+);
 
-// Sponsor inference (master pays)
-const result = await app.sponsorInference(user.address, 'gemma3-270m', 'Hello');
+// After your processor confirms the charge, sign a settlement authorization
+// with one of your enrolled keys. Idempotent per (appId, externalRef).
+const outcome = await app.settleAuthorized(settlementSigner, {
+  appId: 'my-app',
+  chainId: 1337n,
+  payerDid: 'did:tenzro:human:...',
+  amountTnzo: 10_000_000_000_000_000_000n, // 10 TNZO, base units
+  externalRef: chargeId,                   // your PSP charge id
+  nonce: crypto.getRandomValues(new Uint8Array(32)),
+  expiry: BigInt(Date.now() + 60_000),
+  keyId: 'key-1',
+});
+// outcome.duplicate === true when a prior (appId, externalRef) replayed
 ```
 
 ## Modules

@@ -1,8 +1,19 @@
 // Main client
 export { TenzroClient } from "./client";
 
-// App client (developer-funded app pattern / paymaster)
-export { AppClient } from "./app";
+// App client (non-custodial developer app registry + settlement authorization)
+export {
+  AppClient,
+  MAX_DEVELOPER_MARGIN_BPS,
+  paramsHash,
+  settlementSigningPreimage,
+  settlementSigningHash,
+  envelopeCanonicalPreimage,
+  envelopeToHeaderValue,
+  appRegistrationParams,
+  appStatusParams,
+  didKeyFromEd25519,
+} from "./app";
 
 // Sub-clients
 export { ApiKeyClient } from "./api-key";
@@ -858,19 +869,15 @@ export type {
   CallResult,
 } from "./contract";
 
-// App client types (developer-funded app pattern / paymaster)
+// App client types (non-custodial developer app registry + settlement authorization)
 export type {
-  MasterWallet,
-  UserWallet,
-  FundResult as AppFundResult,
-  SpendingPolicy as AppSpendingPolicy,
-  SessionKey as AppSessionKey,
-  UsageStats,
-  InferenceResult as AppInferenceResult,
-  AgentResult as AppAgentResult,
-  BridgeResult as AppBridgeResult,
-  TaskResult as AppTaskResult,
-  TxResult as AppTxResult,
+  AppRecord,
+  AppSigningKeySpec,
+  AppSigningKeyView,
+  SettleOutcome,
+  SettlementAuthorization,
+  DidEnvelope,
+  EnvelopeSigner,
 } from "./app";
 
 // Crypto types
