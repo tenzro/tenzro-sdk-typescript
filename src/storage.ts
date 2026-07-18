@@ -33,11 +33,14 @@ function toBase64(data: Uint8Array): string {
   for (let i = 0; i < data.length; i++) {
     binary += String.fromCharCode(data[i]);
   }
-  // `btoa` in browsers; Buffer fallback under Node.
+  // `btoa` in browsers and modern Node (≥16); fall back to a Buffer path on
+  // older runtimes, reached through `globalThis` so it isn't a bare global.
   if (typeof btoa === "function") {
     return btoa(binary);
   }
-  return Buffer.from(data).toString("base64");
+  return (globalThis as unknown as {
+    Buffer: { from(s: string, e: string): { toString(e: string): string } };
+  }).Buffer.from(binary, "binary").toString("base64");
 }
 
 /**

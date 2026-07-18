@@ -459,7 +459,7 @@ export class AppClient {
 
   /** Connect to a node's JSON-RPC endpoint. */
   static connect(rpcUrl: string, timeoutMs = 30_000): AppClient {
-    return new AppClient(new RpcClient(rpcUrl, timeoutMs));
+    return new AppClient(new RpcClient(rpcUrl, undefined, timeoutMs));
   }
 
   // ---- registerApp -----------------------------------------------------

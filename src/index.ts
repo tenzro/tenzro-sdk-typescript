@@ -876,7 +876,7 @@ export type {
   AppSigningKeyView,
   SettleOutcome,
   SettlementAuthorization,
-  DidEnvelope,
+  DidEnvelope as AppDidEnvelope,
   EnvelopeSigner,
 } from "./app";
 
