@@ -421,7 +421,7 @@ export interface EnvelopeSigner {
  * raw canonical preimage with `signer`. `did` is the signer's DID (e.g. a
  * `did:key`); the node re-derives the verifying key from it for `did:key`.
  */
-async function buildEnvelope(
+export async function buildEnvelope(
   signer: EnvelopeSigner,
   did: string,
   method: string,

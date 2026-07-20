@@ -216,6 +216,37 @@ export class RpcClient {
   }
 
   /**
+   * POST to the Web API where the node replies `204 No Content` (empty
+   * body). Used by the `/wallet/new/{confirm,cancel}` routes — parsing
+   * `response.json()` on an empty body would throw, so this variant only
+   * checks the status.
+   */
+  async postNoContent(path: string, body: unknown): Promise<void> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(`${this.apiEndpoint}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(`Request timed out after ${this.timeout}ms`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  /**
    * Authenticated POST to the Web API. The `/wallet/*` endpoints
    * require a fresh DPoP proof per request that signs over the exact
    * `(method, htu)` pair — only the wallet kernel can produce that

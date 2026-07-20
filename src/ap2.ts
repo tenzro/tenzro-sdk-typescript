@@ -66,6 +66,32 @@ export interface Ap2ProtocolInfo {
  * Enables agents to establish payment sessions with providers,
  * authorize individual payments, and manage session lifecycle.
  */
+export interface Ap2MandateRecord {
+  mandate_id: string;
+  payment_mandate_id: string;
+  controller_did: string;
+  agent_did: string;
+  merchant_did: string;
+  description: string;
+  /** Per-mandate spend ceiling as a decimal string. */
+  max_amount: string;
+  /** Cart total as a decimal string. */
+  total_amount: string;
+  asset: string;
+  chain: string;
+  expires_at: number;
+  delegation_enforced: boolean;
+  validated_at_ms: number;
+  checkout_vdc: unknown;
+  payment_vdc: unknown;
+}
+
+export interface Ap2MandateList {
+  controller_did: string;
+  count: number;
+  mandates: Ap2MandateRecord[];
+}
+
 export class Ap2Client {
   constructor(private readonly rpc: RpcClient) {}
 
@@ -238,5 +264,16 @@ export class Ap2Client {
    */
   async protocolInfo(): Promise<Ap2ProtocolInfo> {
     return this.rpc.call<Ap2ProtocolInfo>('tenzro_ap2ProtocolInfo', []);
+  }
+
+  /**
+   * Lists the persisted AP2 mandates authorized by a controller DID. Each
+   * record captures the validated intent/cart pair — amounts, asset, chain,
+   * merchant, expiry, and the stored checkout/payment VDCs.
+   */
+  async listMandates(controllerDid: string): Promise<Ap2MandateList> {
+    return this.rpc.call<Ap2MandateList>('tenzro_listMandates', [
+      { controller_did: controllerDid },
+    ]);
   }
 }

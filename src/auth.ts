@@ -133,6 +133,42 @@ export class AuthClient {
   }
 
   /**
+   * Mint a DPoP-bound access + refresh token pair against an identity
+   * already provisioned by the passkey-quorum `/wallet/new/*` flow.
+   *
+   * That flow returns a DID but no MPC wallet — custody is the passkey +
+   * node-TEE 2-of-2 — so this is the token bridge for self-custody
+   * wallets: pass the DID from `finalize` plus your public DPoP JWK, and
+   * the node mints a token whose `cnf.jkt` is pinned to that key.
+   *
+   * Pass `dpopJwk` (the public JWK you generated) OR a pre-computed
+   * `dpopJkt` thumbprint. A token minted without either is bearer-only
+   * and cannot drive the signing RPCs.
+   *
+   * Returns the same {@link OnboardSession} shape as the onboard
+   * variants; its `wallet` field is null for this custody model.
+   */
+  async linkIdentityForAuth(
+    did: string,
+    options?: {
+      dpopJwk?: JsonWebKey;
+      dpopJkt?: string;
+      displayName?: string;
+      ttlSecs?: number;
+    }
+  ): Promise<OnboardSession> {
+    const params: Record<string, unknown> = { did };
+    if (options?.dpopJwk) params.dpop_jwk = options.dpopJwk;
+    else if (options?.dpopJkt) params.dpop_jkt = options.dpopJkt;
+    if (options?.displayName) params.display_name = options.displayName;
+    if (options?.ttlSecs) params.ttl_secs = options.ttlSecs;
+    return this.rpc.call<OnboardSession>(
+      "tenzro_linkWalletForAuth",
+      params
+    );
+  }
+
+  /**
    * Revoke a single JWT by its `jti` claim. The token is added to the
    * engine's revocation set and any subsequent validation fails.
    */

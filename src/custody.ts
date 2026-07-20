@@ -62,6 +62,13 @@ export interface SessionKey {
   operations: string[];
 }
 
+export interface RevokedSession {
+  /** Revoked session identifier */
+  session_id: string;
+  /** Terminal status — always `"revoked"`. */
+  status: string;
+}
+
 // ── Client ──
 
 /**
@@ -168,6 +175,16 @@ export class CustodyClient {
   ): Promise<SessionKey> {
     return this.rpc.call<SessionKey>('tenzro_authorizeSession', [
       { wallet_id: walletId, duration_secs: durationSecs, operations },
+    ]);
+  }
+
+  /**
+   * Revoke an authorized session before its natural expiry.
+   * @param sessionId - The `session_id` returned by {@link authorizeSession}
+   */
+  async revokeSession(sessionId: string): Promise<RevokedSession> {
+    return this.rpc.call<RevokedSession>('tenzro_revokeSession', [
+      { session_id: sessionId },
     ]);
   }
 

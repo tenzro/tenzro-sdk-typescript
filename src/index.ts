@@ -12,6 +12,7 @@ export {
   envelopeToHeaderValue,
   appRegistrationParams,
   appStatusParams,
+  buildEnvelope,
   didKeyFromEd25519,
 } from "./app";
 
@@ -38,8 +39,22 @@ export {
 export type {
   EnrollPasskeyParams,
   EnrollPasskeyResponse,
+  WebAuthnAssertionJson,
   SignWithPasskeyParams,
   SignWithPasskeyResponse,
+  AddPasskeyParams,
+  AddPasskeyResponse,
+  ListPasskeysResponse,
+  RemovePasskeyParams,
+  RemovePasskeyResponse,
+  SecondFactorPolicy,
+  SetPasskeyPolicyParams,
+  PasskeyPolicyResponse,
+  PasskeySessionKind,
+  PasskeySessionStatus,
+  CreatePasskeySessionParams,
+  CreatePasskeySessionResponse,
+  PasskeySessionState,
   AddGuardianParams,
   AddGuardianResponse,
   InitiateRecoveryParams,
@@ -76,7 +91,14 @@ export { CortexClient } from "./cortex";
 export { SettlementClient } from "./settlement";
 export { AgentClient } from "./agent";
 export { GovernanceClient } from "./governance";
-export { IdentityClient } from "./identity";
+export {
+  IdentityClient,
+  canonicalClaimsBytes,
+  credentialSubjectCanonicalBytes,
+  identityCredentialParams,
+  identityServiceParams,
+  identityClaimParams,
+} from "./identity";
 export { PaymentClient } from "./payment";
 export { ProviderClient } from "./provider";
 export { StorageClient } from "./storage";
@@ -186,9 +208,31 @@ export type {
   PasskeyConfig,
   PasskeyCredential,
   PasskeyWallet,
+  PasskeyWalletOptions,
   PlatformAuthenticator,
   ResolvedPasskeyConfig,
 } from "./passkey";
+
+// DPoP (RFC 9449) proof minting — WebCrypto Ed25519, no dependency.
+export {
+  generateDpopKeyPair,
+  computeJkt,
+  mintDpopProof,
+} from "./dpop";
+export type { Ed25519Jwk, DpopProofParams } from "./dpop";
+
+// `/wallet/new/*` passkey-quorum provisioning client.
+export { WalletProvisioningClient } from "./wallet-provisioning";
+export type {
+  WalletKind,
+  StartProvisioningResponse,
+  WalletEnrolment,
+  ProvisionedDidParts,
+  ProvisionedIdentity,
+  ProvisioningThreshold,
+  WrappedDeviceShare,
+  FinalizeProvisioningResponse,
+} from "./wallet-provisioning";
 export { TeeClient } from "./tee";
 export { ZkClient } from "./zk";
 export { StreamingClient } from "./streaming";
@@ -932,6 +976,7 @@ export type {
   RotationResult,
   SpendingPolicy as CustodySpendingPolicy,
   SessionKey as CustodySessionKey,
+  RevokedSession,
 } from "./custody";
 
 // Streaming types

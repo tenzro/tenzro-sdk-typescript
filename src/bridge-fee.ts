@@ -83,6 +83,30 @@ export interface BridgeAnalyticsList {
   analytics: BridgeKeyAnalytics[];
 }
 
+export interface GetPriceRequest {
+  symbol?: string;
+  symbols?: string[];
+}
+
+export interface AssetPrice {
+  symbol: string;
+  /** USD price as an integer scaled by 1e8, encoded as a decimal string. */
+  price_usd_8dp: string;
+  decimals: number;
+  updated_at: number;
+  feed_address?: string;
+}
+
+export interface AssetPriceUnavailable {
+  symbol: string;
+  reason: string;
+}
+
+export interface GetPriceResponse {
+  prices: AssetPrice[];
+  unavailable: AssetPriceUnavailable[];
+}
+
 /**
  * Bridge fee in TNZO client. Covers:
  * - Quoting destination-native bridge fee in TNZO (governance- or
@@ -134,5 +158,16 @@ export class BridgeFeeClient {
   /** Operator admin-token-gated cross-tenant read. */
   async listAnalytics(): Promise<BridgeAnalyticsList> {
     return this.rpc.call<BridgeAnalyticsList>('tenzro_listBridgeAnalytics', []);
+  }
+
+  /**
+   * Read one or more asset prices from the node's price oracle. Pass a
+   * single `symbol` or a `symbols` list. `price_usd_8dp` is the USD price
+   * as an integer scaled by 1e8. Symbols with no live feed are returned in
+   * `unavailable` rather than failing the whole call. Requires
+   * `bridge.prices.enabled` on the node.
+   */
+  async getPrice(req: GetPriceRequest): Promise<GetPriceResponse> {
+    return this.rpc.call<GetPriceResponse>('tenzro_getPrice', [req]);
   }
 }

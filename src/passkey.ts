@@ -225,6 +225,25 @@ export class WebAuthnValidator implements Validator {
   }
 }
 
+/** Optional inputs to {@link createPasskeyWallet}. */
+export interface PasskeyWalletOptions {
+  /** Explicit authenticator; defaults to {@link defaultAuthenticator}. */
+  authenticator?: PlatformAuthenticator;
+  /**
+   * ML-DSA-65 verifying key (FIPS 204, exactly 1952 bytes) that forms
+   * the post-quantum leg of the hybrid custody record. The device
+   * passkey covers the classical P-256 leg; this covers the PQ leg.
+   *
+   * ML-DSA-65 is not available in WebCrypto, so the SDK does not
+   * generate it — the wallet kernel that holds the PQ secret supplies
+   * the verifying key here. When provided, {@link PasskeyWallet.enrollParams}
+   * populates `ml_dsa_public_key_hex` so the wallet can drive
+   * `PasskeyRpcClient.enroll`. On-chain enrollment refuses a wallet
+   * whose PQ leg is absent, so production callers MUST provide it.
+   */
+  mlDsaPublicKey?: Uint8Array;
+}
+
 /** The composed wallet returned by {@link createPasskeyWallet}. */
 export interface PasskeyWallet {
   /** Underlying credential — useful for "Touch ID with key XX:..." UI. */
@@ -233,6 +252,27 @@ export interface PasskeyWallet {
   config: ResolvedPasskeyConfig;
   /** The {@link Signer} the wallet wraps. */
   signer: WebAuthnSigner;
+  /**
+   * The ML-DSA-65 verifying key captured at creation, if any. `null`
+   * when no PQ leg was supplied (local-only compositions).
+   */
+  mlDsaPublicKey(): Uint8Array | null;
+  /**
+   * Assemble the `tenzro_enrollPasskey` parameters from the captured
+   * credential + PQ key. Throws if no ML-DSA-65 key was supplied to
+   * {@link createPasskeyWallet}, since on-chain enrollment requires the
+   * hybrid pair. `salt`/`display_name` are optional passthroughs.
+   */
+  enrollParams(opts?: {
+    displayName?: string;
+    salt?: number;
+  }): {
+    display_name?: string;
+    passkey_public_key_hex: string;
+    credential_id_hex: string;
+    ml_dsa_public_key_hex: string;
+    salt?: number;
+  };
   /** Bind the on-chain `WebAuthnValidator` module address after bootstrap. */
   bindValidatorModule(address: Address): void;
   /** The currently-bound validator module address, if any. */
@@ -246,13 +286,29 @@ export interface PasskeyWallet {
  * authenticator is available the SDK MUST switch to the cross-device
  * flow rather than silently using a software key — this is enforced
  * here.
+ *
+ * `optionsOrAuthenticator` accepts either a bare {@link PlatformAuthenticator}
+ * (back-compat) or a {@link PasskeyWalletOptions} bag carrying both the
+ * authenticator and the ML-DSA-65 verifying key for the hybrid PQ leg.
  */
 export async function createPasskeyWallet(
   config: PasskeyConfig,
-  authenticator?: PlatformAuthenticator
+  optionsOrAuthenticator?: PlatformAuthenticator | PasskeyWalletOptions
 ): Promise<PasskeyWallet> {
+  const options: PasskeyWalletOptions =
+    optionsOrAuthenticator && "createCredential" in optionsOrAuthenticator
+      ? { authenticator: optionsOrAuthenticator }
+      : (optionsOrAuthenticator ?? {});
+
   const resolved = resolveConfig(config);
-  const auth = authenticator ?? defaultAuthenticator();
+  const auth = options.authenticator ?? defaultAuthenticator();
+  const mlDsaKey = options.mlDsaPublicKey ?? null;
+  if (mlDsaKey && mlDsaKey.length !== 1952) {
+    throw new SignerError(
+      "authentication-failed",
+      `ML-DSA-65 verifying key must be exactly 1952 bytes, got ${mlDsaKey.length}`
+    );
+  }
 
   if (
     resolved.requirePlatformAuthenticator &&
@@ -270,10 +326,31 @@ export async function createPasskeyWallet(
   const signer = new WebAuthnSigner(auth, registration.credential, resolved);
 
   let validatorModule: Address | null = null;
+  const credential = registration.credential;
   return {
-    credential: registration.credential,
+    credential,
     config: resolved,
     signer,
+    mlDsaPublicKey() {
+      return mlDsaKey;
+    },
+    enrollParams(opts) {
+      if (!mlDsaKey) {
+        throw new SignerError(
+          "authentication-failed",
+          "cannot build enroll params: no ML-DSA-65 verifying key was supplied to createPasskeyWallet — pass options.mlDsaPublicKey from the wallet kernel"
+        );
+      }
+      return {
+        ...(opts?.displayName !== undefined
+          ? { display_name: opts.displayName }
+          : {}),
+        passkey_public_key_hex: hexEncode(credential.publicKey),
+        credential_id_hex: hexEncode(credential.credentialId),
+        ml_dsa_public_key_hex: hexEncode(mlDsaKey),
+        ...(opts?.salt !== undefined ? { salt: opts.salt } : {}),
+      };
+    },
     bindValidatorModule(address: Address) {
       validatorModule = address;
     },
@@ -586,6 +663,15 @@ function b64UrlNoPad(bytes: Uint8Array): string {
   let bin = "";
   for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/** Lowercase hex, no `0x` prefix — matches the node's `*_hex` param decoders. */
+function hexEncode(bytes: Uint8Array): string {
+  let hex = "";
+  for (let i = 0; i < bytes.length; i++) {
+    hex += bytes[i].toString(16).padStart(2, "0");
+  }
+  return hex;
 }
 
 function bufferOf(arr: Uint8Array): ArrayBuffer {
