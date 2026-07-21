@@ -69,11 +69,46 @@ export interface DownloadProgress {
   total_bytes: number;
 }
 
+/**
+ * Accelerator vendor as reported by the node's hardware probe. Drives the
+ * compute-capability interpretation and the FP8/FP4 derivation rules.
+ */
+export type GpuVendor = "Nvidia" | "Amd" | "Apple" | "Other";
+
+/**
+ * A single accelerator discovered by the node's hardware probe. A node may
+ * expose more than one, so `HardwareProfile.gpus` is an array.
+ */
+export interface GpuDevice {
+  /** Accelerator vendor. */
+  vendor: GpuVendor;
+  /** Device marketing name (e.g. "NVIDIA H100 80GB HBM3", "Apple M3 Max"). */
+  name: string;
+  /** Device memory in GiB (unified-memory budget on Apple Silicon). */
+  vram_gb: number;
+  /** Vendor-native compute-capability string: SM version for NVIDIA, gfx
+   * target for AMD, "metal" for Apple. Empty when the probe could not read it. */
+  compute_capability: string;
+  /** Hardware FP8 matrix/tensor units present. */
+  fp8: boolean;
+  /** Hardware FP4 matrix/tensor units present. */
+  fp4: boolean;
+}
+
 export interface HardwareProfile {
-  cpu: string;
-  memory_gb: number;
-  gpu?: string;
-  tee_support: string[];
+  cpu_model: string;
+  cpu_cores: number;
+  cpu_threads: number;
+  total_ram_gb: number;
+  /** Every accelerator the node detected. Empty on a CPU-only node. */
+  gpus: GpuDevice[];
+  storage_available_gb: number;
+  tee_available: boolean;
+  /** TEE vendor string when `tee_available` (e.g. "Intel TDX"), else null. */
+  tee_vendor: string | null;
+  os: string;
+  arch: string;
+  device_fingerprint: string;
 }
 
 /**
@@ -284,13 +319,16 @@ export class ProviderClient {
   /**
    * Get hardware profile of the node
    *
-   * @returns Hardware profile with CPU, memory, GPU, and TEE support
+   * @returns Hardware profile with CPU, memory, accelerators, and TEE support
    *
    * @example
    * ```typescript
    * const profile = await client.provider.getHardwareProfile();
-   * console.log("CPU:", profile.cpu);
-   * console.log("Memory:", profile.memory_gb, "GB");
+   * console.log("CPU:", profile.cpu_model);
+   * console.log("Memory:", profile.total_ram_gb, "GB");
+   * for (const gpu of profile.gpus) {
+   *   console.log(gpu.vendor, gpu.name, `${gpu.vram_gb} GiB`);
+   * }
    * ```
    */
   async getHardwareProfile(): Promise<HardwareProfile> {

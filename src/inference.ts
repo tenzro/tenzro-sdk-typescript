@@ -1,5 +1,11 @@
 import { RpcClient } from "./rpc";
-import { ModelInfo, InferenceResult, ModelEndpoint } from "./types";
+import {
+  ModelInfo,
+  InferenceResult,
+  ModelEndpoint,
+  ModelFileRecord,
+  CanonicalModelHash,
+} from "./types";
 
 /**
  * A use-case hint that biases model selection toward the right modality and
@@ -99,6 +105,48 @@ export class InferenceClient {
    */
   async listModels(): Promise<ModelInfo[]> {
     return this.rpc.call<ModelInfo[]>("tenzro_listModels");
+  }
+
+  /**
+   * Read the canonical content-hash record for a model from the transparency
+   * log. This is the trust root a fetcher verifies downloaded weights against
+   * before load. Open — no auth.
+   *
+   * @param modelId - The model identifier
+   */
+  async getModelHash(modelId: string): Promise<CanonicalModelHash> {
+    return this.rpc.call<CanonicalModelHash>("tenzro_getModelHash", [
+      { model_id: modelId },
+    ]);
+  }
+
+  /**
+   * List every recorded canonical model hash. Open — no auth.
+   */
+  async listModelHashes(): Promise<{
+    count: number;
+    model_hashes: CanonicalModelHash[];
+  }> {
+    return this.rpc.call("tenzro_listModelHashes");
+  }
+
+  /**
+   * Anchor a canonical model hash in the transparency log. Permissionless:
+   * first recorder wins. Re-asserting an identical hash is idempotent; a
+   * differing hash for an already-recorded model is rejected so tampering is
+   * visible (correct only via governance override).
+   *
+   * @param modelId - The model identifier
+   * @param files - One record per weight file (single GGUF, or one per ONNX
+   *   bundle member). Each carries the file's SHA-256 + BLAKE3 (64-hex) + size.
+   */
+  async recordModelHash(
+    modelId: string,
+    files: ModelFileRecord[]
+  ): Promise<CanonicalModelHash> {
+    return this.rpc.call<CanonicalModelHash>("tenzro_recordModelHash", [
+      { model_id: modelId, files },
+    ]);
   }
 
   /**

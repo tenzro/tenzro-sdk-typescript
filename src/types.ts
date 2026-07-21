@@ -67,6 +67,68 @@ export interface ModelInfo {
    * requirement, reasoning default). Returned by `tenzro_modelMetadata`.
    */
   serving?: ServingProfile;
+  /**
+   * BLAKE3 content address of the artifact bytes (32-byte array), when known.
+   * This is the key iroh-blobs indexes by, so it is what a neighbour uses to
+   * fetch the weights over the peer network. Absent for models with no local
+   * downloadable artifact.
+   */
+  blake3_hash?: number[];
+  /**
+   * `tenzro://model/<id>@<blake3>` URI for this artifact when it has a content
+   * address. Lets clients request the model by content hash over the peer
+   * network instead of by HuggingFace repo path.
+   */
+  tenzro_uri?: string;
+  /** Peers that can serve this artifact over `tenzro://`, freshest last. */
+  peer_hints?: PeerHintRecord[];
+}
+
+/**
+ * A peer-fetch hint carried on {@link ModelInfo}. Names a `tenzro://` blob a
+ * neighbour can fetch the artifact from, plus the canonical SHA-256 for a
+ * transport-independent integrity check.
+ */
+export interface PeerHintRecord {
+  /** `tenzro://blob/<blake3>` or `tenzro://model/<id>@<blake3>` URI. */
+  tenzro_uri: string;
+  /** Canonical SHA-256 of the artifact bytes (hex), verified end-to-end. */
+  sha256_hex?: string;
+}
+
+/**
+ * One file record in a model manifest — a single GGUF or one member of an
+ * ONNX bundle. Both hashes are 64-hex 32-byte digests of the same bytes.
+ */
+export interface ModelFileRecord {
+  filename: string;
+  /** SHA-256 of the file bytes (64-hex). */
+  sha256: string;
+  /** BLAKE3 of the file bytes (64-hex) — the iroh-blobs content address. */
+  blake3: string;
+  /** File size in bytes. */
+  size: number;
+}
+
+/**
+ * The canonical hash record for a model in the transparency log, as returned
+ * by {@link InferenceClient.getModelHash} / {@link InferenceClient.listModelHashes}.
+ * A fetcher verifies downloaded weights against this record before load.
+ */
+export interface CanonicalModelHash {
+  model_id: string;
+  /** Manifest BLAKE3 content address (64-hex). */
+  blake3: string;
+  /** Manifest SHA-256 integrity digest (64-hex). */
+  sha256: string;
+  /** SHA-256 over the sorted file manifest (64-hex). */
+  manifest_hash: string;
+  /** DID of the first recorder. */
+  recorder_did: string;
+  /** Consensus epoch at which the record was anchored. */
+  recorded_at_epoch: number;
+  /** True when the record was replaced under a governance override. */
+  governance_overridden: boolean;
 }
 
 /** Multimodal projector descriptor for a vision-capable model. */

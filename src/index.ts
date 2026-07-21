@@ -579,6 +579,9 @@ export type {
   ModelModality,
   ModelParameters,
   ModelStatus,
+  PeerHintRecord,
+  ModelFileRecord,
+  CanonicalModelHash,
   InferenceRequest,
   InferenceResponse,
   InferenceResult,
@@ -662,6 +665,8 @@ export type {
   ChatResponse,
   DownloadProgress,
   HardwareProfile,
+  GpuDevice,
+  GpuVendor,
   ServeOptions,
   ServeVisibility,
 } from "./provider";
