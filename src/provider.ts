@@ -170,19 +170,31 @@ export class ProviderClient {
   }
 
   /**
-   * Download a model from the registry
+   * Download a model from the registry.
+   *
+   * `source` selects where the node fetches the weights: `"network"` uses
+   * verified network providers only (never HuggingFace), `"huggingface"` uses
+   * the HuggingFace Hub only, and omitting it fetches network-first with a
+   * HuggingFace fallback.
    *
    * @param modelId - ID of the model to download
+   * @param source - Optional source class: `"network"` | `"huggingface"`
    * @returns Task ID for tracking download progress
    *
    * @example
    * ```typescript
    * const taskId = await client.provider.downloadModel("gemma4-9b");
-   * console.log("Download started:", taskId);
+   * // verified providers only:
+   * await client.provider.downloadModel("gemma4-9b", "network");
    * ```
    */
-  async downloadModel(modelId: string): Promise<string> {
-    return await this.rpc.call<string>("tenzro_downloadModel", [modelId]);
+  async downloadModel(
+    modelId: string,
+    source?: "network" | "huggingface",
+  ): Promise<string> {
+    const params: { model_id: string; source?: string } = { model_id: modelId };
+    if (source) params.source = source;
+    return await this.rpc.call<string>("tenzro_downloadModel", params);
   }
 
   /**

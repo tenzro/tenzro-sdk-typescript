@@ -211,15 +211,30 @@ const outcome = await app.settleAuthorized(settlementSigner, {
 | Module | Key Methods |
 |--------|------------|
 | `auth` | `onboardHuman()`, `onboardDelegatedAgent()`, `onboardAutonomousAgent()`, `revokeJwt()`, `revokeDid()`, `listPendingApprovals()`, `decideApproval()` |
+| `apiKey` | `create()`, `list()`, `revoke()`, `revokeMine()` — both control planes (operator-protected and subject self-service) |
 | `wallet` | `createWallet()`, `getBalance()`, `sendTransaction()` |
+| `passkeyRpc` | Passkey-first wallet RPC mirroring the node's `tenzro_*Passkey*` / `*Recovery*` / `*SessionKey*` / `*HardwareSigner*` surface |
+| `agentWallet` | `TenzroAgentWallet` — the composite agent-wallet surface over passkey, bond, and agentic Canton |
 | `identity` | `registerHuman()`, `resolveDid()`, `setUsername()` |
 | `agent` | `register(name, creator, capabilities)` (server-provisioned hybrid wallet), `registerWithKeys(name, creator, capabilities, publicKey, pqPublicKey)` (BYOK), `sendMessage(from, to, message)`, `sendMessageSigned({from, to, message, signature, pqSignature, messageType?, replyTo?})`, `spawnAgent()`, `createSwarm()`, `delegateTask()` |
 | `inference` | `listModels()`, `request()`, `estimateCost()`, `getProvenance(contentHash)` (cached synthetic-content manifest, EU AI Act Art. 50(2)), intent routing `routeIntent(params)` / `chatByIntent(params)` / `orchestrate(params)` (resolve an intent to a model without naming one, resolve-and-run, or plan+run an ordered set of models/skills/tools/agent delegation for a goal), plus multi-modal helpers for forecast, vision embed/similarity, text embedding, segmentation, detection, audio ASR, video embed (modality-aware routing via `tenzro_forecast`, `tenzro_visionEmbed`, `tenzro_textEmbed`, `tenzro_segment`, `tenzro_detect`, `tenzro_transcribe`, `tenzro_videoEmbed`). Content-addressed weights: `getModelHash(id)` reads the canonical BLAKE3/SHA-256 record a fetcher verifies weights against before load, `listModelHashes()` lists every recorded hash, `recordModelHash(id, files)` anchors one (permissionless, first-recorder-wins) |
+| `multimodal` | Forecast, vision embed/similarity, text embedding, segmentation, detection, audio ASR, video embed as a dedicated client |
+| `mediaGenInspection` | Generative image and video, read-only: `listCatalog()`, `quote()`, `listJobs()`, `getJob()`, `listWorkers()`, `getReceipt()`, `fetchOutput()`, `fetchLatent()`, `fetchInput()`. Priced by the pixel-step (`width × height × steps × frames`) |
+| `mediaGen` | Generative image and video, write surface: `postJob()`, `cancelJob()`, `enrollWorker()`, `claimJob()`, `markRunning()`, `failJob()`, `publishOutput()`, `recordHandoff()`, `submitReceipt()`. A pipeline whose denoising schedule splits at a timestep boundary is served by two workers holding one expert each — the job carries a required role per half, and the high-noise worker commits to the one intermediate latent via `recordHandoff()` so its partner can pull it and finish |
+| `trainingInspection` | Tenzro Train read side — runs, one run, receipts, sealed manifests |
+| `compute` | Compute rental against a node started with the `ai` role — fixed-term CPU/GPU capacity |
+| `storage` | Decentralized storage against a node started with the `storage` role — erasure-coded objects over content-addressed shards |
+| `database` | Managed databases a node's operator wired up: external (Postgres, Qdrant, Valkey) and embedded engines |
+| `iroh` | Consumer surface over the shared resolver — `publishBlob()` and fetch `tenzro://blob/<hash>` content |
 | `token` | `createToken()`, `listTokens()`, `crossVmTransfer()` |
 | `nft` | `createCollection()`, `mintNft()`, `transferNft()` |
 | `bridge` | `bridgeTokens()`, `getRoutes()`, `getBridgeStatus()` |
 | `wormhole` | `wormholeBridge()`, `getVaa()`, `redeemVaa()` |
 | `cct` | `cctListPools()`, `cctGetPool()` (Chainlink CCT v1.6+ pool registry) |
+| `ccip` | Chainlink CCIP — fee quoting, send, execution tracking, token-pool and rate-limiter inspection |
+| `validators` | Validator registry — state, list, active set (read) plus key rotation |
+| `sla` | Validator-side SLA fault-detector probes and inspection |
+| `snapshot` | State-sync snapshots — the five RPCs that drive sync between nodes |
 | `erc8004` | `register8004Agent()`, `submit8004Feedback()`, `request8004Validation()`, `submit8004Validation()` (Trustless Agents Registry) |
 | `ap2` | `createAp2Mandate()`, `validateMandatePair()` (Agent Payments Protocol intent/cart/payment VDCs) |
 | `agentPayments` | Per-agent runtime spending policies (max-per-tx, daily-cap, enforce_operation pre-check) |

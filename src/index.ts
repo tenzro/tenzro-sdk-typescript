@@ -484,6 +484,18 @@ export type {
   ListTrainingRunsResult,
   TrainerDaemonStatus,
 } from "./training";
+export { MediaGenInspectionClient, MediaGenClient } from "./media-gen";
+export type {
+  MediaGenKind,
+  MediaGenExpertRole,
+  MediaGenStatus,
+  MediaGenCatalog,
+  MediaGenQuote,
+  MediaGenJobList,
+  MediaGenWorkerList,
+  MediaGenPublished,
+  MediaGenPayload,
+} from "./media-gen";
 export { CapitalClient } from "./capital";
 export type {
   CapitalSide,

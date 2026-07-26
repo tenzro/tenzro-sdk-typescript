@@ -59,6 +59,7 @@ import { MultimodalClient } from "./multimodal";
 import { MemoryClient } from "./memory";
 import { ValidatorClient } from "./validator";
 import { TrainingInspectionClient } from "./training";
+import { MediaGenClient, MediaGenInspectionClient } from "./media-gen";
 import { SlaClient } from "./sla";
 import { SnapshotClient } from "./snapshot";
 import { CapitalClient } from "./capital";
@@ -403,6 +404,26 @@ export class TenzroClient {
    */
   trainingInspection(): TrainingInspectionClient {
     return new TrainingInspectionClient(this.rpc);
+  }
+
+  /**
+   * Access the Tenzro Media Gen read-side client — the curated
+   * diffusers catalog, a pixel-step price quote, the job queue, the
+   * worker registry, a job's signed receipt, and the rendered bytes or
+   * intermediate latent behind it. No write surface.
+   */
+  mediaGenInspection(): MediaGenInspectionClient {
+    return new MediaGenInspectionClient(this.rpc);
+  }
+
+  /**
+   * Access the Tenzro Media Gen write-side client — post a job, enroll
+   * a worker, claim a job or one expert half of it, report progress,
+   * publish rendered bytes, hand an intermediate latent to the
+   * low-noise partner, and seal the receipt.
+   */
+  mediaGen(): MediaGenClient {
+    return new MediaGenClient(this.rpc);
   }
 
   /**
