@@ -519,6 +519,24 @@ export class AgentClient {
   }
 
   /**
+   * List every capability registered on this node, with the number of agents
+   * claiming it, the number of attestations backing those claims, and the
+   * claiming agent IDs.
+   *
+   * This is the discovery step for composing work across agents: list what
+   * the node can route, then narrow with `getCapabilityAttestations` or pick
+   * a worker with `findBestAgentForCapability`.
+   *
+   * Returns `{capabilities: [...], total, truncated,
+   * rejected_attestation_count}`. A non-zero `rejected_attestation_count`
+   * means the registry has refused attestations since boot — signature
+   * mismatch or malformed payload.
+   */
+  async listCapabilities(): Promise<unknown> {
+    return this.rpc.call<unknown>("tenzro_listCapabilities", {});
+  }
+
+  /**
    * Fetch every capability attestation registered on this node for
    * `capability`. `capability` accepts the same short-form tags as
    * `register` (`nlp`, `vision`, `code`, `data`, `blockchain`,

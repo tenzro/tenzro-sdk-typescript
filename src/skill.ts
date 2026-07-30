@@ -2,6 +2,7 @@ import type { RpcClient } from './rpc';
 import type {
   SkillInfo,
   SkillFilter,
+  SkillPin,
   RegisterSkillParams,
   UpdateSkillParams,
   SkillExecutionResult,
@@ -34,23 +35,37 @@ export class SkillClient {
   }
 
   /**
-   * Search skills by free-text query.
+   * Search skills by free-text query over name, description and tags.
    * @param query - Search query string
-   * @returns Array of matching skills ranked by relevance
+   * @param filter - Optional narrowing applied on top of the text match
+   * @returns Array of matching skills
    */
-  async searchSkills(query: string): Promise<SkillInfo[]> {
-    return this.rpc.call<SkillInfo[]>('tenzro_searchSkills', [{ query }]);
+  async searchSkills(query: string, filter?: SkillFilter): Promise<SkillInfo[]> {
+    return this.rpc.call<SkillInfo[]>('tenzro_searchSkills', [
+      { ...(filter ?? {}), query },
+    ]);
   }
 
   /**
    * Execute a skill with the given input.
+   *
+   * The registry is permissionless, so pinning is how a caller fixes exactly
+   * which bytes it pays to run: a mismatch is refused before settlement, so a
+   * refused call costs nothing. Omitting the pin accepts whatever the publisher
+   * currently serves.
+   *
    * @param skillId - The skill to invoke
-   * @param input - Input payload (JSON-serializable string or object)
+   * @param input - Input payload conforming to the skill's input schema
+   * @param pin - Optional version and/or artifact digest to require
    * @returns Execution result with output and duration
    */
-  async useSkill(skillId: string, input: string): Promise<SkillExecutionResult> {
+  async useSkill(
+    skillId: string,
+    input: unknown,
+    pin?: SkillPin,
+  ): Promise<SkillExecutionResult> {
     return this.rpc.call<SkillExecutionResult>('tenzro_useSkill', [
-      { skill_id: skillId, input },
+      { skill_id: skillId, input, ...(pin ?? {}) },
     ]);
   }
 

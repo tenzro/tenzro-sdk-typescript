@@ -83,9 +83,18 @@ export type {
   UseCase,
   IntentParams,
   RouteDecision,
+  RouteOutcome,
   OrchestrateParams,
   OrchestrationStep,
   OrchestrationOutcome,
+  GenerationStats,
+  BillableUnits,
+  BillableTotals,
+  UsageRecord,
+  ModelUsageStats,
+  ProviderUsageStats,
+  GlobalUsageStats,
+  InferenceUsage,
 } from "./inference";
 export { CortexClient } from "./cortex";
 export { SettlementClient } from "./settlement";
@@ -125,15 +134,6 @@ export { MarketplaceClient } from "./marketplace";
 export { SkillClient } from "./skill";
 export { ToolClient } from "./tool";
 export { CantonClient } from "./canton";
-export { CantonAgentClient } from "./canton-agent";
-export type {
-  Mandate,
-  SubmitWithMandateParams,
-  MandateBoundReceipt,
-  WatchPartySnapshot,
-  AggregateAnalytics,
-  AnalyticsBucket,
-} from "./canton-agent";
 export {
   ResourcesClient,
   KnowledgeClient,
@@ -422,19 +422,31 @@ export type {
   ImageEmbedResult,
   ImageTextSimilarityResult,
   TextEmbeddingCatalogEntry,
+  TextEmbeddingFamily,
+  LoadTextEmbeddingModelParams,
   TextEmbedParams,
   SegmentationCatalogEntry,
+  SegmentationFamily,
+  LoadSegmentationModelParams,
+  PointPrompt,
   SegmentPrompt,
   SegmentParams,
+  TextSegmentationCatalogEntry,
+  TextSegmentBoxPrompt,
+  TextSegmentParams,
   DetectionCatalogEntry,
+  DetectionFamily,
+  LoadDetectionModelParams,
   DetectParams,
   Detection,
   AudioCatalogEntry,
   AudioFamily,
   WhisperVariant,
+  CanaryLang,
   LoadAudioModelParams,
   TranscribeParams,
   VideoCatalogEntry,
+  LoadVideoModelParams,
   VideoEmbedParams,
   LoadedModelsList,
   LoadModelResult,
@@ -721,6 +733,8 @@ export type {
 export type {
   SkillInfo,
   SkillFilter,
+  SkillBundle,
+  SkillPin,
   RegisterSkillParams,
   UpdateSkillParams,
   SkillExecutionResult,
@@ -748,6 +762,11 @@ export type {
   DamlCreateCommandParams,
   DamlExerciseCommandParams,
   DamlCommandResult,
+  CantonMandate,
+  MandateSubmitReceipt,
+  WatchPartySnapshot,
+  AnalyticsBucket,
+  AggregateAnalytics,
 } from "./types";
 
 // Staking types

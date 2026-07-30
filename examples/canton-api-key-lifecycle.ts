@@ -1,5 +1,5 @@
 /**
- * Canton with API key — end-to-end operator → subject lifecycle.
+ * Canton with API key — the full operator → subject lifecycle.
  *
  * Walks the full per-operator sovereignty flow for a node's
  * Canton-scoped key:
@@ -38,7 +38,7 @@ async function main(): Promise<void> {
 
   if (!adminToken) {
     console.log("TENZRO_ADMIN_TOKEN is not set — dry run only.\n");
-    console.log("To run end-to-end against a live node, export:");
+    console.log("To run the full flow against a live node, export:");
     console.log("  TENZRO_ADMIN_TOKEN=<operator token for the target node>");
     console.log("  TENZRO_SUBJECT_DID=did:tenzro:human:<uuid>");
     console.log("\nThen re-run this example.");
@@ -67,7 +67,7 @@ async function main(): Promise<void> {
 
   // ── Step 2: subject uses the key for a scope-gated Canton call ──
   //
-  // In a real deployment the subject would export the plaintext
+  // In a live deployment the subject would export the plaintext
   // `tnz_...` key as `TENZRO_API_KEY` in their own environment, on
   // a machine that has no access to the operator's admin token.
   // Here we set both env vars for the lifetime of this process so the

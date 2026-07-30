@@ -1,10 +1,8 @@
 /**
  * `TenzroAgentWallet` — the composite agent-wallet surface.
  *
- * This is the user-facing name for what was previously spread across
- * `passkeyRpc.*`, `bond.*`, `cantonAgent.*`, and (forthcoming)
- * delegation-scope helpers. Composes the four pre-existing substrates
- * into one ergonomic class so a developer can do:
+ * Composes `passkeyRpc.*`, `bond.*`, `canton.*`, and delegation-scope
+ * helpers into one class so a developer can do:
  *
  *   const aw = client.agentWallet;
  *   const { smart_account_address, did } = await aw.spawn({
@@ -16,7 +14,7 @@
  *   const bondTx = await aw.postBond({
  *     controller, controllerDid, agentDid: did, amount: 1_000n,
  *   });
- *   await aw.actAsParty({ ... });          // Canton mandate-bound
+ *   await aw.actAsParty(mandate, command); // Canton mandate-bound
  *   const sig = await aw.signOpHash({ ... }); // passkey sig
  *
  * Substrates composed:
@@ -30,14 +28,12 @@
  *                                  → AgentBond economic substrate
  *     (Active/Cooldown/Frozen/Slashed/Returned, governance-gated
  *     insurance claims).
- *   - `tenzro_canton_submit_with_mandate`
+ *   - `tenzro_canton_submitWithMandate`
  *                                  → Canton DAML rail with mandate-
  *     bound execution + IRR/JCC-aware receipts.
  *
  * Three-class TDIP identity model:
- *   spawn()       — autonomous-agent class (TEE-attested; matches
- *                   `project-self-custody-architecture-target.md`
- *                   "Autonomous machine" row).
+ *   spawn()       — autonomous-agent class (TEE-attested).
  *   delegateTo()  — delegated-agent class (controller-signed scope).
  *   getRisk()     — composite risk score combining bond status,
  *                   delegation scope, and recent Canton mandate
@@ -63,11 +59,12 @@ import {
   type SignWithPasskeyResponse,
 } from "./passkey-rpc";
 import { BondClient, type ControllerBonds } from "./bond";
-import {
-  CantonAgentClient,
-  type SubmitWithMandateParams,
-  type MandateBoundReceipt,
-} from "./canton-agent";
+import { CantonClient } from "./canton";
+import type {
+  CantonMandate,
+  DamlCommandParams,
+  MandateSubmitReceipt,
+} from "./types";
 
 /** Result of `spawn()` — the autonomous-agent identity + the smart
  *  account that holds its keys. The address is CREATE2-deterministic
@@ -114,12 +111,12 @@ export class TenzroAgentWallet {
    *  is opinionated — these aren't. */
   public readonly passkey: PasskeyRpcClient;
   public readonly bond: BondClient;
-  public readonly canton: CantonAgentClient;
+  public readonly canton: CantonClient;
 
   constructor(rpc: RpcClient) {
     this.passkey = new PasskeyRpcClient(rpc);
     this.bond = new BondClient(rpc);
-    this.canton = new CantonAgentClient(rpc);
+    this.canton = new CantonClient(rpc);
   }
 
   /**
@@ -196,12 +193,14 @@ export class TenzroAgentWallet {
    * Submit a Canton DAML command under a mandate the controller has
    * pre-issued to this agent. The node enforces
    * `can_act_as_parties`, `allowed_templates`, `allowed_commands`,
-   * `requires_mandate_for`, and `max_per_command_amulet` per
-   * `project-canton-agentic-enforcement-2026-06-11`. Out-of-scope
+   * `requires_mandate_for`, and `max_per_command_amulet`. Out-of-scope
    * commands return `-32004` with the violated rule named.
    */
-  async actAsParty(params: SubmitWithMandateParams): Promise<MandateBoundReceipt> {
-    return this.canton.submitWithMandate(params);
+  async actAsParty(
+    mandate: CantonMandate,
+    params: DamlCommandParams,
+  ): Promise<MandateSubmitReceipt> {
+    return this.canton.submitWithMandate(mandate, params);
   }
 
   /**

@@ -219,17 +219,26 @@ export class AuthClient {
    * Decide a pending approval — either `"approved"` or `"denied"`. Only
    * the recorded approver DID may decide; mismatched approvers are
    * rejected with JSON-RPC error code `-32001` (forbidden).
+   *
+   * `denyReason` is recorded on a denial and returned to the requesting
+   * agent when it retries, so the agent can act on why it was refused.
+   * It is ignored for an approval.
    */
   async decideApproval(
     approvalId: string,
     decision: "approved" | "denied",
-    approverDid: string
+    approverDid: string,
+    denyReason?: string
   ): Promise<ApprovalDecision> {
-    return this.rpc.call<ApprovalDecision>("tenzro_decideApproval", {
+    const params: Record<string, unknown> = {
       approval_id: approvalId,
       decision,
       approver_did: approverDid,
-    });
+    };
+    if (denyReason !== undefined) {
+      params.deny_reason = denyReason;
+    }
+    return this.rpc.call<ApprovalDecision>("tenzro_decideApproval", params);
   }
 
   /**
@@ -422,6 +431,11 @@ export interface ApprovalRecord {
   status?: string;
   /** Decision timestamp (Unix epoch, ms). `null`/absent while pending. */
   decided_at_ms?: number | null;
+  /**
+   * Approver's explanation for a denial, surfaced to the requesting agent
+   * when it retries so it can act on the reason.
+   */
+  deny_reason?: string | null;
   /** Short human-readable summary of the request. */
   summary?: string;
   /** Action identifier (free-form, e.g. `"wallet.transfer"`). */
@@ -545,7 +559,7 @@ export interface OAuthDiscovery {
   /**
    * RFC 9396 RAR `type` values the AS recognises: `transfer`,
    * `create_escrow`, `discharge_escrow`, `inference`, `stake`, `vote`,
-   * `contract`, `register_identity`.
+   * `contract`, `register_identity`, `resource_invocation`.
    */
   authorization_details_types_supported: string[];
   /**

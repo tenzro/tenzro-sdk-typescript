@@ -27,6 +27,20 @@ export interface CreateApiKeyParams {
   /** Revocability class. Defaults to `subject` when omitted. */
   class?: KeyClass;
   /**
+   * Canton networks this key may reach — `"devnet"` and/or `"mainnet"`.
+   * Fail-closed: left empty, the key reaches no Canton network and every
+   * canton-scoped call through it is refused. A network is a distinct
+   * ledger with distinct parties and assets, so there is no "all
+   * networks" default. The node refuses a network it does not serve.
+   */
+  canton_networks?: string[];
+  /**
+   * Service tier — `"free"`, `"standard"`, or `"priority"`. Governs the
+   * per-minute request budget and whether the key may call write
+   * methods. Defaults to `free` (read-only) server-side.
+   */
+  tier?: "free" | "standard" | "priority";
+  /**
    * Optional Canton User Management Service user id (e.g.
    * `tenzro-labs@clients`). When set with the `canton` scope, the node
    * automatically:
@@ -58,6 +72,13 @@ export interface CreatedApiKey {
   scopes: string[];
   class?: string | null;
   created_at: number;
+  /** Service tier granted — `free`, `standard`, or `priority`. */
+  tier?: string | null;
+  /**
+   * Canton networks this key may reach. Empty means no Canton access;
+   * canton-scoped calls through the key are refused.
+   */
+  canton_networks?: string[];
   /** Bound Canton User Management Service user id, if any. */
   canton_user_id?: string | null;
   /** FQ party id (`<hint>::<participant-hash>`) auto-provisioned for this user. */
@@ -107,6 +128,33 @@ export interface ApiKeyRecord {
   label: string;
   scopes: string[];
   class?: string | null;
+  /** Service tier granted — `free`, `standard`, or `priority`. */
+  tier?: string | null;
+  /** Rate ceiling granted by `tier`. */
+  requests_per_minute?: number;
+  /** Whether `tier` permits write methods. */
+  allows_write?: boolean;
+  /** Canton networks this key may reach. Empty means no Canton access. */
+  canton_networks?: string[];
+  /**
+   * Canton User Management Service user bound to this key. `null` means
+   * the key reaches the node but cannot act as a Canton party — node
+   * access without ledger access.
+   */
+  canton_user_id?: string | null;
+  /**
+   * Canton identity provider the bound user resolves in. `null` means the
+   * participant's default provider.
+   */
+  canton_identity_provider_id?: string | null;
+  /** Parties this key may submit on behalf of, beyond the bound user's primary party. */
+  can_act_as_parties?: string[];
+  /** Parties this key may read as. */
+  can_read_as_parties?: string[];
+  /** Template ids this key may touch. Empty means unrestricted. */
+  allowed_templates?: string[];
+  /** Command names this key may issue. Empty means unrestricted. */
+  allowed_commands?: string[];
   created_at: number;
   revoked_at?: number | null;
   active: boolean;
@@ -161,6 +209,11 @@ export class ApiKeyClient {
    * - `operator_protected`: not revokable via RPC — rotate by updating
    *   the operator secret and restarting the node. The SDK injects the
    *   `confirm_operator_protected` interlock automatically.
+   *
+   * For Canton access, name the networks the key may reach in
+   * {@link CreateApiKeyParams.canton_networks} and pick a
+   * {@link CreateApiKeyParams.tier}. Both are fail-closed: no networks
+   * means no Canton access, and the default `free` tier is read-only.
    */
   async create(params: CreateApiKeyParams): Promise<CreatedApiKey> {
     const body: Record<string, unknown> = {
@@ -173,6 +226,12 @@ export class ApiKeyClient {
     }
     if ((params.class ?? "subject") === "operator_protected") {
       body.confirm_operator_protected = true;
+    }
+    if (params.canton_networks !== undefined && params.canton_networks.length > 0) {
+      body.canton_networks = params.canton_networks;
+    }
+    if (params.tier !== undefined) {
+      body.tier = params.tier;
     }
     if (params.canton_user_id !== undefined) {
       body.canton_user_id = params.canton_user_id;
@@ -209,6 +268,13 @@ export class ApiKeyClient {
   /**
    * List every API key belonging to the caller's own subject.
    * Requires `TENZRO_API_KEY` in the environment.
+   *
+   * This is the entitlement self-read: each {@link ApiKeyRecord} carries
+   * the scopes, tier ceiling, Canton networks, and Canton party binding
+   * the node enforces. A row with a non-empty `canton_networks` but a
+   * null `canton_user_id` has node access without ledger access — it
+   * authenticates, but is bound to no Canton party, so command
+   * submission is refused.
    */
   async listMine(): Promise<MyApiKeyList> {
     return this.rpc.call<MyApiKeyList>("tenzro_listMyApiKeys", {});

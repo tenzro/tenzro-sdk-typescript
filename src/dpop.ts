@@ -185,7 +185,7 @@ function randomJti(): string {
   return base64UrlNoPad(bytes);
 }
 
-function utf8(s: string): Uint8Array {
+function utf8(s: string): Uint8Array<ArrayBuffer> {
   return new TextEncoder().encode(s);
 }
 

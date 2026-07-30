@@ -7,9 +7,9 @@ import { RpcClient } from "./rpc";
  * the recommended action computed from the targets and metrics, and the
  * list of in-flight adaptive-burn governance proposals.
  *
- * All endpoints are read-only — the auto-proposal generator and the
- * EIP-1559 fee-market consumer ship alongside the governance executor
- * wiring in a later wave.
+ * All endpoints are read-only. The auto-proposal generator and the
+ * EIP-1559 fee-market consumer run inside the node alongside the
+ * governance executor; this client only reads their output.
  */
 export class AdaptiveBurnClient {
   constructor(private rpc: RpcClient) {}

@@ -76,8 +76,8 @@ export interface Eip7702ProtocolInfo {
  * EOA's code slot, signed by the EOA's secp256k1 key over a domain-
  * separated preimage.
  *
- * This client wraps the **stateless helper RPCs** the node exposes to
- * support 7702 tooling end-to-end:
+ * This client wraps the **stateless helper RPCs** the node exposes for
+ * 7702 tooling:
  * - `tenzro_eip7702SigningHash` — compute the secp256k1 signing hash
  * - `tenzro_eip7702BuildDesignator` — build the 23-byte designator
  * - `tenzro_eip7702ParseDesignator` — decode an account's code

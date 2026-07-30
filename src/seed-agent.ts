@@ -10,9 +10,9 @@ import { RpcClient } from "./rpc";
  * with per-charter spend caps, target throughput, and counterparty
  * filters.
  *
- * All endpoints here are read-only — provisioning, monthly decay, and
- * sunset wind-down land in a later wave with the off-chain provisioning
- * daemon and governance-executor mutation paths.
+ * All endpoints here are read-only. Provisioning, monthly decay, and
+ * sunset wind-down are driven by the off-chain provisioning daemon and
+ * the governance-executor mutation paths, not by this client.
  */
 export class SeedAgentClient {
   constructor(private rpc: RpcClient) {}

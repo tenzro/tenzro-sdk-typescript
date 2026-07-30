@@ -34,7 +34,7 @@ export class MarketplaceClient {
   }
 
   /**
-   * Invoke (run) a spawned agent template end-to-end.
+   * Invoke (run) a spawned agent template through its full task cycle.
    *
    * For paid templates, `payer_wallet` is charged the per-invocation fee and
    * the report contains the detailed fee-split breakdown (treasury commission,

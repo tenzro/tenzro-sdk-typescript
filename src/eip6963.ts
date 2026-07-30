@@ -41,7 +41,7 @@ interface EIP6963AnnounceProviderEvent extends Event {
  * Pre-registration value — kept aligned with the extension's
  * `installTenzroProvider({ rdns })` default. Will become a
  * formally-registered RDNS once the CAIP-2 `tenzro:` namespace PR
- * lands upstream.
+ * is merged upstream.
  */
 export const TENZRO_PROVIDER_RDNS = "xyz.tenzro.wallet";
 

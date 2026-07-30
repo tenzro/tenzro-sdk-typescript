@@ -1,10 +1,14 @@
 import type { RpcClient } from './rpc';
 import type {
+  AggregateAnalytics,
   CantonDomainList,
+  CantonMandate,
   DamlCommandParams,
   DamlCommandResult,
   DamlContractsResponse,
   ListDamlContractsParams,
+  MandateSubmitReceipt,
+  WatchPartySnapshot,
 } from './types';
 
 /**
@@ -18,9 +22,47 @@ import type {
  * - Commands:        `POST /v2/commands/submit-and-wait-for-transaction`
  * - Active contracts:`POST /v2/state/active-contracts` (with `identifierFilter`)
  * - Events:          `POST /v2/events/events-by-contract-id`
+ *
+ * ```ts
+ * // Pin calls to one Canton network when the key authorizes several.
+ * const mainnet = client.canton.onNetwork('mainnet');
+ * const health = await mainnet.health();
+ * ```
  */
 export class CantonClient {
-  constructor(private readonly rpc: RpcClient) {}
+  constructor(
+    private readonly rpc: RpcClient,
+    private readonly network?: string,
+  ) {}
+
+  /**
+   * Pins every call on the returned client to one Canton network —
+   * `'devnet'` or `'mainnet'`.
+   *
+   * Only needed when the presenting API key authorizes more than one
+   * network: the node resolves a single-network key on its own, and
+   * refuses a multi-network key that names none. Naming a network the
+   * key does not authorize is refused with `-32004`.
+   */
+  onNetwork(network: string): CantonClient {
+    return new CantonClient(this.rpc, network);
+  }
+
+  /**
+   * Dispatches a Canton RPC, injecting the pinned `canton_network` when
+   * one is set. Every method in this class routes through here so
+   * network selection cannot be missed on a newly added method.
+   */
+  private async call<T>(
+    method: string,
+    params: Record<string, unknown>,
+  ): Promise<T> {
+    const body =
+      this.network === undefined
+        ? params
+        : { ...params, canton_network: this.network };
+    return this.rpc.call<T>(method, body);
+  }
 
   /**
    * List the Canton synchronizer domains this node is configured against.
@@ -29,7 +71,7 @@ export class CantonClient {
    * `enabled` on the response before treating `domains` as live.
    */
   async listDomains(): Promise<CantonDomainList> {
-    return this.rpc.call<CantonDomainList>('tenzro_listCantonDomains', {});
+    return this.call<CantonDomainList>('tenzro_listCantonDomains', {});
   }
 
   /**
@@ -38,7 +80,7 @@ export class CantonClient {
   async listContracts(
     params: ListDamlContractsParams,
   ): Promise<DamlContractsResponse> {
-    return this.rpc.call<DamlContractsResponse>(
+    return this.call<DamlContractsResponse>(
       'tenzro_listDamlContracts',
       params as unknown as Record<string, unknown>,
     );
@@ -48,10 +90,34 @@ export class CantonClient {
    * Submit a DAML `create` or `exercise` command to the Canton participant.
    */
   async submitCommand(params: DamlCommandParams): Promise<DamlCommandResult> {
-    return this.rpc.call<DamlCommandResult>(
+    return this.call<DamlCommandResult>(
       'tenzro_submitDamlCommand',
       params as unknown as Record<string, unknown>,
     );
+  }
+
+  /**
+   * Submit a DAML command bound to an AP2 mandate pair.
+   *
+   * The node validates `mandate.checkout` against `mandate.payment`
+   * with delegation enforcement on — the AP2 cart invariants, the
+   * signer's TDIP delegation scope, and the runtime spending policy
+   * all have to admit the amount before the DAML command reaches the
+   * participant. Canton's own `AuthService` is the second gate: the
+   * key's Canton user still needs `CanActAs` on the submitting party.
+   *
+   * Use this instead of `submitCommand()` when an autonomous agent is
+   * writing to Canton on a controller's authority, so the ledger write
+   * and the mandate that authorized it are recorded together.
+   */
+  async submitWithMandate(
+    mandate: CantonMandate,
+    params: DamlCommandParams,
+  ): Promise<MandateSubmitReceipt> {
+    return this.call<MandateSubmitReceipt>('tenzro_canton_submitWithMandate', {
+      ...(params as unknown as Record<string, unknown>),
+      mandate: { checkout: mandate.checkout, payment: mandate.payment },
+    });
   }
 
   /**
@@ -69,7 +135,7 @@ export class CantonClient {
   ): Promise<{ party_id: string; party_id_hint: string }> {
     const params: Record<string, unknown> = { party_id_hint: partyIdHint };
     if (displayName !== undefined) params.display_name = displayName;
-    return this.rpc.call('tenzro_allocateParty', params);
+    return this.call('tenzro_allocateParty', params);
   }
 
   /**
@@ -105,7 +171,7 @@ export class CantonClient {
     if (args.identityProviderId !== undefined) {
       params.identity_provider_id = args.identityProviderId;
     }
-    return this.rpc.call('tenzro_canton_grantUserRights', params);
+    return this.call('tenzro_canton_grantUserRights', params);
   }
 
   /**
@@ -117,7 +183,7 @@ export class CantonClient {
    * own user.
    */
   async listUserRights(userId?: string): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_listUserRights', { user_id: userId });
+    return this.call('tenzro_canton_listUserRights', { user_id: userId });
   }
 
   // ── Canton 3.5+ JSON Ledger API extension methods ──
@@ -131,7 +197,7 @@ export class CantonClient {
    * package ids that got installed.
    */
   async uploadDar(darBase64: string): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_uploadDar', {
+    return this.call('tenzro_canton_uploadDar', {
       dar_content_base64: darBase64,
     });
   }
@@ -142,7 +208,7 @@ export class CantonClient {
    * the party registry; expect `{partyDetails: []}` in that case.
    */
   async listParties(): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_listParties', {});
+    return this.call('tenzro_canton_listParties', {});
   }
 
   /**
@@ -156,7 +222,7 @@ export class CantonClient {
     ready_detail: string;
     version: unknown;
   }> {
-    return this.rpc.call('tenzro_canton_health', {});
+    return this.call('tenzro_canton_health', {});
   }
 
   /**
@@ -164,7 +230,7 @@ export class CantonClient {
    * `GET /v2/version`.
    */
   async version(): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_version', {});
+    return this.call('tenzro_canton_version', {});
   }
 
   /**
@@ -172,7 +238,7 @@ export class CantonClient {
    * be a hex string (Canton 3.5+ rejects bare labels).
    */
   async getTransaction(updateId: string): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_getTransaction', {
+    return this.call('tenzro_canton_getTransaction', {
       update_id: updateId,
     });
   }
@@ -183,7 +249,7 @@ export class CantonClient {
    * for capability discovery before contract creation.
    */
   async listPackages(): Promise<{ packageIds: string[] }> {
-    return this.rpc.call('tenzro_canton_listPackages', {});
+    return this.call('tenzro_canton_listPackages', {});
   }
 
   /**
@@ -193,7 +259,7 @@ export class CantonClient {
    * `{party, amulet_count, total_initial_amount, token_standard:"CIP-56"}`.
    */
   async cantonCoinBalance(): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_coinBalance', {});
+    return this.call('tenzro_canton_coinBalance', {});
   }
 
   /**
@@ -203,7 +269,7 @@ export class CantonClient {
    * are visible to the party.
    */
   async feeSchedule(): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_feeSchedule', {});
+    return this.call('tenzro_canton_feeSchedule', {});
   }
 
   /**
@@ -224,7 +290,7 @@ export class CantonClient {
       permission: string;
     }>;
   }> {
-    return this.rpc.call('tenzro_canton_connectedSynchronizers', {});
+    return this.call('tenzro_canton_connectedSynchronizers', {});
   }
 
   /**
@@ -243,7 +309,7 @@ export class CantonClient {
       identityProviderId: string;
     };
   }> {
-    return this.rpc.call('tenzro_canton_getMyUser', {});
+    return this.call('tenzro_canton_getMyUser', {});
   }
 
   /**
@@ -265,7 +331,7 @@ export class CantonClient {
     first_seen_at: number | null;
     last_called_at: number | null;
   }> {
-    return this.rpc.call('tenzro_canton_getMyAnalytics', {});
+    return this.call('tenzro_canton_getMyAnalytics', {});
   }
 
   /**
@@ -289,7 +355,25 @@ export class CantonClient {
   }> {
     const params: Record<string, unknown> = {};
     if (keyId !== undefined) params.key_id = keyId;
-    return this.rpc.call('tenzro_canton_listApiKeyAnalytics', params);
+    return this.call('tenzro_canton_listApiKeyAnalytics', params);
+  }
+
+  /**
+   * Operator admin-read: collapses the per-tenant aggregates into
+   * buckets. `groupBy` accepts `'subject'` (the default — labels
+   * buckets with the API key's subject) or `'key_id'` (labels with the
+   * raw key id). Admin-token-gated at the node; non-admin callers see
+   * `-32001`.
+   */
+  async aggregateAnalytics(
+    groupBy?: 'subject' | 'key_id',
+  ): Promise<AggregateAnalytics> {
+    const params: Record<string, unknown> = {};
+    if (groupBy !== undefined) params.group_by = groupBy;
+    return this.call<AggregateAnalytics>(
+      'tenzro_canton_aggregateAnalytics',
+      params,
+    );
   }
 
   /**
@@ -308,8 +392,8 @@ export class CantonClient {
   async watchParty(
     party: string,
     templateIds: string[]
-  ): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_watchParty', {
+  ): Promise<WatchPartySnapshot> {
+    return this.call<WatchPartySnapshot>('tenzro_canton_watchParty', {
       party,
       template_ids: templateIds,
     });
@@ -326,7 +410,7 @@ export class CantonClient {
     jwksUrl: string;
     audience: string;
   }): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_createIdp', {
+    return this.call('tenzro_canton_createIdp', {
       identity_provider_id: args.identityProviderId,
       issuer_url: args.issuerUrl,
       jwks_url: args.jwksUrl,
@@ -339,7 +423,7 @@ export class CantonClient {
    * (Stage 2.b roster). Admin-token-gated.
    */
   async listIdps(): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_listIdps', {});
+    return this.call('tenzro_canton_listIdps', {});
   }
 
   /**
@@ -349,7 +433,7 @@ export class CantonClient {
    * Admin-token-gated.
    */
   async deleteIdp(identityProviderId: string): Promise<unknown> {
-    return this.rpc.call('tenzro_canton_deleteIdp', {
+    return this.call('tenzro_canton_deleteIdp', {
       identity_provider_id: identityProviderId,
     });
   }
@@ -365,7 +449,7 @@ export class CantonClient {
     workflowId: string,
     synchronizerId: string
   ): Promise<unknown> {
-    return this.rpc.call('tenzro_mirrorWorkflowToCanton', {
+    return this.call('tenzro_mirrorWorkflowToCanton', {
       workflow_id: workflowId,
       synchronizer_id: synchronizerId,
     });
@@ -381,7 +465,7 @@ export class CantonClient {
     obligationId: string,
     parentContractId: string
   ): Promise<unknown> {
-    return this.rpc.call('tenzro_mirrorObligationToCanton', {
+    return this.call('tenzro_mirrorObligationToCanton', {
       obligation_id: obligationId,
       parent_contract_id: parentContractId,
     });

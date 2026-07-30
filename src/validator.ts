@@ -78,7 +78,7 @@ export interface RotateValidatorKeyRequest {
 }
 
 /**
- * Result of `tenzro_rotateValidatorKey`. The rotation lands on the
+ * Result of `tenzro_rotateValidatorKey`. The rotation applies to the
  * receiving node only — operators must fan out the same request to
  * every active validator before the next epoch boundary to avoid a
  * fork (see `tools/deploy/rotate-validator-key.sh`).

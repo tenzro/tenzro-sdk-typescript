@@ -92,7 +92,7 @@ export interface ModelInfo {
 export interface PeerHintRecord {
   /** `tenzro://blob/<blake3>` or `tenzro://model/<id>@<blake3>` URI. */
   tenzro_uri: string;
-  /** Canonical SHA-256 of the artifact bytes (hex), verified end-to-end. */
+  /** Canonical SHA-256 of the artifact bytes (hex), verified after transfer. */
   sha256_hex?: string;
 }
 
@@ -1177,43 +1177,80 @@ export interface RunAgentTemplateReport {
 
 // ─── Skills Registry ─────────────────────────────────────────────────────────
 
+/**
+ * Content-addressed artifact backing a skill.
+ *
+ * The registry is permissionless, so a caller's protection is naming the exact
+ * bytes it is willing to run. `uri` is a `tenzro://blob/<blake3-hex>` locator
+ * (iroh-blobs verifies BLAKE3 over the wire); `sha256` is the publisher's
+ * declared canonical hash of the same bytes, which a caller pins at invocation
+ * without having to trust the transport that delivered them.
+ */
+export interface SkillBundle {
+  uri: string;
+  sha256: string;
+  size_bytes: number;
+}
+
 export interface SkillInfo {
   skill_id: string;
   name: string;
   description: string;
   version: string;
-  capabilities: string[];
-  input_schema?: string;
-  output_schema?: string;
-  category?: string;
-  creator_did?: string;
-  tags?: string[];
+  creator_did: string;
+  creator_wallet?: string;
+  required_capabilities: string[];
+  input_schema?: unknown;
+  output_schema?: unknown;
+  price_per_call: string;
+  category: string;
+  tags: string[];
+  endpoint?: string;
+  bundle?: SkillBundle;
   status: string;
-  created_at?: number;
-  updated_at?: number;
+  created_at: number;
+  last_seen_at: number;
+  invocation_count: number;
+  rating: number;
 }
 
 export interface RegisterSkillParams {
   name: string;
   description: string;
   version: string;
-  capabilities: string[];
-  input_schema?: string;
-  output_schema?: string;
+  creator_did: string;
+  required_capabilities?: string[];
+  input_schema?: unknown;
+  output_schema?: unknown;
   category?: string;
   tags?: string[];
+  endpoint?: string;
+  /** Price per invocation in TNZO atto-tokens; omit or "0" for a free skill. */
+  price_per_call?: string;
+  /** Payout wallet, required whenever price_per_call is non-zero. */
+  creator_wallet?: string;
+  bundle?: SkillBundle;
 }
 
 export interface UpdateSkillParams {
   name?: string;
   description?: string;
   version?: string;
-  capabilities?: string[];
-  input_schema?: string;
-  output_schema?: string;
+  required_capabilities?: string[];
+  input_schema?: unknown;
+  output_schema?: unknown;
   category?: string;
   tags?: string[];
+  endpoint?: string;
   status?: string;
+  price_per_call?: string;
+  creator_wallet?: string;
+  /**
+   * Republish the artifact, or pass `null` to withdraw it. Omitting the key
+   * leaves the current bundle alone. Republishing is a version bump, not a
+   * mutation: pins on the old digest fail closed against the new row.
+   */
+  bundle?: SkillBundle | null;
 }
 
 export interface SkillFilter {
@@ -1221,9 +1258,23 @@ export interface SkillFilter {
   capability?: string;
   creator_did?: string;
   tag?: string;
-  status?: string;
+  /** Only skills publishing a pinnable artifact. */
+  bundled_only?: boolean;
+  /** Highest acceptable price per call, in TNZO atto-tokens. */
+  max_price?: string;
+  /** Set false to include inactive and deprecated rows; defaults to true. */
+  active_only?: boolean;
   limit?: number;
   offset?: number;
+}
+
+/**
+ * Version/artifact pin for an invocation. A mismatch against the registry row
+ * is refused (`-32006`) before any settlement, so a refused call is free.
+ */
+export interface SkillPin {
+  expected_version?: string;
+  expected_sha256?: string;
 }
 
 export interface SkillExecutionResult {
@@ -1381,6 +1432,32 @@ export type DamlCommandParams =
   | DamlCreateCommandParams
   | DamlExerciseCommandParams;
 
+/**
+ * AP2 mandate pair authorizing a Canton write.
+ *
+ * Both halves are verifiable digital credentials: `checkout` is the
+ * cart mandate the controller signed, `payment` is the payment mandate
+ * the agent signed against it. The node cross-checks them before
+ * touching the participant.
+ */
+export interface CantonMandate {
+  /** Signed cart mandate (AP2 `checkout_vdc`) */
+  checkout: Record<string, unknown>;
+  /** Signed payment mandate (AP2 `payment_vdc`) */
+  payment: Record<string, unknown>;
+}
+
+/**
+ * Result from a mandate-bound DAML submission: the AP2 validation
+ * receipt paired with the ledger outcome.
+ */
+export interface MandateSubmitReceipt {
+  /** Mandate validation receipt (signer DIDs, amount, policy verdict) */
+  ap2_receipt: unknown;
+  /** Ledger result for the submitted DAML command */
+  canton_receipt: DamlCommandResult;
+}
+
 export interface DamlCommandResult {
   /** "create" or "exercise" */
   command_type: string;
@@ -1396,6 +1473,38 @@ export interface DamlCommandResult {
   exercise_result?: unknown;
   /** Ledger events produced by the command (for exercise commands) */
   events?: unknown;
+}
+
+/** Active-contracts snapshot for a single party. */
+export interface WatchPartySnapshot {
+  /** Fully-qualified party the snapshot was taken for */
+  party: string;
+  /** Template ids the snapshot was filtered to */
+  template_ids: string[];
+  /** Contracts active at the participant's current ledger offset */
+  active_contracts: unknown;
+  /** Number of contracts in `active_contracts` */
+  count: number;
+}
+
+/** One bucket of `AggregateAnalytics`. */
+export interface AnalyticsBucket {
+  /** Subject or key id, per the enclosing `group_by` */
+  key: string;
+  /** Canton calls attributed to this bucket */
+  total_calls: number;
+  /** Unix millis of the most recent call in this bucket */
+  last_called_at: number;
+}
+
+/** Per-tenant Canton call counters collapsed into buckets. */
+export interface AggregateAnalytics {
+  /** `'subject'` or `'key_id'` — what the bucket keys name */
+  group_by: string;
+  /** One bucket per distinct key, sorted by `last_called_at` descending */
+  buckets: AnalyticsBucket[];
+  /** Number of per-tenant rows that went into the buckets */
+  row_count: number;
 }
 
 // ─── Staking ─────────────────────────────────────────────────────────────────

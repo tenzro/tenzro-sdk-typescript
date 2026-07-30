@@ -367,12 +367,12 @@ export class TenzroClient {
 
   /**
    * Access the multi-modal AI client — forecast (timeseries), vision
-   * encoders, text embeddings, segmentation, detection, audio (ASR),
-   * and video. Each modality exposes catalog browse, list-loaded,
-   * load, unload, and one inference verb.
+   * encoders, text embeddings, click-driven segmentation, text-promptable
+   * segmentation, detection, audio (ASR), and video. Each modality exposes
+   * catalog browse, list-loaded, load, unload, and one inference verb.
    *
-   * Four of the seven `load*Model` paths are wave-1 stubs that return
-   * JSON-RPC `-32004` from the node — see `MultimodalClient` rustdoc.
+   * The runtimes are feature-gated: a node built without `onnx` answers
+   * every load and inference call with JSON-RPC `-32011`.
    */
   multimodal(): MultimodalClient {
     return new MultimodalClient(this.rpc);

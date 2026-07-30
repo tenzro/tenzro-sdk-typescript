@@ -87,7 +87,7 @@ async function main() {
     }
   }
 
-  console.log("Auth lifecycle exercised end-to-end.");
+  console.log("Auth lifecycle exercised in full.");
 }
 
 main().catch((err) => {

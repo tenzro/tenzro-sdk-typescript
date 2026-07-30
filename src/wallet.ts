@@ -181,6 +181,11 @@ export class WalletClient {
    * ML-DSA-65 legs, verifies them against the preimage, and submits to
    * the mempool. Private keys never travel over the wire.
    *
+   * When the controller has put transfers on the AAP always-ask list, the
+   * first call returns JSON-RPC `-32002` with `data.approval_id`. Pass that
+   * id back as `approvalId` once the controller has approved it and the
+   * transfer executes; a denial returns the approver's reason.
+   *
    * @returns The submitted transaction hash (64-char lowercase hex).
    */
   async signAndSend(args: {
@@ -191,6 +196,7 @@ export class WalletClient {
     gasPrice?: number;
     nonce?: number;
     chainId?: number;
+    approvalId?: string;
   }): Promise<string> {
     let { nonce, chainId } = args;
     if (nonce === undefined) {
@@ -201,7 +207,7 @@ export class WalletClient {
       const chainHex = await this.rpc.call<string>("eth_chainId", []);
       chainId = parseInt(chainHex, 16);
     }
-    return this.rpc.call<string>("tenzro_signAndSendTransaction", {
+    const params: Record<string, unknown> = {
       from: args.from,
       to: args.to,
       value: args.value.toString(),
@@ -209,7 +215,11 @@ export class WalletClient {
       gas_price: args.gasPrice ?? 1_000_000_000,
       nonce,
       chain_id: chainId,
-    });
+    };
+    if (args.approvalId !== undefined) {
+      params.approval_id = args.approvalId;
+    }
+    return this.rpc.call<string>("tenzro_signAndSendTransaction", params);
   }
 
   /**

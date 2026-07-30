@@ -209,7 +209,8 @@ export function computeCortexCost(
 /**
  * Client for Cortex recurrent-depth reasoning operations on Tenzro Network.
  *
- * Cortex treats recurrent-loop depth as a first-class billable primitive.
+ * Cortex meters and bills recurrent-loop depth directly, as its own
+ * primitive.
  * Use this to submit reasoning requests with explicit budget envelopes
  * (Fast / Standard / Deep / Institutional tiers) and receive signed
  * receipts binding inputs, outputs, and worker identity.
