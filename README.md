@@ -400,8 +400,8 @@ produced for a given action cannot be replayed as another.
 
 ## Removed from the JSON-RPC surface
 
-`submitBlock`, `offerSnapshot`, and `applySnapshotChunk` are gone. They were
-peer traffic reachable over the user-facing port: `submitBlock` pushed a
+`submitBlock`, `offerSnapshot` and `applySnapshotChunk` are gone. They were peer
+traffic reachable over the user-facing port: `submitBlock` pushed a
 caller-supplied block onto the *finalized* path, which by contract has already
 been through consensus and therefore verifies nothing, and the snapshot write
 half committed arbitrary key/value pairs to the live store on the strength of a
