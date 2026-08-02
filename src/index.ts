@@ -117,6 +117,22 @@ export type {
   StorageStatus,
 } from "./storage";
 export { DatabaseClient } from "./database";
+export { FilesClient } from "./files";
+export { GatewayClient } from "./gateway";
+export type {
+  GateClass,
+  MethodDirectory,
+  MethodEntry,
+  MethodQuery,
+} from "./gateway";
+export type {
+  FileDeletion,
+  FileList,
+  FileObject,
+  FilePurpose,
+  ListFilesOptions,
+  StorageUsage,
+} from "./files";
 export type {
   EngineCatalog,
   CreatedDatabase,
@@ -482,11 +498,9 @@ export type {
   SnapshotList,
   SnapshotManifest,
   SnapshotChunk,
-  SnapshotOfferAccepted,
-  SnapshotChunkApplied,
 } from "./snapshot";
 export { TrainingInspectionClient, TrainingClient } from "./training";
-export type { ConfidentialEnrollment } from "./training";
+export type { TrainingAttestation } from "./training";
 export type {
   TrainingRunStatus,
   TrainingRun,
@@ -684,6 +698,8 @@ export type {
 export type {
   ParticipateResponse,
   ProviderStats,
+  ComputeBond,
+  ComputeBondParams,
   ChatMessage,
   ChatOptions,
   ChatResponse,

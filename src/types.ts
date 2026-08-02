@@ -147,6 +147,7 @@ export interface ServingProfile {
   top_p: number;
   top_k: number;
   min_p: number;
+  presence_penalty: number;
   jinja_required: boolean;
   reasoning_default: boolean;
 }

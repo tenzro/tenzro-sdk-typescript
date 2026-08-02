@@ -165,26 +165,44 @@ export class CustodyClient {
   /**
    * Create a session key with scoped permissions.
    * @param walletId - Wallet identifier
+   * @param didEnvelope - Hex envelope proving control of the DID that owns
+   *   `walletId`, bound to method `tenzro_authorizeSession` with the wallet id
+   *   as the params hash. The node resolves the owner through the identity
+   *   registry; a wallet id names the subject and proves nothing about the
+   *   caller.
    * @param durationSecs - Session validity duration in seconds
    * @param operations - Allowed operations (e.g., "transfer", "stake")
    */
   async authorizeSession(
     walletId: string,
+    didEnvelope: string,
     durationSecs: number,
     operations: string[],
   ): Promise<SessionKey> {
     return this.rpc.call<SessionKey>('tenzro_authorizeSession', [
-      { wallet_id: walletId, duration_secs: durationSecs, operations },
+      {
+        wallet_id: walletId,
+        did_envelope: didEnvelope,
+        duration_secs: durationSecs,
+        operations,
+      },
     ]);
   }
 
   /**
    * Revoke an authorized session before its natural expiry.
    * @param sessionId - The `session_id` returned by {@link authorizeSession}
+   * @param didEnvelope - Hex envelope proving control of the DID that owns
+   *   the session's wallet, bound to method `tenzro_revokeSession` with the
+   *   `sessionId` bytes as the params hash. A session id is a handle the node
+   *   hands back, not a credential.
    */
-  async revokeSession(sessionId: string): Promise<RevokedSession> {
+  async revokeSession(
+    sessionId: string,
+    didEnvelope: string,
+  ): Promise<RevokedSession> {
     return this.rpc.call<RevokedSession>('tenzro_revokeSession', [
-      { session_id: sessionId },
+      { session_id: sessionId, did_envelope: didEnvelope },
     ]);
   }
 

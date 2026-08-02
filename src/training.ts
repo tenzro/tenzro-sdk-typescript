@@ -153,16 +153,24 @@ export class TrainingInspectionClient {
 }
 
 /**
- * Optional confidential-tier enrollment payload — required when the
- * task being enrolled into has a sealed-shard manifest installed.
- * The attestation proves the trainer is running inside a TEE enclave
- * whose pubkey + measurements were sealed into the manifest by the
- * task sponsor.
+ * TEE attestation supplied at Confidential-tier enrollment, matching
+ * `tenzro_types::training::TrainingAttestation`.
+ *
+ * The node verifies `report_hex` against a pinned vendor root, refuses
+ * simulated reports, and requires the report to commit to the enclave
+ * public key the sponsor wrapped this trainer's shard data key to. The
+ * expected key and measurement are read from the sealed manifest, so the
+ * trainer declares nothing about its own enclave.
  */
-export interface ConfidentialEnrollment {
-  attestation: string;
-  enclave_pubkey: string;
-  measurements_hex: string;
+export interface TrainingAttestation {
+  /** Vendor tag: `intel-tdx`, `amd-sev-snp`, `aws-nitro`, `nvidia-cc`. */
+  vendor: string;
+  /** Hex of the JSON-serialized `AttestationReport`. */
+  report_hex: string;
+  /** Hash of the trainer program the report covers. */
+  program_hash: number[];
+  /** Hash of the shard this trainer was assigned. */
+  shard_hash: number[];
 }
 
 /**
@@ -187,25 +195,24 @@ export class TrainingClient {
   }
 
   /**
-   * Enroll a trainer DID into an active training run. For
-   * Confidential-tier tasks, pass `confidential` carrying the
-   * trainer's TEE attestation + enclave pubkey + measurements — the
-   * node validates parity against the installed sealed-shard manifest
-   * before accepting.
+   * Enroll a trainer DID into an active training run.
+   *
+   * Confidential-tier runs require `attestation`. The node verifies the
+   * report against a pinned vendor root and requires it to commit to the
+   * enclave key the sponsor sealed this trainer's shard to; the expected
+   * key and measurement come from the sealed manifest, not from the caller.
    */
   async enrollTrainer(
     taskId: string,
     trainerDid: string,
-    confidential?: ConfidentialEnrollment,
+    attestation?: TrainingAttestation,
   ): Promise<unknown> {
     const params: Record<string, unknown> = {
       task_id: taskId,
       trainer_did: trainerDid,
     };
-    if (confidential) {
-      params.attestation = confidential.attestation;
-      params.enclave_pubkey = confidential.enclave_pubkey;
-      params.measurements_hex = confidential.measurements_hex;
+    if (attestation) {
+      params.attestation = attestation;
     }
     return this.rpc.call("tenzro_training_enrollTrainer", [params]);
   }

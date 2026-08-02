@@ -134,16 +134,28 @@ export class EventsClient {
    * The node enforces: webhook URL must be `https://`; if a secret is provided
    * it must be at least 16 characters.
    * @param url - Callback URL (must be HTTPS in production)
+   * @param ownerDid - DID that owns the row; only it can list or delete it
+   * @param didEnvelope - Hex envelope proving control of `ownerDid`, bound to
+   *   method `tenzro_registerWebhook` with the `url` bytes as the params hash
    * @param eventTypes - Optional event type filter; omit to receive all events
    * @param secret - Optional HMAC-SHA256 secret for webhook signature verification
    * @returns Webhook registration details
    */
   async registerWebhook(
     url: string,
+    ownerDid: string,
+    didEnvelope: string,
     eventTypes?: string[],
     secret?: string
   ): Promise<WebhookRegistration> {
-    return this.registerWebhookWithAddresses(url, eventTypes, undefined, secret);
+    return this.registerWebhookWithAddresses(
+      url,
+      ownerDid,
+      didEnvelope,
+      eventTypes,
+      undefined,
+      secret
+    );
   }
 
   /**
@@ -153,17 +165,28 @@ export class EventsClient {
    * subscriptions.
    *
    * @param url - Callback URL (must be `https://`)
+   * @param ownerDid - DID that owns the row; only it can list or delete it
+   * @param didEnvelope - Hex envelope proving control of `ownerDid`, bound to
+   *   method `tenzro_registerWebhook` with the `url` bytes as the params hash.
+   *   The URL and not the id, because the id is minted by the node and does
+   *   not exist when the caller signs.
    * @param eventTypes - Optional event type filter; omit to receive all events
    * @param addresses - Optional address filter; omit for no restriction
    * @param secret - Optional HMAC-SHA256 secret (≥16 characters when provided)
    */
   async registerWebhookWithAddresses(
     url: string,
+    ownerDid: string,
+    didEnvelope: string,
     eventTypes?: string[],
     addresses?: string[],
     secret?: string
   ): Promise<WebhookRegistration> {
-    const params: Record<string, unknown> = { url };
+    const params: Record<string, unknown> = {
+      url,
+      owner_did: ownerDid,
+      did_envelope: didEnvelope,
+    };
     if (eventTypes !== undefined) params.event_types = eventTypes;
     if (addresses !== undefined) params.addresses = addresses;
     if (secret !== undefined) params.secret = secret;
@@ -171,22 +194,40 @@ export class EventsClient {
   }
 
   /**
-   * List every registered webhook. Returns each webhook's id, url, active
-   * flag, event_types/addresses filters, and delivery counters. Secret
-   * hashes are NOT returned — secrets are write-only.
+   * List the webhooks registered under one owner DID. Returns each webhook's
+   * id, url, active flag, event_types/addresses filters, and delivery
+   * counters. Secret hashes are NOT returned — secrets are write-only.
+   *
+   * Scoped to one owner rather than the whole node: a row carries its
+   * delivery URL and the addresses its owner watches.
+   * @param ownerDid - DID whose webhooks to list
+   * @param didEnvelope - Hex envelope proving control of `ownerDid`, bound to
+   *   method `tenzro_listWebhooks` with the DID string as the params hash
    */
-  async listWebhooks(): Promise<WebhookList> {
-    return this.rpc.call<WebhookList>('tenzro_listWebhooks', [{}]);
+  async listWebhooks(
+    ownerDid: string,
+    didEnvelope: string
+  ): Promise<WebhookList> {
+    return this.rpc.call<WebhookList>('tenzro_listWebhooks', [
+      { owner_did: ownerDid, did_envelope: didEnvelope },
+    ]);
   }
 
   /**
    * Delete a webhook by id. Returns JSON-RPC error `-32602` if the id is
    * unknown.
    * @param webhookId - Webhook identifier to delete
+   * @param didEnvelope - Hex envelope proving control of the `owner_did`
+   *   recorded at registration, bound to method `tenzro_deleteWebhook` with
+   *   the `webhookId` bytes as the params hash. A webhook id comes back from
+   *   every list call, so it identifies the row and authorizes nothing.
    */
-  async deleteWebhook(webhookId: string): Promise<WebhookDeletion> {
+  async deleteWebhook(
+    webhookId: string,
+    didEnvelope: string
+  ): Promise<WebhookDeletion> {
     return this.rpc.call<WebhookDeletion>('tenzro_deleteWebhook', [
-      { webhook_id: webhookId },
+      { webhook_id: webhookId, did_envelope: didEnvelope },
     ]);
   }
 }

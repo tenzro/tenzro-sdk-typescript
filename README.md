@@ -234,7 +234,7 @@ const outcome = await app.settleAuthorized(settlementSigner, {
 | `ccip` | Chainlink CCIP — fee quoting, send, execution tracking, token-pool and rate-limiter inspection |
 | `validators` | Validator registry — state, list, active set (read) plus key rotation |
 | `sla` | Validator-side SLA fault-detector probes and inspection |
-| `snapshot` | State-sync snapshots — the five RPCs that drive sync between nodes |
+| `snapshot` | State-sync snapshots — the three read RPCs a syncing node calls on a serving one |
 | `erc8004` | `register8004Agent()`, `submit8004Feedback()`, `request8004Validation()`, `submit8004Validation()` (Trustless Agents Registry) |
 | `ap2` | `signMandate()`, `verifyMandate()`, `validateMandatePair()`, `listMandates()`, `protocolInfo()` (Agent Payments Protocol checkout/payment VDCs) |
 | `agentPayments` | Per-agent runtime spending policies (max-per-tx, daily-cap, enforce_operation pre-check) |
@@ -335,7 +335,7 @@ const agent = await client.auth.onboardDelegatedAgent(
 );
 
 // Revoke (cascades through act-chain by DID)
-await client.auth.revokeDid((session.identity as any).did, 'lost device');
+await client.auth.revokeDid((session.identity as any).did, didEnvelope, 'lost device');
 ```
 
 Holder-side DPoP proof generation is left to the caller — sign a per-request
@@ -379,6 +379,38 @@ See the [examples/](examples/) directory and [Tenzro Cookbook](https://github.co
 - Website: [tenzro.com](https://tenzro.com)
 - Engineering: [eng@tenzro.com](mailto:eng@tenzro.com)
 - GitHub: [github.com/tenzro](https://github.com/tenzro)
+
+## Owner-proof on resource mutations
+
+Several methods that previously took only an identifier now also require a
+signed DID envelope proving control of the resource. An identifier is not a
+credential: a `jti` travels in every audit row, a `webhook_id` comes back from
+every list call, and a `session_id` is a handle the node hands back.
+
+| Method | Proof required |
+| --- | --- |
+| `revokeJwt` | envelope from the token's bearer **or** the controller that authorized it |
+| `revokeDid` | operator admin token **and** an envelope from the DID (or a machine's controller) |
+| `registerWebhook` | `owner_did` plus an envelope over the URL |
+| `listWebhooks` / `deleteWebhook` | envelope from the recorded `owner_did` |
+| `authorizeSession` / `revokeSession` | envelope from the DID that owns the wallet |
+
+Each envelope is bound to the method name and to that call's parameters, so one
+produced for a given action cannot be replayed as another.
+
+## Removed from the JSON-RPC surface
+
+`submitBlock`, `offerSnapshot`, and `applySnapshotChunk` are gone. They were
+peer traffic reachable over the user-facing port: `submitBlock` pushed a
+caller-supplied block onto the *finalized* path, which by contract has already
+been through consensus and therefore verifies nothing, and the snapshot write
+half committed arbitrary key/value pairs to the live store on the strength of a
+manifest that attested only to itself.
+
+Blocks arrive over the peer-authenticated gossip and block-sync paths; the
+inbound half of state-sync is driven in-process by the node's bootstrap path.
+The read half — `listSnapshots`, `getSnapshotManifest`, `getSnapshotChunk` — is
+unchanged and is what a syncing node calls on a serving one.
 
 ## License
 

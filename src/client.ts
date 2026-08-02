@@ -14,6 +14,8 @@ import { PaymentClient } from "./payment";
 import { ProviderClient } from "./provider";
 import { StorageClient } from "./storage";
 import { DatabaseClient } from "./database";
+import { FilesClient } from "./files";
+import { GatewayClient } from "./gateway";
 import { ComputeClient } from "./compute";
 import { TaskClient } from "./task";
 import { MarketplaceClient } from "./marketplace";
@@ -114,6 +116,10 @@ export class TenzroClient {
   public readonly provider: ProviderClient;
   public readonly storage: StorageClient;
   public readonly database: DatabaseClient;
+  /** Tenant object storage. Needs a `storage`-scoped API key; its subject owns every file. */
+  public readonly files: FilesClient;
+  /** Discover and call any method this node serves — everything the typed clients above do not cover. */
+  public readonly gateway: GatewayClient;
   public readonly compute: ComputeClient;
   public readonly skill: SkillClient;
   public readonly tool: ToolClient;
@@ -169,6 +175,8 @@ export class TenzroClient {
     this.provider = new ProviderClient(this.rpc);
     this.storage = new StorageClient(this.rpc);
     this.database = new DatabaseClient(this.rpc);
+    this.files = new FilesClient(this.rpc);
+    this.gateway = new GatewayClient(this.rpc);
     this.compute = new ComputeClient(this.rpc);
     this.skill = new SkillClient(this.rpc);
     this.tool = new ToolClient(this.rpc);
@@ -438,11 +446,11 @@ export class TenzroClient {
   }
 
   /**
-   * State-sync snapshot client. Wraps `tenzro_listSnapshots`,
-   * `tenzro_getSnapshotManifest`, `tenzro_getSnapshotChunk`,
-   * `tenzro_offerSnapshot`, and `tenzro_applySnapshotChunk`. Callers
-   * MUST verify a manifest's `state_root_hex` against a trusted QC at
-   * the same height before calling `offerSnapshot` / `applySnapshotChunk`.
+   * State-sync snapshot client. Wraps the read half of state-sync —
+   * `tenzro_listSnapshots`, `tenzro_getSnapshotManifest`, and
+   * `tenzro_getSnapshotChunk`. Callers MUST verify a manifest's
+   * `state_root_hex` against a trusted QC at the same height before
+   * applying it; the manifest attests only to its own chunks.
    */
   snapshot(): SnapshotClient {
     return new SnapshotClient(this.rpc);

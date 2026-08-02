@@ -22,7 +22,8 @@ export interface SnapshotList {
 
 /**
  * Full snapshot manifest with per-chunk SHA-256 hashes. Returned by
- * `tenzro_getSnapshotManifest` and consumed by `tenzro_offerSnapshot`.
+ * `tenzro_getSnapshotManifest`. The receiver verifies each fetched chunk
+ * against `chunk_hashes_hex` before handing it to its own snapshot store.
  */
 export interface SnapshotManifest {
   /** Block height at which this snapshot was taken. */
@@ -56,41 +57,25 @@ export interface SnapshotChunk {
   data_b64: string;
 }
 
-/** Result of `tenzro_offerSnapshot`. */
-export interface SnapshotOfferAccepted {
-  accepted: boolean;
-  height: number;
-  num_chunks: number;
-}
-
-/**
- * Result of `tenzro_applySnapshotChunk`. `complete` flips to `true` on
- * the final chunk, after which the snapshot has been atomically
- * committed via `write_batch_sync`.
- */
-export interface SnapshotChunkApplied {
-  complete: boolean;
-  height: number;
-  chunk_index: number;
-}
-
 // ── Client ──
 
 /**
  * State-sync snapshot client.
  *
- * Wraps the five snapshot RPCs that drive state-sync between nodes:
+ * Wraps the three snapshot RPCs a syncing node calls on a serving one:
  * - `tenzro_listSnapshots` — enumerate local snapshots
  * - `tenzro_getSnapshotManifest` — full manifest including per-chunk hashes
  * - `tenzro_getSnapshotChunk` — fetch a single chunk by index
- * - `tenzro_offerSnapshot` — register an inbound manifest from a peer
- * - `tenzro_applySnapshotChunk` — write one inbound chunk
  *
- * **Trust model:** Callers MUST verify `manifest.state_root_hex` against
- * a trusted QC at the same height before calling `offerSnapshot` /
- * `applySnapshotChunk`. The node verifies per-chunk SHA-256 against
- * the manifest before any disk write, and atomically commits on the
- * final chunk via `write_batch_sync`.
+ * All three are reads. The inbound half of state-sync — offering a manifest
+ * and applying its chunks — is driven in-process by the node's own bootstrap
+ * path and is deliberately not reachable over JSON-RPC, so there is nothing
+ * here to wrap.
+ *
+ * **Trust model:** a manifest attests only to its own chunks; nothing inside
+ * it binds the snapshot to the chain. Callers MUST verify
+ * `manifest.state_root_hex` against a trusted QC at the same height before
+ * applying it.
  */
 export class SnapshotClient {
   constructor(private readonly rpc: RpcClient) {}
@@ -129,35 +114,4 @@ export class SnapshotClient {
     ]);
   }
 
-  /**
-   * Register an inbound manifest from a peer.
-   *
-   * **Caller MUST verify `manifest.state_root_hex` against a trusted QC
-   * at the same height before invoking.** This RPC only registers the
-   * offer and provisions the spool directory; it does not itself
-   * validate the manifest against chain state.
-   */
-  async offerSnapshot(
-    manifest: SnapshotManifest
-  ): Promise<SnapshotOfferAccepted> {
-    return this.rpc.call<SnapshotOfferAccepted>('tenzro_offerSnapshot', [
-      manifest,
-    ]);
-  }
-
-  /**
-   * Write one inbound chunk. The chunk's SHA-256 is verified against
-   * `manifest.chunk_hashes_hex[chunkIndex]` before any disk write. On
-   * the final chunk, all chunks are decoded and atomically committed
-   * via `write_batch_sync`; `complete` will be `true` on that call.
-   */
-  async applySnapshotChunk(
-    height: number,
-    chunkIndex: number,
-    dataB64: string
-  ): Promise<SnapshotChunkApplied> {
-    return this.rpc.call<SnapshotChunkApplied>('tenzro_applySnapshotChunk', [
-      { height, chunk_index: chunkIndex, data_b64: dataB64 },
-    ]);
-  }
 }

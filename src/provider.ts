@@ -26,6 +26,38 @@ export interface ProviderStats {
   total_inferences: number;
 }
 
+/**
+ * A provider's compute bond — the admission collateral `register` checks
+ * before it will accept a provider onto a rung.
+ */
+export interface ComputeBond {
+  provider_did: string;
+  provider_address: string;
+  /** Bonded amount in wei (10^-18 TNZO) as a decimal string. */
+  amount: string;
+  /** "Active", "Cooldown", "Returned", or "Slashed". */
+  status: string;
+  /** Unix ms at which a withdrawal may be finalized; null unless in Cooldown. */
+  cooldown_until: number | null;
+  last_modified_block: number;
+  history_len: number;
+  /** Whether this bond can currently back a provider registration. */
+  is_eligible: boolean;
+  /** Amount counting toward admission in wei — zero once the bond leaves Active. */
+  effective_amount: string;
+}
+
+/** The admission dials a provider needs before it posts a compute bond. */
+export interface ComputeBondParams {
+  /**
+   * Minimum bond in wei the node accepts for admission. The operative
+   * requirement is the higher of this floor and the target rung's own bond.
+   */
+  min_bond_wei: string;
+  /** Milliseconds a withdrawal sits in Cooldown before it can be finalized. */
+  cooldown_ms: number;
+}
+
 export interface ChatMessage {
   role: string;
   content: string;
@@ -108,7 +140,16 @@ export interface HardwareProfile {
   tee_vendor: string | null;
   os: string;
   arch: string;
+  /** Hash of the hardware's descriptive attributes — identifies a hardware
+   * class, not an individual unit. */
   device_fingerprint: string;
+  /** Hex SHA-256 over the machine's per-unit hardware identifiers (SMBIOS
+   * system UUID, baseboard serial, NVIDIA GPU UUIDs). Null when the node can
+   * read none of them. */
+  hardware_root: string | null;
+  /** Labels of the identifier sources behind `hardware_root`, e.g.
+   * `["dmi:product_uuid", "gpu:uuid"]`. Never carries serial values. */
+  hardware_root_sources: string[];
 }
 
 /**
@@ -420,6 +461,46 @@ export class ProviderClient {
   }
 
   /**
+   * Read the compute-bond floor and withdrawal cooldown this node enforces.
+   *
+   * Call this before {@link register} — a registration whose backing bond is
+   * below the floor is refused at admission.
+   *
+   * @example
+   * ```typescript
+   * const params = await client.provider.computeBondParams();
+   * console.log("Minimum bond:", params.min_bond_wei, "wei");
+   * ```
+   */
+  async computeBondParams(): Promise<ComputeBondParams> {
+    return await this.rpc.call<ComputeBondParams>(
+      "tenzro_computeBondParams",
+      [],
+    );
+  }
+
+  /**
+   * Fetch the compute bond posted against `providerDid`, or null when that
+   * provider has never posted one.
+   *
+   * @param providerDid - Provider DID (e.g. "did:tenzro:machine:...")
+   */
+  async getComputeBond(providerDid: string): Promise<ComputeBond | null> {
+    return await this.rpc.call<ComputeBond | null>("tenzro_getComputeBond", [
+      { provider_did: providerDid },
+    ]);
+  }
+
+  /** List every compute bond this node knows about. */
+  async listComputeBonds(): Promise<ComputeBond[]> {
+    const result = await this.rpc.call<{ count: number; bonds: ComputeBond[] }>(
+      "tenzro_listComputeBonds",
+      [],
+    );
+    return result.bonds ?? [];
+  }
+
+  /**
    * List all model service endpoints with load information
    *
    * @returns Array of model endpoints with load data
@@ -619,12 +700,4 @@ export class ProviderClient {
     ]);
   }
 
-  /**
-   * Submit a block to the network.
-   * @param block - Block data to submit
-   * @returns Submission result
-   */
-  async submitBlock(block: any): Promise<any> {
-    return await this.rpc.call("tenzro_submitBlock", [block]);
-  }
 }
