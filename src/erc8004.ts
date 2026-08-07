@@ -43,7 +43,7 @@ export interface Erc8004Metadata {
  * Client for the ERC-8004 Trustless Agents Registry family
  * (IdentityRegistry, ReputationRegistry, ValidationRegistry).
  *
- * Covers the canonical v0.6+ surface — base register/feedback/validation
+ * Covers the canonical Jan 2026 revision surface — base register/feedback/validation
  * plus `setAgentURI` / `setAgentWallet` / `setMetadata` / `getMetadata`
  * / `getAgentURI` / `getAgentWallet` / `revokeFeedback` /
  * `appendResponse` / `isFeedbackRevoked` / `getFeedbackResponses` /
@@ -93,7 +93,7 @@ export class Erc8004Client {
   }
 
   // -----------------------------------------------------------------
-  // Identity registry — v0.6+ mutators
+  // Identity registry — Jan 2026 revision mutators
   // -----------------------------------------------------------------
 
   /** ABI-encode `IdentityRegistry.setAgentURI(uint256 agentId, string metadataURI)`. */
@@ -142,7 +142,7 @@ export class Erc8004Client {
   }
 
   // -----------------------------------------------------------------
-  // Identity registry — v0.6+ reads
+  // Identity registry — Jan 2026 revision reads
   // -----------------------------------------------------------------
 
   /** ABI-encode `IdentityRegistry.getMetadata(uint256 agentId, string metadataKey)`. */
@@ -216,7 +216,7 @@ export class Erc8004Client {
     );
   }
 
-  /** ABI-encode `ReputationRegistry.revokeFeedback(uint256 agentId, bytes32 feedbackId)` (v0.6+). */
+  /** ABI-encode `ReputationRegistry.revokeFeedback(uint256 agentId, bytes32 feedbackId)` (Jan 2026 revision). */
   async encodeRevokeFeedback(
     agentId: string,
     feedbackId: string,
@@ -227,7 +227,7 @@ export class Erc8004Client {
     );
   }
 
-  /** ABI-encode `ReputationRegistry.appendResponse(uint256 agentId, bytes32 feedbackId, string responseURI)` (v0.6+). */
+  /** ABI-encode `ReputationRegistry.appendResponse(uint256 agentId, bytes32 feedbackId, string responseURI)` (Jan 2026 revision). */
   async encodeAppendResponse(
     agentId: string,
     feedbackId: string,
@@ -245,7 +245,7 @@ export class Erc8004Client {
     );
   }
 
-  /** ABI-encode `ReputationRegistry.isFeedbackRevoked(uint256 agentId, bytes32 feedbackId)` (v0.6+). */
+  /** ABI-encode `ReputationRegistry.isFeedbackRevoked(uint256 agentId, bytes32 feedbackId)` (Jan 2026 revision). */
   async encodeIsFeedbackRevoked(
     agentId: string,
     feedbackId: string,
@@ -256,7 +256,7 @@ export class Erc8004Client {
     );
   }
 
-  /** ABI-encode `ReputationRegistry.getFeedbackResponses(uint256 agentId, bytes32 feedbackId)` (v0.6+). */
+  /** ABI-encode `ReputationRegistry.getFeedbackResponses(uint256 agentId, bytes32 feedbackId)` (Jan 2026 revision). */
   async encodeGetFeedbackResponses(
     agentId: string,
     feedbackId: string,
