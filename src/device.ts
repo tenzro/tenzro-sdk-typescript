@@ -117,4 +117,27 @@ export class DeviceClient {
   async verifyInteraction(interaction: unknown): Promise<any> {
     return this.rpc.call("tenzro_verifyInteraction", { interaction });
   }
+
+  /**
+   * Record an anchored settlement on other chains, in parallel.
+   *
+   * A self-contained mirror writes the canonical settlement bytes, so the
+   * record stays readable with no Tenzro node — the only form that survives the
+   * Tenzro Ledger losing state. A digest-only mirror proves a payload you hold
+   * is the one that settled but cannot say what settled.
+   *
+   * Each target is dispatched independently, so partial success is the normal
+   * case and the report says which landed.
+   */
+  async mirrorSettlement(
+    interactionId: string,
+    targets: Array<{ chain: string; self_contained?: boolean }>,
+    primaryCommitted = true,
+  ): Promise<any> {
+    return this.rpc.call("tenzro_mirrorSettlement", {
+      interaction_id: interactionId,
+      targets,
+      primary_committed: primaryCommitted,
+    });
+  }
 }
