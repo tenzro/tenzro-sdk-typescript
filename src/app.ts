@@ -155,7 +155,7 @@ function randomBytes(len: number): Uint8Array {
   if (!c || !c.getRandomValues) {
     throw new Error("crypto.getRandomValues is unavailable");
   }
-  const b = new Uint8Array(len);
+  const b = new Uint8Array(new ArrayBuffer(len));
   c.getRandomValues(b);
   return b;
 }

@@ -176,7 +176,7 @@ function subtle(): SubtleCrypto {
 }
 
 function randomJti(): string {
-  const bytes = new Uint8Array(16);
+  const bytes = new Uint8Array(new ArrayBuffer(16));
   const c = (globalThis as unknown as { crypto?: Crypto }).crypto;
   if (!c || !c.getRandomValues) {
     throw new Error("WebCrypto getRandomValues unavailable for jti");

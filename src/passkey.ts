@@ -425,7 +425,7 @@ export class BrowserWebAuthnAuthenticator implements PlatformAuthenticator {
     config: ResolvedPasskeyConfig,
     challenge: Uint8Array
   ): Promise<AuthenticatorRegistration> {
-    const userId = new Uint8Array(16);
+    const userId = new Uint8Array(new ArrayBuffer(16));
     crypto.getRandomValues(userId);
     const cred = (await navigator.credentials.create({
       publicKey: {
@@ -557,8 +557,13 @@ export class SoftwareP256Authenticator implements PlatformAuthenticator {
       );
     }
     this.publicKey = raw.slice(1);
-    this.credentialId = new Uint8Array(16);
-    crypto.getRandomValues(this.credentialId);
+    // Fill a local first: the field is declared `Uint8Array`, which TS 7
+    // widens to `Uint8Array<ArrayBufferLike>`, and `getRandomValues` requires
+    // a view backed specifically by `ArrayBuffer`. Assigning after the fill
+    // keeps the narrow type at the call site.
+    const credentialId = new Uint8Array(new ArrayBuffer(16));
+    crypto.getRandomValues(credentialId);
+    this.credentialId = credentialId;
   }
 
   async isPlatformAuthenticatorAvailable(): Promise<boolean> {
@@ -648,7 +653,7 @@ function packAux(authData: Uint8Array, clientData: Uint8Array): Uint8Array {
 }
 
 function randomChallenge(): Uint8Array {
-  const buf = new Uint8Array(32);
+  const buf = new Uint8Array(new ArrayBuffer(32));
   crypto.getRandomValues(buf);
   return buf;
 }
