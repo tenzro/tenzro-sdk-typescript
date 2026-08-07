@@ -24,7 +24,7 @@ export class MarketplaceClient {
    *   registration time (immutable afterwards).
    * - `creator_wallet` (**mandatory** for non-free pricing): payout wallet. Each
    *   invocation fee is split 95/5 — 5% flows to the network treasury as
-   *   `AGENT_MARKETPLACE_COMMISSION_BPS`, the remainder is paid here.
+   *   the governance-set marketplace commission, the remainder is paid here.
    * - `pricing`: either the canonical `AgentPricingModel` object or the compact
    *   string form (`"free"`, `"per_execution:<u128>"`, `"per_token:<u128>"`,
    *   `"subscription:<u128>"`, `"revenue_share:<bps>"`).

@@ -1053,7 +1053,7 @@ export interface AgentTemplate {
   creator_did?: string;
   /**
    * Creator payout wallet — **mandatory** for any non-free pricing; receives the
-   * per-invocation fee minus the `AGENT_MARKETPLACE_COMMISSION_BPS` network commission.
+   * per-invocation fee minus the governance-set marketplace commission.
    */
   creator_wallet?: string;
   /** Total successful invocations via `tenzro_runAgentTemplate`. */
@@ -1104,7 +1104,7 @@ export interface RegisterAgentTemplateParams {
   creator_did?: string;
   /**
    * Creator payout wallet. **Mandatory** for any non-free pricing — receives
-   * the per-invocation fee minus the `AGENT_MARKETPLACE_COMMISSION_BPS` (5%)
+   * the per-invocation fee minus the governance-set marketplace commission
    * network commission that flows to the treasury.
    */
   creator_wallet?: string;
@@ -1135,7 +1135,7 @@ export interface RunAgentTemplateParams {
   /**
    * Payer wallet. **Mandatory** for any non-free template — charged the
    * per-invocation fee which is split 95/5 between creator and treasury
-   * (`AGENT_MARKETPLACE_COMMISSION_BPS = 500`). May be omitted for free
+   * (read it from `tenzro_getEconomicPolicy`). May be omitted for free
    * templates.
    */
   payer_wallet?: string;

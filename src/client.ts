@@ -53,6 +53,7 @@ import { AuthClient } from "./auth";
 import { BondClient } from "./bond";
 import { InsuranceClient } from "./insurance";
 import { AdaptiveBurnClient } from "./adaptive-burn";
+import { DeviceClient } from "./device";
 import { SeedAgentClient } from "./seed-agent";
 import { QuotaClient } from "./quota";
 import { PrincipalChainClient } from "./principal-chain";
@@ -351,6 +352,11 @@ export class TenzroClient {
   /** Access the adaptive-burn governance dial client. */
   adaptiveBurn(): AdaptiveBurnClient {
     return new AdaptiveBurnClient(this.rpc);
+  }
+
+  /** Access the device-binding and machine-ownership client. */
+  device(): DeviceClient {
+    return new DeviceClient(this.rpc);
   }
 
   /** Access the SeedAgent treasury / charter / registry client (Spec 10). */

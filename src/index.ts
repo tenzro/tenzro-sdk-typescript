@@ -423,6 +423,7 @@ export type {
   ClaimList,
 } from "./insurance";
 export { AdaptiveBurnClient } from "./adaptive-burn";
+export { DeviceClient } from "./device";
 export { SeedAgentClient } from "./seed-agent";
 export { QuotaClient } from "./quota";
 export { PrincipalChainClient } from "./principal-chain";

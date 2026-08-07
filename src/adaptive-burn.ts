@@ -23,6 +23,23 @@ export class AdaptiveBurnClient {
   }
 
   /**
+   * Returns the economic policy this node applies to every settlement — how a
+   * payment divides, the marketplace commission, the network's default
+   * settlement asset, and the micro-settlement floor.
+   *
+   * Read this before paying rather than inferring the split from a receipt
+   * afterwards. The response also reports, per capability, which economic mode
+   * the node is in: a **private** capability keeps the whole payment, a
+   * **public validating** one shares with the treasury, and a **public
+   * delegated** one also pays the RPC provider validating on its behalf.
+   *
+   * Every rate is governance-set; see `docs/ECONOMICS.md`.
+   */
+  async getEconomicPolicy(): Promise<any> {
+    return this.rpc.call("tenzro_getEconomicPolicy", [{}]);
+  }
+
+  /**
    * Returns the latest rolling supply metrics snapshot — circulating
    * supply, epoch delta, burn breakdown, emission breakdown.
    * @returns Latest `SupplyMetricsSnapshot`
