@@ -1105,7 +1105,7 @@ export interface RegisterAgentTemplateParams {
   /**
    * Creator payout wallet. **Mandatory** for any non-free pricing — receives
    * the per-invocation fee minus the governance-set marketplace commission
-   * network commission that flows to the treasury.
+   * marketplace commission that flows to the treasury.
    */
   creator_wallet?: string;
 }

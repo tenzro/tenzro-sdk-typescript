@@ -476,7 +476,7 @@ export class InferenceClient {
    * Throws JSON-RPC `-32004` when no manifest is cached for the hash.
    */
   async getProvenance(contentHash: string): Promise<Record<string, unknown>> {
-    return this.rpc.call<Record<string, unknown>>("tenzro_getProvenance", [
+    return this.rpc.call<Record<string, unknown>>("tenzro_getContentProvenance", [
       { content_hash: contentHash },
     ]);
   }

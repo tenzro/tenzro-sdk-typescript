@@ -69,4 +69,52 @@ export class DeviceClient {
         hardware_root_hex: hardwareRootHex ?? null,
       });
   }
+
+  /**
+   * The rails a payment can settle on, and the smallest worthwhile payment on
+   * each. Supporting x402 and being able to carry a micropayment are different
+   * properties — Base speaks x402 and still cannot carry a one-cent charge
+   * without ~10% overhead.
+   */
+  async settlementNetworks(): Promise<any> {
+    return this.rpc.call("tenzro_settlementNetworks", {});
+  }
+
+  /**
+   * Where a specific charge would settle: accumulate below the
+   * micro-settlement floor, the Tenzro Ledger, a secondary rail, or no viable
+   * rail for the payee's asset. Omit `tnzoMicroUsd` and the node settles on the
+   * home chain rather than routing on a guessed rate.
+   */
+  async routePayment(
+    amountWei: string,
+    asset?: string,
+    tnzoMicroUsd?: number,
+  ): Promise<any> {
+    return this.rpc.call("tenzro_settlementNetworks", {
+      amount_wei: amountWei,
+      asset: asset ?? null,
+      tnzo_micro_usd: tnzoMicroUsd ?? null,
+    });
+  }
+
+  /**
+   * Read an anchored interaction receipt and its attestation digest. One
+   * record covers access, inference, storage and marketplace alike, so an
+   * audit is a lookup rather than a reconciliation across per-surface logs.
+   */
+  async getInteraction(interactionId: string): Promise<any> {
+    return this.rpc.call("tenzro_getInteraction", {
+      interaction_id: interactionId,
+    });
+  }
+
+  /**
+   * Check a receipt against what the node anchored. Compares content addresses
+   * rather than signatures, so the answer does not depend on trusting the
+   * verifying node.
+   */
+  async verifyInteraction(interaction: unknown): Promise<any> {
+    return this.rpc.call("tenzro_verifyInteraction", { interaction });
+  }
 }
