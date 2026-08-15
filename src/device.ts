@@ -13,7 +13,11 @@ import { RpcClient } from "./rpc";
  * second bound device exists yet, and names the remedy when it does not.
  */
 export class DeviceClient {
-  constructor(private rpc: RpcClient) {}
+  private rpc: RpcClient;
+
+  constructor(rpc: RpcClient) {
+    this.rpc = rpc;
+  }
 
   /**
    * Bind a device to an identity from a WebAuthn registration.
@@ -23,18 +27,34 @@ export class DeviceClient {
    * the vendor roots it pins — a device whose key is not in hardware, or whose
    * credential can sync to a cloud account, is refused with the reason.
    */
-  async bindDevice(identityDid: string, label: string, attestationObjectB64: string): Promise<any> {
-    return this.rpc.call("tenzro_bindDevice", { identity_did: identityDid, label, attestation_object_b64: attestationObjectB64 });
+  async bindDevice(
+    identityDid: string,
+    label: string,
+    attestationObjectB64: string,
+  ): Promise<any> {
+    return this.rpc.call("tenzro_bindDevice", {
+      identity_did: identityDid,
+      label,
+      attestation_object_b64: attestationObjectB64,
+    });
   }
 
   /** The devices that can authenticate as an identity, and what each proved. */
   async listBoundDevices(identityDid: string): Promise<any> {
-    return this.rpc.call("tenzro_listBoundDevices", { identity_did: identityDid });
+    return this.rpc.call("tenzro_listBoundDevices", {
+      identity_did: identityDid,
+    });
   }
 
   /** Unbind a device and end every session it authorised, in one action. */
-  async revokeBoundDevice(identityDid: string, credentialId: string): Promise<any> {
-    return this.rpc.call("tenzro_revokeBoundDevice", { identity_did: identityDid, credential_id: credentialId });
+  async revokeBoundDevice(
+    identityDid: string,
+    credentialId: string,
+  ): Promise<any> {
+    return this.rpc.call("tenzro_revokeBoundDevice", {
+      identity_did: identityDid,
+      credential_id: credentialId,
+    });
   }
 
   /**
@@ -44,8 +64,14 @@ export class DeviceClient {
    * "scan the pairing QR with your phone" — rather than shown a button that
    * fails. A wallet cannot sit behind a single device.
    */
-  async walletReadiness(identityDid: string, thisDeviceCredentialId?: string): Promise<any> {
-    return this.rpc.call("tenzro_walletReadiness", { identity_did: identityDid, this_device_credential_id: thisDeviceCredentialId ?? null });
+  async walletReadiness(
+    identityDid: string,
+    thisDeviceCredentialId?: string,
+  ): Promise<any> {
+    return this.rpc.call("tenzro_walletReadiness", {
+      identity_did: identityDid,
+      this_device_credential_id: thisDeviceCredentialId ?? null,
+    });
   }
 
   /**
@@ -62,12 +88,12 @@ export class DeviceClient {
     hardwareRootHex?: string,
   ): Promise<any> {
     return this.rpc.call("tenzro_transferMachineOwnership", {
-        machine_did: machineDid,
-        new_owner_did: newOwnerDid,
-        authority,
-        controller_did: controllerDid ?? null,
-        hardware_root_hex: hardwareRootHex ?? null,
-      });
+      machine_did: machineDid,
+      new_owner_did: newOwnerDid,
+      authority,
+      controller_did: controllerDid ?? null,
+      hardware_root_hex: hardwareRootHex ?? null,
+    });
   }
 
   /**
@@ -116,28 +142,5 @@ export class DeviceClient {
    */
   async verifyInteraction(interaction: unknown): Promise<any> {
     return this.rpc.call("tenzro_verifyInteraction", { interaction });
-  }
-
-  /**
-   * Record an anchored settlement on other chains, in parallel.
-   *
-   * A self-contained mirror writes the canonical settlement bytes, so the
-   * record stays readable with no Tenzro node — the only form that survives the
-   * Tenzro Ledger losing state. A digest-only mirror proves a payload you hold
-   * is the one that settled but cannot say what settled.
-   *
-   * Each target is dispatched independently, so partial success is the normal
-   * case and the report says which landed.
-   */
-  async mirrorSettlement(
-    interactionId: string,
-    targets: Array<{ chain: string; self_contained?: boolean }>,
-    primaryCommitted = true,
-  ): Promise<any> {
-    return this.rpc.call("tenzro_mirrorSettlement", {
-      interaction_id: interactionId,
-      targets,
-      primary_committed: primaryCommitted,
-    });
   }
 }
