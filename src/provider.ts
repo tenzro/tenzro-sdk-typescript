@@ -183,7 +183,14 @@ export interface NetworkProvider {
 	peer_id: string;
 	/** Wallet/account address of the provider */
 	provider_address: string;
-	/** Provider type (e.g. "llm", "tee", "general") */
+	/**
+	 * Provider class: "ai", "tee", "storage", "compute", "database",
+	 * "cloud", "general".
+	 *
+	 * "ai" covers every model class — text, multimodal, image, video,
+	 * audio, embeddings. Nodes announced "llm" before this was
+	 * generalised; treat the two as one class.
+	 */
 	provider_type: string;
 	/** Model IDs currently being served by this node */
 	served_models: string[];
@@ -578,7 +585,8 @@ export class ProviderClient {
 	 * - All remote providers discovered via the `tenzro/providers`
 	 *   gossipsub topic (announcements refreshed every 60 seconds)
 	 *
-	 * @param providerType - Optional filter by provider type (e.g. "llm", "tee", "general")
+	 * @param providerType - Optional filter by provider class (e.g. "ai",
+	 * "tee", "storage"). "llm" is accepted as a legacy alias for "ai".
 	 * @returns Array of discovered network providers
 	 *
 	 * @example
@@ -590,7 +598,7 @@ export class ProviderClient {
 	 * }
 	 *
 	 * // List only LLM providers
-	 * const llmProviders = await client.provider.listProviders("llm");
+	 * const aiProviders = await client.provider.listProviders("ai");
 	 * ```
 	 */
 	async listProviders(providerType?: string): Promise<NetworkProvider[]> {

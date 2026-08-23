@@ -1293,7 +1293,7 @@ export interface ToolInfo {
   name: string;
   description: string;
   version: string;
-  tool_type?: string;
+  transport?: "mcp" | "mcp-stdio" | "api" | "native";
   input_schema?: string;
   output_schema?: string;
   category?: string;
@@ -1309,7 +1309,7 @@ export interface RegisterToolParams {
   name: string;
   description: string;
   version: string;
-  tool_type?: string;
+  transport?: "mcp" | "mcp-stdio" | "api" | "native";
   input_schema?: string;
   output_schema?: string;
   category?: string;
@@ -1320,7 +1320,7 @@ export interface UpdateToolParams {
   name?: string;
   description?: string;
   version?: string;
-  tool_type?: string;
+  transport?: "mcp" | "mcp-stdio" | "api" | "native";
   input_schema?: string;
   output_schema?: string;
   category?: string;
@@ -1329,7 +1329,7 @@ export interface UpdateToolParams {
 }
 
 export interface ToolFilter {
-  tool_type?: string;
+  transport?: "mcp" | "mcp-stdio" | "api" | "native";
   category?: string;
   creator_did?: string;
   tag?: string;

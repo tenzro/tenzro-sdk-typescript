@@ -26,7 +26,7 @@ export class ToolClient {
 
   /**
    * List tools with optional filtering.
-   * @param filter - Optional filter criteria (tool_type, category, tag, etc.)
+   * @param filter - Optional filter criteria (transport, category, tag, etc.)
    * @returns Array of matching tools
    */
   async listTools(filter?: ToolFilter): Promise<ToolInfo[]> {
