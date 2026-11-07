@@ -1,9 +1,7 @@
 # Dependencies
 node_modules/
+package-lock.json
 yarn.lock
-# package-lock.json IS tracked here (unlike in the monorepo, where the workspace
-# root's single lockfile covers this package): this mirror is its own package
-# root, and `npm ci` (used in CI) needs a lockfile to exist at all.
 
 # Build output
 dist/

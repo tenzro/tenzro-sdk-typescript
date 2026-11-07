@@ -61,24 +61,6 @@ npm test         # tsc -b, the examples, the tests under test/, API.md up to dat
 
 ## Quick Start
 
-The snippet below is the form that works with the version published on npm today (`tenzro-sdk@0.7.0`):
-
-```typescript
-import pkg from "tenzro-sdk";
-const { TenzroClient } = pkg;
-
-// Preview network: chain id 13380 (0x3444)
-const client = new TenzroClient({ endpoint: "https://rpc.tenzro.com", chainId: 13380 });
-
-console.log(await client.getChainId());
-console.log(await client.getStatus());
-console.log(await client.getBalance("0x<32-byte account address>"));
-```
-
-The rest of this README, including the example below, describes the in-repo source (0.9.0), which is not yet published to npm. `connectToNetwork`, `openHardwareSigner` and `HardwareKeySigner` exist only there.
-
-### Quick Start (source, 0.9.0)
-
 ```typescript
 import { HardwareKeySigner, connectToNetwork, openHardwareSigner } from "tenzro-sdk";
 
@@ -322,7 +304,6 @@ produced for a given action cannot be replayed as another.
 
 ```bash
 npx tsx examples/local-node.ts              # chain id, a balance and a transfer dry run on one node
-npx tsx examples/did-resolve.ts             # resolve a did:tenzro DID (DID Document + identity record)
 npx tsx examples/quickstart.ts              # read the chain, run inference, send TNZO with a hardware key
 npx tsx examples/intent-routing.ts          # route an intent to a model, or run by intent
 ```
