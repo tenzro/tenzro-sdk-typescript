@@ -320,6 +320,7 @@ produced for a given action cannot be replayed as another.
 
 ```bash
 npx tsx examples/local-node.ts              # chain id, a balance and a transfer dry run on one node
+npx tsx examples/did-resolve.ts             # resolve a did:tenzro DID (DID Document + identity record)
 npx tsx examples/quickstart.ts              # read the chain, run inference, send TNZO with a hardware key
 npx tsx examples/intent-routing.ts          # route an intent to a model, or run by intent
 ```
